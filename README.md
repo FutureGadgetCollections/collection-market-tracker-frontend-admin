@@ -1,6 +1,6 @@
-# bq-cr-gcs-git-architecture-frontend-admin-template
+# collection-market-tracker-frontend-admin
 
-A reusable template for Hugo-based admin frontends that follow the BigQuery / Cloud Run / GCS / Git architecture.
+Admin interface for the Collection Market Tracker — a Hugo-based static site that lets admins manage tracked products and view market pricing data.
 
 ## Architecture
 
@@ -8,19 +8,26 @@ A reusable template for Hugo-based admin frontends that follow the BigQuery / Cl
 Browser
   │
   ├── Read (static JSON data)
-  │     └── GitHub Raw (your-org/your-data-repo)
-  │           └── GCS fallback (your-gcs-data-bucket)
+  │     └── GitHub Raw (FutureGadgetCollections/collection-market-tracker-data)
+  │           └── GCS fallback (collection-market-tracker-data bucket)
   │
   └── Write (create, update, delete)
-        └── Backend API (Cloud Run)
+        └── Backend API (collection-market-tracker-backend on Cloud Run)
               ├── Firebase Auth token verified
               ├── Operation applied to BigQuery
               └── Updated JSON published to GitHub + GCS
 ```
 
-**Reads** are served from static JSON files published by the backend after each mutation. The frontend fetches from GitHub first and falls back to GCS.
+**Reads** are served from static JSON files in the data repo, published by the backend after each mutation. The frontend fetches from GitHub Raw first and falls back to GCS.
 
-**Writes** go to the backend API, which handles the database operation and republishes the static data files to both GitHub and GCS.
+**Writes** go to the backend API, which validates the Firebase ID token, applies the operation to BigQuery, and republishes the static data files.
+
+## Related Repositories
+
+| Repo | Purpose |
+|------|---------|
+| [`FutureGadgetCollections/collection-market-tracker-backend`](https://github.com/FutureGadgetCollections/collection-market-tracker-backend) | Cloud Run backend — BigQuery CRUD + data sync |
+| [`FutureGadgetCollections/collection-market-tracker-data`](https://github.com/FutureGadgetCollections/collection-market-tracker-data) | Static JSON data files served to the frontend |
 
 ## Tech Stack
 
@@ -30,15 +37,13 @@ Browser
 - **GitHub Pages** — hosting (deployed via GitHub Actions)
 - **GitHub Raw / GCS** — static data sources for reads
 
-## Using This Template
+## Sections
 
-1. Create a new repo from this template.
-2. Update `hugo.toml`: set `title`, `description`, and your backend/data source defaults.
-3. Add your sections under `content/` (follow the `items/` example).
-4. Add nav links in `themes/admin/layouts/partials/navbar.html`.
-5. Copy the `themes/admin/layouts/_default/list.html` pattern to build section-specific pages.
-6. Set GitHub Actions secrets/variables (see Configuration below).
-7. Enable GitHub Pages in repo settings (source: GitHub Actions).
+| Section | Path | Data File | Backend Endpoint |
+|---------|------|-----------|-----------------|
+| Sealed Products | `/sealed-products/` | `data/sealed-products.json` | `/sealed-products` |
+| Single Cards | `/single-cards/` | `data/single-cards.json` | `/single-cards` |
+| Set Pull Rates | `/set-pull-rates/` | `data/set-pull-rates.json` | `/set-pull-rates` |
 
 ## Local Development
 
@@ -55,6 +60,8 @@ source .env && \
   HUGO_PARAMS_FIREBASE_APP_ID=$HUGO_PARAMS_FIREBASE_APP_ID \
   HUGO_PARAMS_BACKENDURL=$HUGO_PARAMS_BACKENDURL \
   HUGO_PARAMS_ALLOWED_EMAILS=$HUGO_PARAMS_ALLOWED_EMAILS \
+  HUGO_PARAMS_GCS_DATA_BUCKET=$HUGO_PARAMS_GCS_DATA_BUCKET \
+  HUGO_PARAMS_GITHUB_DATA_REPO=$HUGO_PARAMS_GITHUB_DATA_REPO \
   hugo server --port 1313
 ```
 
@@ -68,14 +75,14 @@ All configuration is supplied via `HUGO_PARAMS_*` environment variables at build
 
 | Variable | Purpose |
 |----------|---------|
-| `GITHUB_PAGES_URL` | Full URL of the GitHub Pages site (e.g. `https://your-org.github.io/your-repo/`) |
+| `GITHUB_PAGES_URL` | Full URL of the GitHub Pages site |
 | `HUGO_PARAMS_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
 | `HUGO_PARAMS_FIREBASE_PROJECT_ID` | Firebase project ID |
 | `HUGO_PARAMS_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
-| `HUGO_PARAMS_BACKENDURL` | Backend API base URL |
+| `HUGO_PARAMS_BACKENDURL` | Backend API base URL (Cloud Run URL) |
 | `HUGO_PARAMS_ALLOWED_EMAILS` | Comma-separated list of admin emails |
 | `HUGO_PARAMS_GCS_DATA_BUCKET` | GCS bucket name for static data fallback |
-| `HUGO_PARAMS_GITHUB_DATA_REPO` | GitHub repo for static data (e.g. `org/repo`) |
+| `HUGO_PARAMS_GITHUB_DATA_REPO` | `FutureGadgetCollections/collection-market-tracker-data` |
 
 ### GitHub Actions Secrets (sensitive)
 
@@ -85,13 +92,17 @@ All configuration is supplied via `HUGO_PARAMS_*` environment variables at build
 | `HUGO_PARAMS_FIREBASE_APP_ID` | Firebase app ID |
 | `HUGO_PARAMS_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID |
 
-## Adding a New Section
+## Data Files
 
-1. Create the content directory:
-   ```bash
-   mkdir -p content/my-section
-   echo $'---\ntitle: "My Section"\n---' > content/my-section/_index.md
-   ```
-2. Add a nav link in `themes/admin/layouts/partials/navbar.html`.
-3. Optionally create a custom layout at `themes/admin/layouts/my-section/list.html` (or rely on the default).
-4. Update the `RESOURCE_PATH` constant in the page scripts to match your backend endpoint.
+The backend syncer exports these files to GCS and GitHub after every write operation:
+
+| Path in repo | Format | Description |
+|---|---|---|
+| `data/sealed-products.json` | JSON array | Sealed product catalog |
+| `data/single-cards.json` | JSON array | Single card catalog |
+| `data/set-pull-rates.json` | JSON array | Pull rate reference data |
+| `schema/sealed-products.json` | BQ schema | Field definitions |
+| `schema/single-cards.json` | BQ schema | Field definitions |
+| `schema/set-pull-rates.json` | BQ schema | Field definitions |
+
+> **Note:** The data repo (`FutureGadgetCollections/collection-market-tracker-data`) has not been fully set up yet. The backend will publish these files automatically after each sync operation.

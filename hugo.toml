@@ -1,10 +1,10 @@
 baseURL = "/"
 languageCode = "en-us"
-title = "Admin App"
+title = "Market Tracker"
 theme = "admin"
 
 [params]
-  description = "A lightweight admin interface"
+  description = "Admin interface for the Collection Market Tracker"
   backendURL = "http://localhost:8080"
 
   # Firebase config — nested to match HUGO_PARAMS_FIREBASE_* env var mapping
@@ -29,7 +29,7 @@ theme = "admin"
   [params.gcs.data]
     bucket = ""
   [params.github.data]
-    repo = ""
+    repo = "FutureGadgetCollections/collection-market-tracker-data"
 
 [markup]
   [markup.goldmark]

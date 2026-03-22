@@ -1,0 +1,336 @@
+{{ define "main" }}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h2 class="h5 mb-0 fw-semibold"><i class="bi bi-credit-card me-2 text-primary"></i>Single Cards</h2>
+  <div class="d-flex gap-2">
+    <button id="btn-sync" class="btn btn-outline-secondary btn-sm d-none" onclick="triggerSync(this)">
+      <i class="bi bi-cloud-upload me-1"></i>Sync
+    </button>
+    <div id="btn-refresh-group" class="btn-group btn-group-sm d-none" role="group">
+      <button class="btn btn-outline-secondary" onclick="refreshItems('github')"><i class="bi bi-github me-1"></i>GitHub</button>
+      <button class="btn btn-outline-secondary" onclick="refreshItems('gcs')"><i class="bi bi-cloud me-1"></i>GCS</button>
+      <button class="btn btn-outline-primary"   onclick="refreshItems('api')"><i class="bi bi-plug me-1"></i>API</button>
+    </div>
+    <button id="btn-add" class="btn btn-primary btn-sm d-none"
+            data-bs-toggle="modal" data-bs-target="#itemModal" onclick="openCreateModal()">
+      <i class="bi bi-plus-lg me-1"></i>Add Card
+    </button>
+  </div>
+</div>
+
+<div id="auth-guard"  class="alert alert-warning  d-none"><i class="bi bi-lock me-1"></i>You must be <a href="{{ "" | relURL }}">signed in</a> to manage single cards.</div>
+<div id="admin-guard" class="alert alert-secondary d-none"><i class="bi bi-shield-lock me-1"></i>You need to be an admin to access this page.</div>
+<div id="loading" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+<div id="empty-state" class="text-center py-5 d-none">
+  <i class="bi bi-inbox fs-1 text-muted"></i>
+  <p class="text-muted mt-2">No single cards yet.</p>
+</div>
+
+<!-- Filters -->
+<div class="card shadow-sm border-0 d-none mb-3" id="filters-card">
+  <div class="card-body py-2">
+    <div class="row g-2">
+      <div class="col-sm-3">
+        <select class="form-select form-select-sm" id="filter-game" onchange="applyFilters()">
+          <option value="">All Games</option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <select class="form-select form-select-sm" id="filter-set" onchange="applyFilters()">
+          <option value="">All Sets</option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <select class="form-select form-select-sm" id="filter-rarity" onchange="applyFilters()">
+          <option value="">All Rarities</option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <input type="text" class="form-control form-control-sm" id="filter-search"
+               placeholder="Search name…" oninput="applyFilters()">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0 d-none" id="items-card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3">Name</th>
+            <th>Game</th>
+            <th>Set / #</th>
+            <th>Rarity</th>
+            <th class="text-end pe-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="items-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Create / Edit Modal -->
+<div class="modal fade" id="itemModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title" id="modal-title">Add Card</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="orig-game">
+        <input type="hidden" id="orig-set-code">
+        <input type="hidden" id="orig-card-number">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label small fw-medium">Game <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="item-game" placeholder="e.g. pokemon">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-medium">Era <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="item-era" placeholder="e.g. Scarlet & Violet">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label small fw-medium">Set Code <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="item-set-code" placeholder="e.g. sv01">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label small fw-medium">Card # <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="item-card-number" placeholder="e.g. 019">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label small fw-medium">Rarity <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="item-rarity" placeholder="e.g. double_rare">
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-medium">Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="item-name" placeholder="e.g. Arcanine ex">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-medium">TCGPlayer ID</label>
+            <input type="text" class="form-control" id="item-tcgplayer-id" placeholder="e.g. 12345">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-medium">PriceCharting URL</label>
+            <input type="url" class="form-control" id="item-pricecharting-url" placeholder="https://…">
+          </div>
+        </div>
+        <div id="modal-error" class="alert alert-danger py-2 small d-none mt-3"></div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="modal-save-btn" onclick="saveItem()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-body text-center pt-4">
+        <i class="bi bi-trash3 fs-2 text-danger"></i>
+        <p class="mt-2 mb-1 fw-medium">Delete this card?</p>
+        <p class="text-muted small">This cannot be undone.</p>
+      </div>
+      <div class="modal-footer border-0 justify-content-center pt-0 pb-3">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-danger btn-sm" id="confirm-delete-btn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+{{ end }}
+
+{{ define "page-scripts" }}
+<script>
+  const itemModal   = new bootstrap.Modal(document.getElementById('itemModal'));
+  const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+  firebase.auth().onAuthStateChanged(async user => {
+    if (!user) {
+      document.getElementById('loading').classList.add('d-none');
+      document.getElementById('auth-guard').classList.remove('d-none');
+      return;
+    }
+    if (!isEmailAllowed(user.email)) {
+      document.getElementById('loading').classList.add('d-none');
+      document.getElementById('admin-guard').classList.remove('d-none');
+      return;
+    }
+    document.getElementById('btn-sync').classList.remove('d-none');
+    document.getElementById('btn-add').classList.remove('d-none');
+    document.getElementById('btn-refresh-group').classList.remove('d-none');
+    await loadItems();
+  });
+
+  let allItems = [];
+
+  async function refreshItems(source) {
+    const btns = document.querySelectorAll('#btn-refresh-group button');
+    btns.forEach(b => b.disabled = true);
+    await loadItems(source);
+    btns.forEach(b => b.disabled = false);
+  }
+
+  async function loadItems(source = 'github') {
+    try {
+      let items;
+      if      (source === 'api') items = await api('GET', '/single-cards');
+      else if (source === 'gcs') items = await loadFromGCS('data/single-cards.json');
+      else                        items = await loadJsonData('data/single-cards.json');
+      document.getElementById('loading').classList.add('d-none');
+      if (!items || items.length === 0) { document.getElementById('empty-state').classList.remove('d-none'); return; }
+      allItems = items;
+      populateFilters(items);
+      renderItems(items);
+    } catch (e) {
+      document.getElementById('loading').classList.add('d-none');
+      showToast('Failed to load single cards: ' + e.message, 'danger');
+    }
+  }
+
+  function populateFilters(items) {
+    const games    = [...new Set(items.map(c => c.game).filter(Boolean))].sort();
+    const sets     = [...new Set(items.map(c => c.set_code).filter(Boolean))].sort();
+    const rarities = [...new Set(items.map(c => c.rarity).filter(Boolean))].sort();
+    const fill = (id, opts) => {
+      const sel = document.getElementById(id);
+      const first = sel.options[0].outerHTML;
+      sel.innerHTML = first + opts.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+    };
+    fill('filter-game', games);
+    fill('filter-set', sets);
+    fill('filter-rarity', rarities);
+    document.getElementById('filters-card').classList.remove('d-none');
+  }
+
+  function applyFilters() {
+    const game   = document.getElementById('filter-game').value;
+    const set    = document.getElementById('filter-set').value;
+    const rarity = document.getElementById('filter-rarity').value;
+    const search = document.getElementById('filter-search').value.toLowerCase();
+    renderItems(allItems.filter(c =>
+      (!game   || c.game === game) &&
+      (!set    || c.set_code === set) &&
+      (!rarity || c.rarity === rarity) &&
+      (!search || (c.name || '').toLowerCase().includes(search))
+    ));
+  }
+
+  function renderItems(items) {
+    document.getElementById('items-card').classList.remove('d-none');
+    document.getElementById('empty-state').classList.add('d-none');
+    document.getElementById('items-tbody').innerHTML = items.map(c => `
+      <tr>
+        <td class="ps-3 fw-medium">${escHtml(c.name)}</td>
+        <td class="text-muted">${escHtml(c.game)}</td>
+        <td class="text-muted">
+          <span class="d-block">${escHtml(c.set_code)}</span>
+          <span class="small text-secondary">#${escHtml(c.card_number)}</span>
+        </td>
+        <td class="text-muted">${escHtml(c.rarity)}</td>
+        <td class="text-end pe-3">
+          <button class="btn btn-sm btn-outline-secondary me-1" onclick='openEditModal(${JSON.stringify(c)})'>
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-danger"
+                  onclick="openDeleteModal(${JSON.stringify(c.game)},${JSON.stringify(c.set_code)},${JSON.stringify(c.card_number)})">
+            <i class="bi bi-trash3"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function openCreateModal() {
+    document.getElementById('modal-title').textContent = 'Add Card';
+    ['orig-game','orig-set-code','orig-card-number','item-game','item-era','item-set-code',
+     'item-card-number','item-rarity','item-name','item-tcgplayer-id','item-pricecharting-url']
+      .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('modal-error').classList.add('d-none');
+  }
+
+  function openEditModal(c) {
+    document.getElementById('modal-title').textContent = 'Edit Card';
+    document.getElementById('orig-game').value        = c.game;
+    document.getElementById('orig-set-code').value    = c.set_code;
+    document.getElementById('orig-card-number').value = c.card_number;
+    document.getElementById('item-game').value         = c.game;
+    document.getElementById('item-era').value          = c.era;
+    document.getElementById('item-set-code').value     = c.set_code;
+    document.getElementById('item-card-number').value  = c.card_number;
+    document.getElementById('item-rarity').value       = c.rarity;
+    document.getElementById('item-name').value         = c.name;
+    document.getElementById('item-tcgplayer-id').value       = c.tcgplayer_id || '';
+    document.getElementById('item-pricecharting-url').value  = c.pricecharting_url || '';
+    document.getElementById('modal-error').classList.add('d-none');
+    itemModal.show();
+  }
+
+  async function saveItem() {
+    const origGame       = document.getElementById('orig-game').value;
+    const origSetCode    = document.getElementById('orig-set-code').value;
+    const origCardNumber = document.getElementById('orig-card-number').value;
+    const isEdit         = !!origGame;
+
+    const game       = document.getElementById('item-game').value.trim();
+    const era        = document.getElementById('item-era').value.trim();
+    const setCode    = document.getElementById('item-set-code').value.trim();
+    const cardNumber = document.getElementById('item-card-number').value.trim();
+    const rarity     = document.getElementById('item-rarity').value.trim();
+    const name       = document.getElementById('item-name').value.trim();
+    const errEl      = document.getElementById('modal-error');
+    errEl.classList.add('d-none');
+
+    if (!game || !era || !setCode || !cardNumber || !rarity || !name) {
+      errEl.textContent = 'All required fields must be filled.';
+      errEl.classList.remove('d-none');
+      return;
+    }
+
+    const btn = document.getElementById('modal-save-btn');
+    btn.disabled = true;
+    try {
+      const body = {
+        game, era, name, rarity,
+        set_code:         setCode,
+        card_number:      cardNumber,
+        tcgplayer_id:     document.getElementById('item-tcgplayer-id').value.trim() || null,
+        pricecharting_url: document.getElementById('item-pricecharting-url').value.trim() || null,
+      };
+      if (isEdit) {
+        await api('PUT', `/single-cards/${encodeURIComponent(origGame)}/${encodeURIComponent(origSetCode)}/${encodeURIComponent(origCardNumber)}`, body);
+      } else {
+        await api('POST', '/single-cards', body);
+      }
+      itemModal.hide();
+      await loadItems();
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.classList.remove('d-none');
+    } finally { btn.disabled = false; }
+  }
+
+  let pendingDelete = null;
+  function openDeleteModal(game, setCode, cardNumber) {
+    pendingDelete = { game, setCode, cardNumber };
+    deleteModal.show();
+  }
+
+  document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+    if (!pendingDelete) return;
+    const { game, setCode, cardNumber } = pendingDelete;
+    try {
+      await api('DELETE', `/single-cards/${encodeURIComponent(game)}/${encodeURIComponent(setCode)}/${encodeURIComponent(cardNumber)}`);
+      deleteModal.hide();
+      await loadItems();
+    } catch (e) { showToast('Delete failed: ' + e.message, 'danger'); }
+  });
+
+  function escHtml(s) { const d = document.createElement('div'); d.appendChild(document.createTextNode(String(s))); return d.innerHTML; }
+</script>
+{{ end }}

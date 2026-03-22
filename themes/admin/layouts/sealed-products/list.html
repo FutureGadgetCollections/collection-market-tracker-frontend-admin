@@ -1,0 +1,363 @@
+{{ define "main" }}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h2 class="h5 mb-0 fw-semibold"><i class="bi bi-box-seam me-2 text-primary"></i>Sealed Products</h2>
+  <div class="d-flex gap-2">
+    <button id="btn-sync" class="btn btn-outline-secondary btn-sm d-none" onclick="triggerSync(this)">
+      <i class="bi bi-cloud-upload me-1"></i>Sync
+    </button>
+    <div id="btn-refresh-group" class="btn-group btn-group-sm d-none" role="group">
+      <button class="btn btn-outline-secondary" onclick="refreshItems('github')"><i class="bi bi-github me-1"></i>GitHub</button>
+      <button class="btn btn-outline-secondary" onclick="refreshItems('gcs')"><i class="bi bi-cloud me-1"></i>GCS</button>
+      <button class="btn btn-outline-primary"   onclick="refreshItems('api')"><i class="bi bi-plug me-1"></i>API</button>
+    </div>
+    <button id="btn-add" class="btn btn-primary btn-sm d-none"
+            data-bs-toggle="modal" data-bs-target="#itemModal" onclick="openCreateModal()">
+      <i class="bi bi-plus-lg me-1"></i>Add Product
+    </button>
+  </div>
+</div>
+
+<div id="auth-guard"  class="alert alert-warning  d-none"><i class="bi bi-lock me-1"></i>You must be <a href="{{ "" | relURL }}">signed in</a> to manage sealed products.</div>
+<div id="admin-guard" class="alert alert-secondary d-none"><i class="bi bi-shield-lock me-1"></i>You need to be an admin to access this page.</div>
+<div id="loading" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+<div id="empty-state" class="text-center py-5 d-none">
+  <i class="bi bi-inbox fs-1 text-muted"></i>
+  <p class="text-muted mt-2">No sealed products yet.</p>
+</div>
+
+<!-- Filters -->
+<div class="card shadow-sm border-0 d-none mb-3" id="filters-card">
+  <div class="card-body py-2">
+    <div class="row g-2">
+      <div class="col-sm-3">
+        <select class="form-select form-select-sm" id="filter-game" onchange="applyFilters()">
+          <option value="">All Games</option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <select class="form-select form-select-sm" id="filter-era" onchange="applyFilters()">
+          <option value="">All Eras</option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <select class="form-select form-select-sm" id="filter-product-type" onchange="applyFilters()">
+          <option value="">All Types</option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <input type="text" class="form-control form-control-sm" id="filter-search"
+               placeholder="Search set code…" oninput="applyFilters()">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0 d-none" id="items-card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3">Product Type</th>
+            <th>Game</th>
+            <th>Era / Set</th>
+            <th>Released</th>
+            <th>MSRP</th>
+            <th>Packs</th>
+            <th class="text-end pe-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="items-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Create / Edit Modal -->
+<div class="modal fade" id="itemModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title" id="modal-title">Add Sealed Product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Hidden composite key fields for edit mode -->
+        <input type="hidden" id="orig-game">
+        <input type="hidden" id="orig-set-code">
+        <input type="hidden" id="orig-product-type">
+
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label small fw-medium">Game <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="item-game" placeholder="e.g. pokemon">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-medium">Era <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="item-era" placeholder="e.g. Scarlet & Violet">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label small fw-medium">Set Code <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="item-set-code" placeholder="e.g. sv01">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label small fw-medium">Product Type <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="item-product-type" placeholder="e.g. booster-box">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label small fw-medium">Release Date <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="item-release-date">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label small fw-medium">Packs / Product <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="item-packs" min="1" placeholder="36">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label small fw-medium">MSRP</label>
+            <input type="number" class="form-control" id="item-msrp" step="0.01" placeholder="143.64">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label small fw-medium">Legal Until</label>
+            <input type="date" class="form-control" id="item-legal-until">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-medium">TCGPlayer ID</label>
+            <input type="text" class="form-control" id="item-tcgplayer-id" placeholder="e.g. 521234">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-medium">PriceCharting URL</label>
+            <input type="url" class="form-control" id="item-pricecharting-url" placeholder="https://www.pricecharting.com/…">
+          </div>
+          <div class="col-12 d-flex align-items-center gap-2">
+            <input type="checkbox" class="form-check-input" id="item-is-special-set">
+            <label class="form-check-label small fw-medium" for="item-is-special-set">Special Set</label>
+          </div>
+        </div>
+        <div id="modal-error" class="alert alert-danger py-2 small d-none mt-3"></div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="modal-save-btn" onclick="saveItem()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-body text-center pt-4">
+        <i class="bi bi-trash3 fs-2 text-danger"></i>
+        <p class="mt-2 mb-1 fw-medium">Delete this product?</p>
+        <p class="text-muted small">This cannot be undone.</p>
+      </div>
+      <div class="modal-footer border-0 justify-content-center pt-0 pb-3">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-danger btn-sm" id="confirm-delete-btn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+{{ end }}
+
+{{ define "page-scripts" }}
+<script>
+  const itemModal   = new bootstrap.Modal(document.getElementById('itemModal'));
+  const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+  firebase.auth().onAuthStateChanged(async user => {
+    if (!user) {
+      document.getElementById('loading').classList.add('d-none');
+      document.getElementById('auth-guard').classList.remove('d-none');
+      return;
+    }
+    if (!isEmailAllowed(user.email)) {
+      document.getElementById('loading').classList.add('d-none');
+      document.getElementById('admin-guard').classList.remove('d-none');
+      return;
+    }
+    document.getElementById('btn-sync').classList.remove('d-none');
+    document.getElementById('btn-add').classList.remove('d-none');
+    document.getElementById('btn-refresh-group').classList.remove('d-none');
+    await loadItems();
+  });
+
+  let allItems = [];
+
+  async function refreshItems(source) {
+    const btns = document.querySelectorAll('#btn-refresh-group button');
+    btns.forEach(b => b.disabled = true);
+    await loadItems(source);
+    btns.forEach(b => b.disabled = false);
+  }
+
+  async function loadItems(source = 'github') {
+    try {
+      let items;
+      if      (source === 'api') items = await api('GET', '/sealed-products');
+      else if (source === 'gcs') items = await loadFromGCS('data/sealed-products.json');
+      else                        items = await loadJsonData('data/sealed-products.json');
+      document.getElementById('loading').classList.add('d-none');
+      if (!items || items.length === 0) { document.getElementById('empty-state').classList.remove('d-none'); return; }
+      allItems = items;
+      populateFilters(items);
+      renderItems(items);
+    } catch (e) {
+      document.getElementById('loading').classList.add('d-none');
+      showToast('Failed to load sealed products: ' + e.message, 'danger');
+    }
+  }
+
+  function populateFilters(items) {
+    const games = [...new Set(items.map(p => p.game).filter(Boolean))].sort();
+    const eras  = [...new Set(items.map(p => p.era).filter(Boolean))].sort();
+    const types = [...new Set(items.map(p => p.product_type).filter(Boolean))].sort();
+    const fill = (id, opts) => {
+      const sel = document.getElementById(id);
+      const first = sel.options[0].outerHTML;
+      sel.innerHTML = first + opts.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+    };
+    fill('filter-game', games);
+    fill('filter-era', eras);
+    fill('filter-product-type', types);
+    document.getElementById('filters-card').classList.remove('d-none');
+  }
+
+  function applyFilters() {
+    const game   = document.getElementById('filter-game').value;
+    const era    = document.getElementById('filter-era').value;
+    const type   = document.getElementById('filter-product-type').value;
+    const search = document.getElementById('filter-search').value.toLowerCase();
+    renderItems(allItems.filter(p =>
+      (!game   || p.game === game) &&
+      (!era    || p.era === era) &&
+      (!type   || p.product_type === type) &&
+      (!search || (p.set_code || '').toLowerCase().includes(search))
+    ));
+  }
+
+  function renderItems(items) {
+    document.getElementById('items-card').classList.remove('d-none');
+    document.getElementById('empty-state').classList.add('d-none');
+    document.getElementById('items-tbody').innerHTML = items.map(p => `
+      <tr>
+        <td class="ps-3 fw-medium">${escHtml(p.product_type)}</td>
+        <td class="text-muted">${escHtml(p.game)}</td>
+        <td class="text-muted">
+          <span class="d-block">${escHtml(p.era)}</span>
+          <span class="small text-secondary">${escHtml(p.set_code)}</span>
+        </td>
+        <td class="text-muted small">${escHtml(p.release_date || '—')}</td>
+        <td class="text-muted">${p.msrp != null ? '$' + Number(p.msrp).toFixed(2) : '—'}</td>
+        <td class="text-muted">${escHtml(String(p.packs_per_product))}</td>
+        <td class="text-end pe-3">
+          <button class="btn btn-sm btn-outline-secondary me-1" onclick='openEditModal(${JSON.stringify(p)})'>
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-danger"
+                  onclick="openDeleteModal(${JSON.stringify(p.game)},${JSON.stringify(p.set_code)},${JSON.stringify(p.product_type)})">
+            <i class="bi bi-trash3"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function openCreateModal() {
+    document.getElementById('modal-title').textContent = 'Add Sealed Product';
+    ['orig-game','orig-set-code','orig-product-type','item-game','item-era','item-set-code',
+     'item-product-type','item-release-date','item-packs','item-msrp','item-legal-until',
+     'item-tcgplayer-id','item-pricecharting-url'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('item-is-special-set').checked = false;
+    document.getElementById('modal-error').classList.add('d-none');
+  }
+
+  function openEditModal(p) {
+    document.getElementById('modal-title').textContent = 'Edit Sealed Product';
+    document.getElementById('orig-game').value         = p.game;
+    document.getElementById('orig-set-code').value     = p.set_code;
+    document.getElementById('orig-product-type').value = p.product_type;
+    document.getElementById('item-game').value          = p.game;
+    document.getElementById('item-era').value           = p.era;
+    document.getElementById('item-set-code').value      = p.set_code;
+    document.getElementById('item-product-type').value  = p.product_type;
+    document.getElementById('item-release-date').value  = p.release_date || '';
+    document.getElementById('item-packs').value         = p.packs_per_product ?? '';
+    document.getElementById('item-msrp').value          = p.msrp ?? '';
+    document.getElementById('item-legal-until').value   = p.standard_legal_until || '';
+    document.getElementById('item-tcgplayer-id').value  = p.tcgplayer_id || '';
+    document.getElementById('item-pricecharting-url').value = p.pricecharting_url || '';
+    document.getElementById('item-is-special-set').checked  = !!p.is_special_set;
+    document.getElementById('modal-error').classList.add('d-none');
+    itemModal.show();
+  }
+
+  async function saveItem() {
+    const origGame        = document.getElementById('orig-game').value;
+    const origSetCode     = document.getElementById('orig-set-code').value;
+    const origProductType = document.getElementById('orig-product-type').value;
+    const isEdit          = !!origGame;
+
+    const game        = document.getElementById('item-game').value.trim();
+    const era         = document.getElementById('item-era').value.trim();
+    const setCode     = document.getElementById('item-set-code').value.trim();
+    const productType = document.getElementById('item-product-type').value.trim();
+    const releaseDate = document.getElementById('item-release-date').value;
+    const packs       = document.getElementById('item-packs').value;
+    const errEl       = document.getElementById('modal-error');
+    errEl.classList.add('d-none');
+
+    if (!game || !era || !setCode || !productType || !releaseDate || !packs) {
+      errEl.textContent = 'Game, Era, Set Code, Product Type, Release Date, and Packs are required.';
+      errEl.classList.remove('d-none');
+      return;
+    }
+
+    const btn = document.getElementById('modal-save-btn');
+    btn.disabled = true;
+    try {
+      const body = {
+        game, era,
+        set_code:             setCode,
+        product_type:         productType,
+        release_date:         releaseDate,
+        packs_per_product:    parseInt(packs, 10),
+        is_special_set:       document.getElementById('item-is-special-set').checked,
+        standard_legal_until: document.getElementById('item-legal-until').value || null,
+        msrp:                 document.getElementById('item-msrp').value ? parseFloat(document.getElementById('item-msrp').value) : null,
+        tcgplayer_id:         document.getElementById('item-tcgplayer-id').value.trim() || null,
+        pricecharting_url:    document.getElementById('item-pricecharting-url').value.trim() || null,
+      };
+      if (isEdit) {
+        await api('PUT', `/sealed-products/${encodeURIComponent(origGame)}/${encodeURIComponent(origSetCode)}/${encodeURIComponent(origProductType)}`, body);
+      } else {
+        await api('POST', '/sealed-products', body);
+      }
+      itemModal.hide();
+      await loadItems();
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.classList.remove('d-none');
+    } finally { btn.disabled = false; }
+  }
+
+  let pendingDelete = null;
+  function openDeleteModal(game, setCode, productType) {
+    pendingDelete = { game, setCode, productType };
+    deleteModal.show();
+  }
+
+  document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+    if (!pendingDelete) return;
+    const { game, setCode, productType } = pendingDelete;
+    try {
+      await api('DELETE', `/sealed-products/${encodeURIComponent(game)}/${encodeURIComponent(setCode)}/${encodeURIComponent(productType)}`);
+      deleteModal.hide();
+      await loadItems();
+    } catch (e) { showToast('Delete failed: ' + e.message, 'danger'); }
+  });
+
+  function escHtml(s) { const d = document.createElement('div'); d.appendChild(document.createTextNode(String(s))); return d.innerHTML; }
+</script>
+{{ end }}
