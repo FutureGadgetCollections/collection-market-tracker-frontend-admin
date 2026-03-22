@@ -1,0 +1,64 @@
+name: Checkpoint Tag
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Optional reason for this checkpoint'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  checkpoint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create checkpoint tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Skip if HEAD has not moved since the last checkpoint-* tag
+          LAST_TAG=$(git tag --list 'checkpoint-*' --sort=-version:refname | head -1)
+          HEAD_COMMIT=$(git rev-parse HEAD)
+
+          if [ -n "$LAST_TAG" ]; then
+            LAST_TAG_COMMIT=$(git rev-list -n 1 "$LAST_TAG")
+            if [ "$LAST_TAG_COMMIT" = "$HEAD_COMMIT" ]; then
+              echo "No new commits since $LAST_TAG — skipping."
+              exit 0
+            fi
+          fi
+
+          # Determine tag name; append -2, -3, ... if same-day tag already exists
+          DATE=$(date -u +%Y-%m-%d)
+          BASE_TAG="checkpoint-${DATE}"
+          TAG="${BASE_TAG}"
+          SUFFIX=2
+          while git rev-parse "${TAG}" >/dev/null 2>&1; do
+            TAG="${BASE_TAG}-${SUFFIX}"
+            SUFFIX=$((SUFFIX + 1))
+          done
+
+          # Build annotation from short SHA + last commit subject
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          LAST_MSG=$(git log -1 --format="%s")
+          REASON="${{ github.event.inputs.reason }}"
+
+          if [ -n "$REASON" ]; then
+            ANNOTATION="checkpoint at ${SHORT_SHA}: ${LAST_MSG} (${REASON})"
+          else
+            ANNOTATION="checkpoint at ${SHORT_SHA}: ${LAST_MSG}"
+          fi
+
+          git tag -a "${TAG}" -m "${ANNOTATION}"
+          git push origin "${TAG}"
+          echo "Created tag: ${TAG}"

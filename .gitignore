@@ -1,6 +1,9 @@
 # env file
 .env
 
+# Claude Code local settings (machine-specific permission grants)
+.claude/settings.local.json
+
 # Hugo build output
 public/
 resources/_gen/

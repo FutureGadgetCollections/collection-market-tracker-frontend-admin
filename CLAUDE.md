@@ -4,15 +4,29 @@
 
 Hugo-based admin frontend for the **Collection Market Tracker** — tracks TCG market prices and listings. Deployed to GitHub Pages; reads static JSON from the data repo and writes via the backend API.
 
-## Related Repositories
+## Multi-Repo Setup
 
-| Repo | Local Path |
-|------|-----------|
-| Backend (Cloud Run / Go) | `C:\Users\nguye\IdeaProjects\FutureGadgetLabs\collection-market-tracker-backend` |
-| Data files (static JSON) | `C:\Users\nguye\IdeaProjects\FutureGadgetLabs\collection-market-tracker-data` |
+Run `./setup.sh` after cloning this repo to clone all sibling repos to the correct local paths.
 
-- Data GitHub repo: `FutureGadgetCollections/collection-market-tracker-data` (not fully set up yet)
-- Backend GitHub repo: `FutureGadgetCollections/collection-market-tracker-backend`
+## All Repositories
+
+| Repo | GitHub | Local Path | Purpose |
+|------|--------|-----------|---------|
+| Frontend admin (this repo) | `FutureGadgetCollections/collection-market-tracker-frontend-admin` | `../collection-market-tracker-frontend-admin` | Hugo admin UI — CRUD via backend API |
+| Backend (Go / Cloud Run) | `FutureGadgetCollections/collection-market-tracker-backend` | `../collection-market-tracker-backend` | API microservice + scheduled Cloud Run jobs |
+| Data files (static JSON) | `FutureGadgetCollections/collection-market-tracker-data` | `../collection-market-tracker-data` | JSON published by backend; read by frontends |
+| Showcase frontend (public) | `FutureGadgetCollections/collection-showcase-frontend` | `../collection-showcase-frontend` | Public-facing Hugo site; read-only, no auth |
+
+## GCP Infrastructure
+
+| Resource | Details |
+|----------|---------|
+| GCP Project | `future-gadget-labs-483502` |
+| Cloud Run service (API) | `collection-market-tracker` — `us-central1` |
+| Cloud Run job (cron) | `collection-showcase-data-sync` — `us-central1` (daily sync; planned, not fully set up) |
+| GCS bucket | `collection-showcase-data` (in `future-gadget-labs` project) |
+| BigQuery | Project `future-gadget-labs-483502`, various datasets |
+| Firebase project | `collection-showcase-auth` (Google sign-in; config goes in `.env`, never committed) |
 
 ## Architecture
 
@@ -22,6 +36,24 @@ Hugo-based admin frontend for the **Collection Market Tracker** — tracks TCG m
 - **Backend communication:** `api()` helper in `static/js/api.js` handles token attachment automatically
 - **Data reads:** Static JSON from GitHub Raw (`collection-market-tracker-data`) with GCS fallback, via `static/js/data-loader.js`
 - **Deployment:** GitHub Pages via GitHub Actions (`.github/workflows/deploy.yml`)
+
+## Backend Architecture (collection-market-tracker-backend)
+
+The backend has two distinct parts:
+
+1. **API microservice** — Cloud Run service (`collection-market-tracker`): handles REST endpoints for CRUD operations on BigQuery, triggers GCS and GitHub data file updates after mutations.
+2. **Scheduled jobs** — Cloud Run jobs (`collection-showcase-data-sync`): daily cron; queries BigQuery and publishes fresh JSON to GCS and the data repo. Cron jobs are planned but not fully configured yet.
+
+## Data Flow
+
+```
+BigQuery (source of truth)
+  ├── API (on mutation) ──► GCS bucket ──► admin frontend (GCS source)
+  ├── API (on mutation) ──► data repo  ──► admin/showcase frontends (GitHub Raw source)
+  └── Cron job (daily)  ──► GCS + data repo (same as above)
+
+Frontend data source priority: GitHub Raw ► GCS ► API (user-selectable via refresh buttons)
+```
 
 ## Sections
 
