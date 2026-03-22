@@ -62,7 +62,8 @@
       <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
-            <th class="ps-3">Product Type</th>
+            <th class="ps-3" style="width:56px"></th>
+            <th>Product Type</th>
             <th>Game</th>
             <th>Era / Set</th>
             <th>Released</th>
@@ -305,7 +306,8 @@
     document.getElementById('empty-state').classList.add('d-none');
     document.getElementById('items-tbody').innerHTML = items.map(p => `
       <tr>
-        <td class="ps-3 fw-medium">${escHtml(p.product_type)}</td>
+        <td class="ps-3">${p.tcgplayer_id ? `<img src="https://tcgplayer-cdn.tcgplayer.com/product/${escHtml(String(p.tcgplayer_id))}_in_1000x1000.jpg" style="width:48px;height:48px;object-fit:contain;" loading="lazy" onerror="this.style.display='none'">` : ''}</td>
+        <td class="fw-medium">${escHtml(p.product_type)}</td>
         <td class="text-muted">${escHtml(p.game)}</td>
         <td class="text-muted">
           <span class="d-block">${escHtml(p.era)}</span>
