@@ -10,6 +10,10 @@
       <button class="btn btn-outline-secondary" onclick="refreshItems('gcs')"><i class="bi bi-cloud me-1"></i>GCS</button>
       <button class="btn btn-outline-primary"   onclick="refreshItems('api')"><i class="bi bi-plug me-1"></i>API</button>
     </div>
+    <button id="btn-bulk" class="btn btn-outline-primary btn-sm d-none"
+            data-bs-toggle="modal" data-bs-target="#bulkModal" onclick="openBulkModal()">
+      <i class="bi bi-upload me-1"></i>Bulk Import
+    </button>
     <button id="btn-add" class="btn btn-primary btn-sm d-none"
             data-bs-toggle="modal" data-bs-target="#itemModal" onclick="openCreateModal()">
       <i class="bi bi-plus-lg me-1"></i>Add Card
@@ -127,6 +131,27 @@
   </div>
 </div>
 
+<!-- Bulk Import Modal -->
+<div class="modal fade" id="bulkModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title">Bulk Import Single Cards</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-2">Paste a JSON array of single card objects. Required fields: <code>game</code>, <code>era</code>, <code>set_code</code>, <code>card_number</code>, <code>name</code>, <code>rarity</code>.</p>
+        <textarea id="bulk-input" class="form-control font-monospace" rows="12" placeholder='[{"game":"pokemon","era":"Scarlet &amp; Violet","set_code":"sv01","card_number":"019","name":"Arcanine ex","rarity":"double_rare"}]'></textarea>
+        <div id="bulk-error" class="alert alert-danger py-2 small d-none mt-2"></div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="bulk-save-btn" onclick="bulkImport()">Import</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Delete confirm -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
   <div class="modal-dialog modal-sm">
@@ -162,10 +187,48 @@
       return;
     }
     document.getElementById('btn-sync').classList.remove('d-none');
+    document.getElementById('btn-bulk').classList.remove('d-none');
     document.getElementById('btn-add').classList.remove('d-none');
     document.getElementById('btn-refresh-group').classList.remove('d-none');
     await loadItems();
   });
+
+  const bulkModal = new bootstrap.Modal(document.getElementById('bulkModal'));
+
+  function openBulkModal() {
+    document.getElementById('bulk-input').value = '';
+    document.getElementById('bulk-error').classList.add('d-none');
+  }
+
+  async function bulkImport() {
+    const errEl = document.getElementById('bulk-error');
+    errEl.classList.add('d-none');
+    let records;
+    try {
+      records = JSON.parse(document.getElementById('bulk-input').value);
+    } catch (e) {
+      errEl.textContent = 'Invalid JSON: ' + e.message;
+      errEl.classList.remove('d-none');
+      return;
+    }
+    if (!Array.isArray(records) || records.length === 0) {
+      errEl.textContent = 'Input must be a non-empty JSON array.';
+      errEl.classList.remove('d-none');
+      return;
+    }
+    const btn = document.getElementById('bulk-save-btn');
+    btn.disabled = true;
+    try {
+      const result = await api('POST', '/single-cards/bulk', records);
+      bulkModal.hide();
+      showToast(`Imported ${result.inserted} card(s). Syncing…`, 'success');
+      await api('POST', '/sync/single-cards');
+      await loadItems();
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.classList.remove('d-none');
+    } finally { btn.disabled = false; }
+  }
 
   let allItems = [];
 
