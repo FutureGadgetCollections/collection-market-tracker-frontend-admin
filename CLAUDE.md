@@ -25,7 +25,7 @@ Run `./setup.sh` after cloning this repo to clone all sibling repos to the corre
 | Cloud Run service (API) | `collection-market-tracker` — `us-central1` |
 | Cloud Run job (price scraper) | `tcgplayer-price-scraper` — `us-central1` — daily at 08:00 UTC via Cloud Scheduler |
 | Cloud Run job (data sync) | `collection-showcase-data-sync` — `us-central1` (planned, not yet configured) |
-| GCS bucket | `collection-showcase-data` (in `future-gadget-labs` project) |
+| GCS bucket | `collection-tracker-data` |
 | BigQuery | Project `future-gadget-labs-483502` — datasets: `catalog` (reference), `market_data` (price history) |
 | Firebase project | `collection-showcase-auth` (Google sign-in; config goes in `.env`, never committed) |
 | Artifact Registry | `us-central1-docker.pkg.dev/future-gadget-labs-483502/tcg-collection/` |
@@ -52,8 +52,8 @@ The backend has three distinct concerns:
 
 ```
 BigQuery (source of truth)
-  ├── API (on mutation) ──► GCS bucket ──► admin frontend (GCS source)
-  ├── API (on mutation) ──► data repo  ──► admin/showcase frontends (GitHub Raw source)
+  ├── API (on mutation) ──► GCS bucket ──┐
+  ├── API (on mutation) ──► data repo  ──┤──► frontends (GitHub Raw first, GCS fallback)
   └── Cron job (daily)  ──► GCS + data repo (same as above)
 
 Frontend data source priority: GitHub Raw ► GCS ► API (user-selectable via refresh buttons)
@@ -98,6 +98,6 @@ Frontend data source priority: GitHub Raw ► GCS ► API (user-selectable via r
 - Data loads default to GitHub Raw; use the refresh button group (GitHub / GCS / API) to switch sources
 - Data files live under `data/` in the data repo (e.g. `data/sealed-products.json`), not the root
 - Data files are JSON arrays — the backend syncer (`queryJSON`) marshals BQ rows as `[]map[string]bigquery.Value`
-- Composite PKs: sealed-products `(game, set_code, product_type)`, single-cards `(game, set_code, card_number)`, set-pull-rates `(era, set_code, rarity)`
+- Composite PKs: sealed-products `(game, set_code, product_type)`, single-cards `(game, set_code, card_number)`, set-pull-rates `(set_code, rarity)`
 - URL segments for composite PKs are `encodeURIComponent`-encoded by the frontend
 - To add a new section: create `content/<section>/_index.md`, add a nav link in `navbar.html`, and create `themes/admin/layouts/<section>/list.html`

@@ -1,10 +1,13 @@
-// Triggers a backend sync and shows feedback on the button.
+// Triggers a backend sync for a specific resource and shows feedback on the button.
+// The button must have a data-resource attribute (e.g. data-resource="sealed-products").
 async function triggerSync(btn) {
+  const resource = btn.dataset.resource;
+  if (!resource) { showToast('Sync failed: missing data-resource on button.', 'danger'); return; }
   const original = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Syncing…';
   try {
-    await api('POST', '/sync');
+    await api('POST', `/sync/${resource}`);
     showToast('Sync triggered — data will update shortly.', 'success');
   } catch (e) {
     showToast('Sync failed: ' + e.message, 'danger');

@@ -3,6 +3,7 @@
   <h2 class="h5 mb-0 fw-semibold"><i class="bi bi-credit-card me-2 text-primary"></i>Single Cards</h2>
   <div class="d-flex gap-2">
     <button id="btn-sync" class="btn btn-outline-secondary btn-sm d-none" onclick="triggerSync(this)"
+            data-resource="single-cards"
             data-bs-toggle="tooltip" title="Push the current BigQuery data to GCS and the GitHub data repo so all frontends see the latest records.">
       <i class="bi bi-cloud-upload me-1"></i>Sync
     </button>

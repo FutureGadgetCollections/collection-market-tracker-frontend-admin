@@ -9,7 +9,7 @@ Browser
   │
   ├── Read (static JSON data)
   │     └── GitHub Raw (FutureGadgetCollections/collection-market-tracker-data)
-  │           └── GCS fallback (collection-market-tracker-data bucket)
+  │           └── GCS fallback (collection-tracker-data bucket)
   │
   └── Write (create, update, delete)
         └── Backend API (collection-market-tracker-backend on Cloud Run)
@@ -64,7 +64,7 @@ All configuration is supplied via `HUGO_PARAMS_*` environment variables at build
 
 | Variable | Purpose |
 |----------|---------|
-| `GITHUB_PAGES_URL` | Full URL of the GitHub Pages site |
+| `PAGES_BASE_URL` | Full URL of the GitHub Pages site |
 | `HUGO_PARAMS_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
 | `HUGO_PARAMS_FIREBASE_PROJECT_ID` | Firebase project ID |
 | `HUGO_PARAMS_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
