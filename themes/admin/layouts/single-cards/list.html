@@ -2,22 +2,30 @@
 <div class="d-flex align-items-center justify-content-between mb-4">
   <h2 class="h5 mb-0 fw-semibold"><i class="bi bi-credit-card me-2 text-primary"></i>Single Cards</h2>
   <div class="d-flex gap-2">
-    <button id="btn-sync" class="btn btn-outline-secondary btn-sm d-none" onclick="triggerSync(this)">
+    <button id="btn-sync" class="btn btn-outline-secondary btn-sm d-none" onclick="triggerSync(this)"
+            data-bs-toggle="tooltip" title="Push the current BigQuery data to GCS and the GitHub data repo so all frontends see the latest records.">
       <i class="bi bi-cloud-upload me-1"></i>Sync
     </button>
     <div id="btn-refresh-group" class="btn-group btn-group-sm d-none" role="group">
-      <button class="btn btn-outline-secondary" onclick="refreshItems('github')"><i class="bi bi-github me-1"></i>GitHub</button>
-      <button class="btn btn-outline-secondary" onclick="refreshItems('gcs')"><i class="bi bi-cloud me-1"></i>GCS</button>
-      <button class="btn btn-outline-primary"   onclick="refreshItems('api')"><i class="bi bi-plug me-1"></i>API</button>
+      <button class="btn btn-outline-primary"    onclick="refreshItems('github')"
+              data-bs-toggle="tooltip" title="Reload data from the GitHub data repo (fastest; reflects the last sync)."><i class="bi bi-github me-1"></i>GitHub</button>
+      <button class="btn btn-outline-secondary"  onclick="refreshItems('gcs')"
+              data-bs-toggle="tooltip" title="Reload data from Google Cloud Storage (reflects the last sync; use if GitHub is stale)."><i class="bi bi-cloud me-1"></i>GCS</button>
+      <button class="btn btn-outline-secondary"  onclick="refreshItems('api')"
+              data-bs-toggle="tooltip" title="Reload data live from the backend API and BigQuery (always up-to-date, but slower)."><i class="bi bi-plug me-1"></i>API</button>
     </div>
-    <button id="btn-bulk" class="btn btn-outline-primary btn-sm d-none"
-            data-bs-toggle="modal" data-bs-target="#bulkModal" onclick="openBulkModal()">
-      <i class="bi bi-upload me-1"></i>Bulk Import
-    </button>
-    <button id="btn-add" class="btn btn-primary btn-sm d-none"
-            data-bs-toggle="modal" data-bs-target="#itemModal" onclick="openCreateModal()">
-      <i class="bi bi-plus-lg me-1"></i>Add Card
-    </button>
+    <span data-bs-toggle="tooltip" title="Paste a JSON array to create multiple single cards at once.">
+      <button id="btn-bulk" class="btn btn-outline-primary btn-sm d-none"
+              data-bs-toggle="modal" data-bs-target="#bulkModal" onclick="openBulkModal()">
+        <i class="bi bi-upload me-1"></i>Bulk Import
+      </button>
+    </span>
+    <span data-bs-toggle="tooltip" title="Open the form to add a single new card.">
+      <button id="btn-add" class="btn btn-primary btn-sm d-none"
+              data-bs-toggle="modal" data-bs-target="#itemModal" onclick="openCreateModal()">
+        <i class="bi bi-plus-lg me-1"></i>Add Card
+      </button>
+    </span>
   </div>
 </div>
 
@@ -173,6 +181,10 @@
 
 {{ define "page-scripts" }}
 <script>
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el =>
+    new bootstrap.Tooltip(el, { trigger: 'hover' })
+  );
+
   const itemModal   = new bootstrap.Modal(document.getElementById('itemModal'));
   const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
 
