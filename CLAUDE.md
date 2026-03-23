@@ -23,10 +23,12 @@ Run `./setup.sh` after cloning this repo to clone all sibling repos to the corre
 |----------|---------|
 | GCP Project | `future-gadget-labs-483502` |
 | Cloud Run service (API) | `collection-market-tracker` — `us-central1` |
-| Cloud Run job (cron) | `collection-showcase-data-sync` — `us-central1` (daily sync; planned, not fully set up) |
+| Cloud Run job (price scraper) | `tcgplayer-price-scraper` — `us-central1` — daily at 08:00 UTC via Cloud Scheduler |
+| Cloud Run job (data sync) | `collection-showcase-data-sync` — `us-central1` (planned, not yet configured) |
 | GCS bucket | `collection-showcase-data` (in `future-gadget-labs` project) |
-| BigQuery | Project `future-gadget-labs-483502`, various datasets |
+| BigQuery | Project `future-gadget-labs-483502` — datasets: `catalog` (reference), `market_data` (price history) |
 | Firebase project | `collection-showcase-auth` (Google sign-in; config goes in `.env`, never committed) |
+| Artifact Registry | `us-central1-docker.pkg.dev/future-gadget-labs-483502/tcg-collection/` |
 
 ## Architecture
 
@@ -39,10 +41,12 @@ Run `./setup.sh` after cloning this repo to clone all sibling repos to the corre
 
 ## Backend Architecture (collection-market-tracker-backend)
 
-The backend has two distinct parts:
+The backend has three distinct concerns:
 
-1. **API microservice** — Cloud Run service (`collection-market-tracker`): handles REST endpoints for CRUD operations on BigQuery, triggers GCS and GitHub data file updates after mutations.
-2. **Scheduled jobs** — Cloud Run jobs (`collection-showcase-data-sync`): daily cron; queries BigQuery and publishes fresh JSON to GCS and the data repo. Cron jobs are planned but not fully configured yet.
+1. **API microservice** — Cloud Run service (`collection-market-tracker`): handles REST endpoints for CRUD operations on BigQuery `catalog` dataset, triggers GCS and GitHub data file updates after mutations.
+2. **TCGPlayer price scraper** — Cloud Run job (`tcgplayer-price-scraper`): Python + Playwright job in `scripts/tcgplayer_prices/`. Scrapes market price, avg daily sold, listed median, and sellers from TCGPlayer. Writes to `market_data.tcgplayer_price_history` via MERGE on `(tcgplayer_id, date)`. Runs daily at 08:00 UTC via Cloud Scheduler. Two modes: `--daily` (snapshot for all products) and `--backfill` (full annual history for new products — run manually after adding `tcgplayer_id`s to catalog).
+3. **Data sync job** — Cloud Run job (`collection-showcase-data-sync`): planned but not yet configured.
+
 
 ## Data Flow
 
