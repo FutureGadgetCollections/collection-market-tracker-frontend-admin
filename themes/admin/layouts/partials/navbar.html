@@ -4,6 +4,12 @@
       <i class="bi bi-graph-up-arrow me-2"></i>{{ .Site.Title }}
     </a>
 
+    <!-- Infrastructure quick-nav trigger -->
+    <button class="btn btn-sm btn-outline-secondary me-2 ms-auto ms-md-0" type="button"
+            data-bs-toggle="offcanvas" data-bs-target="#infraNav" title="Infrastructure">
+      <i class="bi bi-diagram-3"></i>
+    </button>
+
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -49,3 +55,142 @@
     </div>
   </div>
 </nav>
+
+<!-- ── Infrastructure quick-nav ──────────────────────────────────────── -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="infraNav" style="width:340px">
+  <div class="offcanvas-header bg-dark text-white">
+    <h5 class="offcanvas-title"><i class="bi bi-diagram-3 me-2"></i>Infrastructure</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body p-0">
+
+    <!-- GitHub --------------------------------------------------------- -->
+    <div class="px-3 pt-3 pb-1 text-uppercase text-muted" style="font-size:.7rem;letter-spacing:.08em">GitHub Repos</div>
+    <ul class="list-group list-group-flush mb-2">
+      <li class="list-group-item list-group-item-action px-3 py-2">
+        <a href="https://github.com/FutureGadgetCollections/collection-market-tracker-backend" target="_blank" class="text-decoration-none text-body d-flex gap-2 align-items-start">
+          <i class="bi bi-github text-secondary mt-1 flex-shrink-0"></i>
+          <div>
+            <div class="fw-medium">collection-market-tracker-backend</div>
+            <div class="text-muted small">Go REST API — CRUD for catalog &amp; inventory, data-sync to GCS/GitHub</div>
+          </div>
+        </a>
+      </li>
+      <li class="list-group-item list-group-item-action px-3 py-2">
+        <a href="https://github.com/FutureGadgetCollections/collection-market-tracker-frontend-admin" target="_blank" class="text-decoration-none text-body d-flex gap-2 align-items-start">
+          <i class="bi bi-github text-secondary mt-1 flex-shrink-0"></i>
+          <div>
+            <div class="fw-medium">collection-market-tracker-frontend-admin</div>
+            <div class="text-muted small">Hugo admin UI — this site</div>
+          </div>
+        </a>
+      </li>
+      <li class="list-group-item list-group-item-action px-3 py-2">
+        <a href="https://github.com/FutureGadgetCollections/collection-showcase-frontend" target="_blank" class="text-decoration-none text-body d-flex gap-2 align-items-start">
+          <i class="bi bi-github text-secondary mt-1 flex-shrink-0"></i>
+          <div>
+            <div class="fw-medium">collection-showcase-frontend</div>
+            <div class="text-muted small">Hugo public site — read-only collection showcase</div>
+          </div>
+        </a>
+      </li>
+      <li class="list-group-item list-group-item-action px-3 py-2">
+        <a href="https://github.com/FutureGadgetCollections/collection-market-tracker-data" target="_blank" class="text-decoration-none text-body d-flex gap-2 align-items-start">
+          <i class="bi bi-github text-secondary mt-1 flex-shrink-0"></i>
+          <div>
+            <div class="fw-medium">collection-market-tracker-data</div>
+            <div class="text-muted small">Static JSON snapshots published by the backend after every write</div>
+          </div>
+        </a>
+      </li>
+    </ul>
+
+    <!-- GCS ------------------------------------------------------------ -->
+    <div class="px-3 pt-2 pb-1 text-uppercase text-muted" style="font-size:.7rem;letter-spacing:.08em">Cloud Storage</div>
+    <ul class="list-group list-group-flush mb-2">
+      <li class="list-group-item list-group-item-action px-3 py-2">
+        <a href="https://console.cloud.google.com/storage/browser/collection-tracker-data?project=future-gadget-labs-483502" target="_blank" class="text-decoration-none text-body d-flex gap-2 align-items-start">
+          <i class="bi bi-cloud-fill text-secondary mt-1 flex-shrink-0"></i>
+          <div>
+            <div class="fw-medium">collection-tracker-data</div>
+            <div class="text-muted small">JSON data bucket — sealed-products, single-cards, prices, XIRR exports</div>
+          </div>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Cloud Run ------------------------------------------------------ -->
+    <div class="px-3 pt-2 pb-1 text-uppercase text-muted" style="font-size:.7rem;letter-spacing:.08em">Cloud Run — Services</div>
+    <ul class="list-group list-group-flush mb-2">
+      <li class="list-group-item list-group-item-action px-3 py-2">
+        <a href="https://console.cloud.google.com/run/detail/us-central1/collection-market-tracker/metrics?project=future-gadget-labs-483502" target="_blank" class="text-decoration-none text-body d-flex gap-2 align-items-start">
+          <i class="bi bi-rocket-takeoff text-secondary mt-1 flex-shrink-0"></i>
+          <div>
+            <div class="fw-medium">collection-market-tracker</div>
+            <div class="text-muted small">Go REST API — serves this admin UI's backend; write routes require Firebase JWT</div>
+          </div>
+        </a>
+      </li>
+    </ul>
+
+    <div class="px-3 pt-2 pb-1 text-uppercase text-muted" style="font-size:.7rem;letter-spacing:.08em">Cloud Run — Jobs</div>
+    <ul class="list-group list-group-flush mb-2">
+      <li class="list-group-item list-group-item-action px-3 py-2">
+        <a href="https://console.cloud.google.com/run/jobs/details/us-central1/tcgplayer-price-scraper/executions?project=future-gadget-labs-483502" target="_blank" class="text-decoration-none text-body d-flex gap-2 align-items-start">
+          <i class="bi bi-play-circle text-secondary mt-1 flex-shrink-0"></i>
+          <div>
+            <div class="fw-medium">tcgplayer-price-scraper</div>
+            <div class="text-muted small">Python/Playwright scraper — writes daily market prices to BigQuery</div>
+          </div>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Cloud Scheduler ------------------------------------------------ -->
+    <div class="px-3 pt-2 pb-1 text-uppercase text-muted" style="font-size:.7rem;letter-spacing:.08em">Cloud Scheduler</div>
+    <ul class="list-group list-group-flush mb-2">
+      <li class="list-group-item list-group-item-action px-3 py-2">
+        <a href="https://console.cloud.google.com/cloudscheduler?project=future-gadget-labs-483502" target="_blank" class="text-decoration-none text-body d-flex gap-2 align-items-start">
+          <i class="bi bi-calendar-event text-secondary mt-1 flex-shrink-0"></i>
+          <div>
+            <div class="fw-medium">Scheduler jobs</div>
+            <div class="text-muted small">Triggers tcgplayer-price-scraper daily at 08:00 UTC</div>
+          </div>
+        </a>
+      </li>
+    </ul>
+
+    <!-- BigQuery ------------------------------------------------------- -->
+    <div class="px-3 pt-2 pb-1 text-uppercase text-muted" style="font-size:.7rem;letter-spacing:.08em">BigQuery</div>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item list-group-item-action px-3 py-2">
+        <a href="https://console.cloud.google.com/bigquery?project=future-gadget-labs-483502&ws=!1m4!1m3!3m2!1sfuture-gadget-labs-483502!2scatalog" target="_blank" class="text-decoration-none text-body d-flex gap-2 align-items-start">
+          <i class="bi bi-table text-secondary mt-1 flex-shrink-0"></i>
+          <div>
+            <div class="fw-medium">catalog</div>
+            <div class="text-muted small">Reference tables — sealed_products, single_cards, set_pull_rates</div>
+          </div>
+        </a>
+      </li>
+      <li class="list-group-item list-group-item-action px-3 py-2">
+        <a href="https://console.cloud.google.com/bigquery?project=future-gadget-labs-483502&ws=!1m4!1m3!3m2!1sfuture-gadget-labs-483502!2smarket_data" target="_blank" class="text-decoration-none text-body d-flex gap-2 align-items-start">
+          <i class="bi bi-table text-secondary mt-1 flex-shrink-0"></i>
+          <div>
+            <div class="fw-medium">market_data</div>
+            <div class="text-muted small">TCGPlayer price history scraped daily; view: latest_tcgplayer_prices</div>
+          </div>
+        </a>
+      </li>
+      <li class="list-group-item list-group-item-action px-3 py-2">
+        <a href="https://console.cloud.google.com/bigquery?project=future-gadget-labs-483502&ws=!1m4!1m3!3m2!1sfuture-gadget-labs-483502!2sinventory" target="_blank" class="text-decoration-none text-body d-flex gap-2 align-items-start">
+          <i class="bi bi-table text-secondary mt-1 flex-shrink-0"></i>
+          <div>
+            <div class="fw-medium">inventory</div>
+            <div class="text-muted small">transactions table + catalog_products view (union of sealed &amp; cards)</div>
+          </div>
+        </a>
+      </li>
+    </ul>
+
+  </div>
+</div>
