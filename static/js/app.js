@@ -17,6 +17,22 @@ async function triggerSync(btn) {
   }
 }
 
+// Triggers a backend price sync and shows feedback on the button.
+async function syncPrices(btn) {
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Syncing…';
+  try {
+    await api('POST', '/sync/prices');
+    showToast('Price sync triggered — data will update shortly.', 'success');
+  } catch (e) {
+    showToast('Price sync failed: ' + e.message, 'danger');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
+}
+
 // Global toast helper
 function showToast(message, type = 'secondary') {
   let container = document.getElementById('toast-container');

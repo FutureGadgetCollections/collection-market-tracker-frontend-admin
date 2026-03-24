@@ -7,6 +7,10 @@
             data-bs-toggle="tooltip" title="Push the current BigQuery data to GCS and the GitHub data repo so all frontends see the latest records.">
       <i class="bi bi-cloud-upload me-1"></i>Sync
     </button>
+    <button id="btn-sync-prices" class="btn btn-outline-success btn-sm d-none" onclick="syncPrices(this)"
+            data-bs-toggle="tooltip" title="Export the latest TCGPlayer prices from BigQuery to GCS and the GitHub data repo.">
+      <i class="bi bi-currency-dollar me-1"></i>Sync Prices
+    </button>
     <div id="btn-refresh-group" class="btn-group btn-group-sm d-none" role="group">
       <button class="btn btn-outline-primary"    onclick="refreshItems('github')"
               data-bs-toggle="tooltip" title="Reload data from the GitHub data repo (fastest; reflects the last sync)."><i class="bi bi-github me-1"></i>GitHub</button>
@@ -78,6 +82,7 @@
             <th>Released</th>
             <th>MSRP</th>
             <th>Packs</th>
+            <th>Market Price</th>
             <th class="text-end pe-3">Actions</th>
           </tr>
         </thead>
@@ -217,6 +222,7 @@
       return;
     }
     document.getElementById('btn-sync').classList.remove('d-none');
+    document.getElementById('btn-sync-prices').classList.remove('d-none');
     document.getElementById('btn-bulk').classList.remove('d-none');
     document.getElementById('btn-add').classList.remove('d-none');
     document.getElementById('btn-refresh-group').classList.remove('d-none');
@@ -261,6 +267,7 @@
   }
 
   let allItems = [];
+  let priceMap = {};
 
   async function refreshItems(source) {
     const btns = document.querySelectorAll('#btn-refresh-group button');
@@ -271,10 +278,24 @@
 
   async function loadItems(source = 'github') {
     try {
-      let items;
-      if      (source === 'api') items = await api('GET', '/sealed-products');
-      else if (source === 'gcs') items = await loadFromGCS('data/sealed-products.json');
-      else                        items = await loadJsonData('data/sealed-products.json');
+      let items, prices;
+      if (source === 'api') {
+        [items, prices] = await Promise.all([
+          api('GET', '/sealed-products'),
+          loadJsonData('data/tcgplayer-latest-prices.json'),
+        ]);
+      } else if (source === 'gcs') {
+        [items, prices] = await Promise.all([
+          loadFromGCS('data/sealed-products.json'),
+          loadFromGCS('data/tcgplayer-latest-prices.json'),
+        ]);
+      } else {
+        [items, prices] = await Promise.all([
+          loadJsonData('data/sealed-products.json'),
+          loadJsonData('data/tcgplayer-latest-prices.json'),
+        ]);
+      }
+      priceMap = Object.fromEntries((prices || []).map(p => [String(p.tcgplayer_id), p]));
       document.getElementById('loading').classList.add('d-none');
       if (!items || items.length === 0) { document.getElementById('empty-state').classList.remove('d-none'); return; }
       allItems = items;
@@ -314,10 +335,18 @@
     ));
   }
 
+  function fmt$(v) { return v != null ? '$' + Number(v).toFixed(2) : '—'; }
+
   function renderItems(items) {
     document.getElementById('items-card').classList.remove('d-none');
     document.getElementById('empty-state').classList.add('d-none');
-    document.getElementById('items-tbody').innerHTML = items.map(p => `
+    document.getElementById('items-tbody').innerHTML = items.map(p => {
+      const price = p.tcgplayer_id ? priceMap[String(p.tcgplayer_id)] : null;
+      const priceCell = price && price.market_price != null
+        ? `<span class="text-success fw-medium price-pop" data-price-id="${escHtml(String(p.tcgplayer_id))}" style="cursor:default">${fmt$(price.market_price)}</span>` +
+          `<small class="d-block text-muted">${escHtml(String(price.date).slice(0, 10))}</small>`
+        : '<span class="text-muted">—</span>';
+      return `
       <tr>
         <td class="ps-3">${p.tcgplayer_id ? `<img src="https://tcgplayer-cdn.tcgplayer.com/product/${escHtml(String(p.tcgplayer_id))}_in_1000x1000.jpg" style="width:48px;height:48px;object-fit:contain;" loading="lazy" onerror="this.style.display='none'">` : ''}</td>
         <td class="fw-medium">${escHtml(p.product_type)}</td>
@@ -329,6 +358,7 @@
         <td class="text-muted small">${escHtml(p.release_date || '—')}</td>
         <td class="text-muted">${p.msrp != null ? '$' + Number(p.msrp).toFixed(2) : '—'}</td>
         <td class="text-muted">${escHtml(String(p.packs_per_product))}</td>
+        <td>${priceCell}</td>
         <td class="text-end pe-3">
           <button class="btn btn-sm btn-outline-secondary me-1" onclick='openEditModal(${JSON.stringify(p)})'>
             <i class="bi bi-pencil"></i>
@@ -338,8 +368,21 @@
             <i class="bi bi-trash3"></i>
           </button>
         </td>
-      </tr>
-    `).join('');
+      </tr>`;
+    }).join('');
+
+    document.querySelectorAll('.price-pop').forEach(el => {
+      const pr = priceMap[el.dataset.priceId];
+      if (!pr) return;
+      const lines = [];
+      if (pr.listed_median  != null) lines.push(`Listed Median: ${fmt$(pr.listed_median)}`);
+      if (pr.avg_daily_sold != null) lines.push(`Avg Daily Sold: ${Number(pr.avg_daily_sold).toFixed(2)}`);
+      if (pr.sellers        != null) lines.push(`Sellers: ${Math.round(pr.sellers)}`);
+      if (lines.length) new bootstrap.Popover(el, {
+        html: true, trigger: 'hover focus', title: 'TCGPlayer',
+        content: lines.join('<br>'),
+      });
+    });
   }
 
   function openCreateModal() {
