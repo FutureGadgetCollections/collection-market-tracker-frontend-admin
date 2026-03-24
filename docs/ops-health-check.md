@@ -1,18 +1,51 @@
 # Ops Health Check Runbook
 
 Use this runbook to verify all scheduled jobs and the API service are healthy.
-Run these checks daily, or whenever you suspect a job may have failed.
+
+## Running the Health Check
+
+**Ask Claude to run it:**
+> "Can you check if the jobs were all successful?"
+
+Claude will execute `scripts/health-check.sh`, interpret the results, and report any failures or warnings — no manual steps required.
+
+**Run it yourself:**
+```bash
+bash scripts/health-check.sh
+```
+
+The script checks all four areas below in sequence and prints a pass/warn/fail summary. Exits non-zero if any check fails.
 
 > **Project:** `future-gadget-labs-483502`
 > **Region:** `us-central1`
 
 ---
 
-## Prerequisites
+## What the Script Checks
 
-```bash
-gcloud config set project future-gadget-labs-483502
-```
+| # | Check | Tool |
+|---|-------|------|
+| 1 | Daily data sync — last execution passed | `gcloud run jobs executions list` |
+| 2 | GCS data files — all present and within max age | `gcloud storage ls -l` |
+| 3 | GitHub data repo — all files present, recent commit | `git log` |
+| 4 | Weekly price sync — last execution passed | `gcloud run jobs executions list` |
+| 5 | Daily price scraper — ran today and passed | `gcloud run jobs executions list` |
+| 6 | BigQuery — yesterday's rows in price history | `bq query` |
+| 7 | API service — Ready and `/healthz` returns 200 | `gcloud run services describe` + `curl` |
+| 8 | All Cloud Schedulers — ENABLED | `gcloud scheduler jobs describe` |
+
+If any check fails, the script automatically fetches the relevant error logs.
+
+---
+
+## Manual Reference
+
+The sections below document each check in detail for cases where you need to dig deeper than the script output.
+
+> **Prerequisites:**
+> ```bash
+> gcloud config set project future-gadget-labs-483502
+> ```
 
 ---
 
