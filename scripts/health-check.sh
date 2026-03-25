@@ -13,8 +13,9 @@ API_URL="https://collection-market-tracker-c2zyiz24hq-uc.a.run.app"
 GCS_BUCKET="gs://collection-tracker-data"
 
 # Max acceptable age in seconds for each file type
-MAX_AGE_CATALOG=$((48 * 3600))   # 48 hours
-MAX_AGE_PRICES=$((8 * 86400))    # 8 days
+# Catalog files only update on API mutations — 72h gives a full day of slack
+MAX_AGE_CATALOG=$((72 * 3600))   # 72 hours
+MAX_AGE_PRICES=$((8 * 86400))    # 8 days (weekly sync)
 
 # Colors
 GREEN='\033[0;32m'
@@ -32,12 +33,44 @@ fail() { echo -e "  ${RED}FAIL${RESET}  $1"; ((FAIL++)) || true; }
 warn() { echo -e "  ${YELLOW}WARN${RESET}  $1"; ((WARN++)) || true; }
 section() { echo -e "\n${BOLD}$1${RESET}"; }
 
+# Check Cloud Run job execution: pass/warn/fail based on COMPLETE count vs total tasks.
+# $1 = job name, $2 = "today" to require same-day run, anything else for any recent run
+check_job_execution() {
+  local JOB="$1" REQUIRE_TODAY="${2:-}"
+  local EXEC_OUT EXEC_NAME EXEC_TIME COMPLETE_COUNT TOTAL_COUNT
+
+  EXEC_OUT=$(gcloud run jobs executions list \
+    --job="$JOB" --region="$REGION" --limit=1 \
+    --format="csv[no-heading](name,completionTime,status.completedCount,spec.taskCount)" \
+    2>/dev/null || true)
+
+  if [[ -z "$EXEC_OUT" ]]; then
+    echo "__NOEXEC__"
+    return
+  fi
+
+  EXEC_NAME=$(echo "$EXEC_OUT" | cut -d',' -f1)
+  EXEC_TIME=$(echo "$EXEC_OUT" | cut -d',' -f2)
+  COMPLETE_COUNT=$(echo "$EXEC_OUT" | cut -d',' -f3)
+  TOTAL_COUNT=$(echo "$EXEC_OUT" | cut -d',' -f4)
+
+  # Job still running — completion time not yet set
+  if [[ -z "$EXEC_TIME" ]]; then
+    echo "__RUNNING__ $EXEC_NAME"
+    return
+  fi
+
+  if [[ "$COMPLETE_COUNT" == "$TOTAL_COUNT" && "$TOTAL_COUNT" -ge 1 ]]; then
+    echo "__SUCCESS__ $EXEC_NAME ($EXEC_TIME)"
+  else
+    echo "__FAILED__ $EXEC_NAME ($EXEC_TIME)"
+  fi
+}
+
 now_epoch() { date +%s; }
 
 gcs_epoch() {
-  # Parse "2026-03-24T01:39:08Z" style timestamp from gcloud storage ls -l
   local ts="$1"
-  # Remove trailing Z, replace T with space for date parsing
   ts="${ts%Z}"
   ts="${ts/T/ }"
   date -d "$ts UTC" +%s 2>/dev/null || date -j -f "%Y-%m-%d %H:%M:%S" "$ts" +%s 2>/dev/null || echo 0
@@ -61,62 +94,46 @@ gcloud config set project "$PROJECT" --quiet 2>/dev/null
 # ─────────────────────────────────────────────────────────────────────────────
 section "1. Daily Data Sync (collection-showcase-data-sync)"
 
-EXEC_OUT=$(gcloud run jobs executions list \
-  --job=collection-showcase-data-sync \
-  --region="$REGION" \
-  --limit=1 \
-  --format="csv[no-heading](name,completionTime,status.conditions[0].type,status.conditions[0].status)" \
-  2>/dev/null)
-
-if [[ -z "$EXEC_OUT" ]]; then
+RESULT=$(check_job_execution "collection-showcase-data-sync")
+EXEC_LABEL="${RESULT#* }"
+if [[ "$RESULT" == "__NOEXEC__" ]]; then
   fail "No executions found for collection-showcase-data-sync"
+elif [[ "$RESULT" == __RUNNING__* ]]; then
+  warn "collection-showcase-data-sync is currently running: $EXEC_LABEL"
+elif [[ "$RESULT" == __SUCCESS__* ]]; then
+  pass "Last execution succeeded: $EXEC_LABEL"
 else
-  EXEC_NAME=$(echo "$EXEC_OUT" | cut -d',' -f1)
-  EXEC_TIME=$(echo "$EXEC_OUT" | cut -d',' -f2)
-  EXEC_COND=$(echo "$EXEC_OUT" | cut -d',' -f3)
-  EXEC_STATUS=$(echo "$EXEC_OUT" | cut -d',' -f4)
-
-  # Check if Completed = True
-  if [[ "$EXEC_COND" == "Completed" && "$EXEC_STATUS" == "True" ]]; then
-    pass "Last execution succeeded: $EXEC_NAME ($EXEC_TIME)"
-  else
-    fail "Last execution FAILED: $EXEC_NAME ($EXEC_TIME)"
-    echo -e "       Fetching error logs..."
-    gcloud logging read \
-      "resource.type=cloud_run_job AND labels.\"run.googleapis.com/execution_name\"=${EXEC_NAME}" \
-      --limit=10 \
-      --format="value(timestamp,textPayload)" \
-      --project="$PROJECT" 2>/dev/null | grep -v '^$' | head -10 | sed 's/^/         /'
-  fi
+  fail "Last execution FAILED: $EXEC_LABEL"
+  EXEC_NAME=$(echo "$EXEC_LABEL" | awk '{print $1}')
+  echo -e "       Fetching error logs..."
+  gcloud logging read \
+    "resource.type=cloud_run_job AND labels.\"run.googleapis.com/execution_name\"=${EXEC_NAME}" \
+    --limit=10 --format="value(timestamp,textPayload)" \
+    --project="$PROJECT" 2>/dev/null | grep -v '^$' | head -10 | sed 's/^/         /'
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
 section "2. GCS Data Files (gs://collection-tracker-data/data/)"
 
 NOW=$(now_epoch)
+GCS_LS=$(gcloud storage ls -l "${GCS_BUCKET}/data/" 2>/dev/null || true)
 
-declare -A FILES_MAX_AGE=(
+# Core files — always expected (FAIL if missing or stale)
+declare -A CORE_FILES=(
   ["data/sealed-products.json"]=$MAX_AGE_CATALOG
   ["data/single-cards.json"]=$MAX_AGE_CATALOG
   ["data/set-pull-rates.json"]=$MAX_AGE_CATALOG
-  ["data/products.json"]=$MAX_AGE_CATALOG
-  ["data/transactions.json"]=$MAX_AGE_CATALOG
-  ["data/product-xirr.json"]=$MAX_AGE_CATALOG
-  ["data/portfolio-xirr.json"]=$MAX_AGE_CATALOG
   ["data/tcgplayer-latest-prices.json"]=$MAX_AGE_PRICES
   ["data/tcgplayer-price-history.json"]=$MAX_AGE_PRICES
 )
 
-GCS_LS=$(gcloud storage ls -l "${GCS_BUCKET}/data/" 2>/dev/null || true)
-
-for FILE in "${!FILES_MAX_AGE[@]}"; do
-  MAX="${FILES_MAX_AGE[$FILE]}"
+for FILE in "${!CORE_FILES[@]}"; do
+  MAX="${CORE_FILES[$FILE]}"
   ROW=$(echo "$GCS_LS" | grep "$FILE" || true)
   if [[ -z "$ROW" ]]; then
     fail "$FILE — NOT FOUND in GCS"
     continue
   fi
-  # gcloud storage ls -l format: "  <size>  <timestamp>  gs://..."
   TIMESTAMP=$(echo "$ROW" | awk '{print $2}')
   FILE_EPOCH=$(gcs_epoch "$TIMESTAMP")
   AGE=$(( NOW - FILE_EPOCH ))
@@ -129,6 +146,19 @@ for FILE in "${!FILES_MAX_AGE[@]}"; do
   fi
 done
 
+# Inventory files — only present after inventory mutations via the admin UI (WARN if missing)
+for FILE in data/products.json data/transactions.json data/product-xirr.json data/portfolio-xirr.json; do
+  ROW=$(echo "$GCS_LS" | grep "$FILE" || true)
+  if [[ -z "$ROW" ]]; then
+    warn "$FILE — not found (expected after first inventory mutation via admin UI)"
+  else
+    TIMESTAMP=$(echo "$ROW" | awk '{print $2}')
+    FILE_EPOCH=$(gcs_epoch "$TIMESTAMP")
+    AGE=$(( NOW - FILE_EPOCH ))
+    pass "$FILE — $(age_str "$AGE")"
+  fi
+done
+
 # ─────────────────────────────────────────────────────────────────────────────
 section "3. GitHub Data Repo (collection-market-tracker-data)"
 
@@ -136,9 +166,9 @@ DATA_REPO="../collection-market-tracker-data"
 if [[ -d "$DATA_REPO/.git" ]]; then
   pushd "$DATA_REPO" > /dev/null
   git fetch --quiet origin main 2>/dev/null || true
-  LAST_COMMIT_DATE=$(git log -1 --format="%ci" origin/main 2>/dev/null || git log -1 --format="%ci" 2>/dev/null)
-  LAST_COMMIT_MSG=$(git log -1 --format="%s" origin/main 2>/dev/null || git log -1 --format="%s" 2>/dev/null)
-  LAST_COMMIT_EPOCH=$(git log -1 --format="%ct" origin/main 2>/dev/null || git log -1 --format="%ct" 2>/dev/null)
+
+  LAST_COMMIT_MSG=$(git log -1 --format="%s" origin/main 2>/dev/null)
+  LAST_COMMIT_EPOCH=$(git log -1 --format="%ct" origin/main 2>/dev/null)
   AGE=$(( NOW - LAST_COMMIT_EPOCH ))
   AGE_LABEL=$(age_str "$AGE")
 
@@ -148,14 +178,28 @@ if [[ -d "$DATA_REPO/.git" ]]; then
     warn "Last commit: \"$LAST_COMMIT_MSG\" — $AGE_LABEL (may be stale if no recent edits)"
   fi
 
-  # Check all expected data files exist
-  for F in sealed-products.json single-cards.json set-pull-rates.json \
-            products.json transactions.json product-xirr.json portfolio-xirr.json \
-            tcgplayer-latest-prices.json tcgplayer-price-history.json; do
-    if [[ -f "data/$F" ]]; then
-      pass "data/$F present"
+  # Core catalog + price files — check against remote tracking branch (no local pull needed)
+  for F in sealed-products.json single-cards.json set-pull-rates.json tcgplayer-latest-prices.json; do
+    if git show "origin/main:data/$F" > /dev/null 2>&1; then
+      pass "data/$F present on GitHub"
     else
-      fail "data/$F MISSING from repo"
+      fail "data/$F MISSING from GitHub"
+    fi
+  done
+
+  # Price history — on GCS but GitHub push has historically been incomplete; WARN not FAIL
+  if git show "origin/main:data/tcgplayer-price-history.json" > /dev/null 2>&1; then
+    pass "data/tcgplayer-price-history.json present on GitHub"
+  else
+    warn "data/tcgplayer-price-history.json missing from GitHub (exists on GCS — trigger /sync/history to push)"
+  fi
+
+  # Inventory files — only present after first inventory mutations (WARN not FAIL)
+  for F in products.json transactions.json product-xirr.json portfolio-xirr.json; do
+    if git show "origin/main:data/$F" > /dev/null 2>&1; then
+      pass "data/$F present on GitHub"
+    else
+      warn "data/$F not on GitHub (expected after first inventory mutation via admin UI)"
     fi
   done
   popd > /dev/null
@@ -166,69 +210,55 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 section "4. Weekly Price Sync (tcgplayer-price-sync)"
 
-EXEC_OUT=$(gcloud run jobs executions list \
-  --job=tcgplayer-price-sync \
-  --region="$REGION" \
-  --limit=1 \
-  --format="csv[no-heading](name,completionTime,status.conditions[0].type,status.conditions[0].status)" \
-  2>/dev/null)
-
-if [[ -z "$EXEC_OUT" ]]; then
-  warn "No executions found for tcgplayer-price-sync (job may be new; next scheduled run is Monday 10:00 UTC)"
+RESULT=$(check_job_execution "tcgplayer-price-sync")
+EXEC_LABEL="${RESULT#* }"
+if [[ "$RESULT" == "__NOEXEC__" ]]; then
+  warn "No executions found for tcgplayer-price-sync (runs Mondays 10:00 UTC)"
+elif [[ "$RESULT" == __RUNNING__* ]]; then
+  warn "tcgplayer-price-sync is currently running: $EXEC_LABEL"
+elif [[ "$RESULT" == __SUCCESS__* ]]; then
+  pass "Last execution succeeded: $EXEC_LABEL"
 else
-  EXEC_NAME=$(echo "$EXEC_OUT" | cut -d',' -f1)
-  EXEC_TIME=$(echo "$EXEC_OUT" | cut -d',' -f2)
-  EXEC_COND=$(echo "$EXEC_OUT" | cut -d',' -f3)
-  EXEC_STATUS=$(echo "$EXEC_OUT" | cut -d',' -f4)
-
-  if [[ "$EXEC_COND" == "Completed" && "$EXEC_STATUS" == "True" ]]; then
-    pass "Last execution succeeded: $EXEC_NAME ($EXEC_TIME)"
-  else
-    fail "Last execution FAILED: $EXEC_NAME ($EXEC_TIME)"
-    echo -e "       Fetching error logs..."
-    gcloud logging read \
-      "resource.type=cloud_run_job AND labels.\"run.googleapis.com/execution_name\"=${EXEC_NAME}" \
-      --limit=10 \
-      --format="value(timestamp,textPayload)" \
-      --project="$PROJECT" 2>/dev/null | grep -v '^$' | head -10 | sed 's/^/         /'
-  fi
+  fail "Last execution FAILED: $EXEC_LABEL"
+  EXEC_NAME=$(echo "$EXEC_LABEL" | awk '{print $1}')
+  echo -e "       Fetching error logs..."
+  gcloud logging read \
+    "resource.type=cloud_run_job AND labels.\"run.googleapis.com/execution_name\"=${EXEC_NAME}" \
+    --limit=10 --format="value(timestamp,textPayload)" \
+    --project="$PROJECT" 2>/dev/null | grep -v '^$' | head -10 | sed 's/^/         /'
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
 section "5. Daily Price Scraper (tcgplayer-price-scraper)"
 
-EXEC_OUT=$(gcloud run jobs executions list \
-  --job=tcgplayer-price-scraper \
-  --region="$REGION" \
-  --limit=1 \
-  --format="csv[no-heading](name,completionTime,status.conditions[0].type,status.conditions[0].status)" \
-  2>/dev/null)
+RESULT=$(check_job_execution "tcgplayer-price-scraper")
+EXEC_LABEL="${RESULT#* }"
+TODAY=$(date -u '+%Y-%m-%d')
 
-if [[ -z "$EXEC_OUT" ]]; then
-  fail "No executions found for tcgplayer-price-scraper — has the Cloud Scheduler (tcgplayer-price-daily) been configured?"
-else
-  EXEC_NAME=$(echo "$EXEC_OUT" | cut -d',' -f1)
-  EXEC_TIME=$(echo "$EXEC_OUT" | cut -d',' -f2)
-  EXEC_COND=$(echo "$EXEC_OUT" | cut -d',' -f3)
-  EXEC_STATUS=$(echo "$EXEC_OUT" | cut -d',' -f4)
-
-  # Check it ran today (after 08:00 UTC)
-  TODAY=$(date -u '+%Y-%m-%d')
-  if [[ "$EXEC_TIME" == "$TODAY"* ]]; then
-    if [[ "$EXEC_COND" == "Completed" && "$EXEC_STATUS" == "True" ]]; then
-      pass "Last execution succeeded today: $EXEC_NAME ($EXEC_TIME)"
-    else
-      fail "Execution ran today but FAILED: $EXEC_NAME ($EXEC_TIME)"
-      echo -e "       Fetching error logs..."
-      gcloud logging read \
-        "resource.type=cloud_run_job AND labels.\"run.googleapis.com/execution_name\"=${EXEC_NAME}" \
-        --limit=15 \
-        --format="value(timestamp,textPayload)" \
-        --project="$PROJECT" 2>/dev/null | grep -v '^$' | head -15 | sed 's/^/         /'
-    fi
+if [[ "$RESULT" == "__NOEXEC__" ]]; then
+  SCHED_EXISTS=$(gcloud scheduler jobs describe tcgplayer-price-daily \
+    --location="$REGION" --project="$PROJECT" --format="value(state)" 2>/dev/null || true)
+  if [[ "$SCHED_EXISTS" == "ENABLED" ]]; then
+    warn "No executions yet — scheduler is configured and will run at next 08:00 UTC"
   else
-    warn "Last execution was NOT today: $EXEC_NAME ($EXEC_TIME) — may not have run yet, or missed"
+    fail "No executions found and scheduler tcgplayer-price-daily is missing or disabled"
   fi
+elif [[ "$RESULT" == __RUNNING__* ]]; then
+  pass "tcgplayer-price-scraper is currently running: $EXEC_LABEL"
+elif [[ "$RESULT" == __SUCCESS__* ]]; then
+  if [[ "$EXEC_LABEL" == *"$TODAY"* ]]; then
+    pass "Ran and succeeded today: $EXEC_LABEL"
+  else
+    warn "Last run succeeded but NOT today: $EXEC_LABEL — may not have run yet"
+  fi
+else
+  fail "Last execution FAILED: $EXEC_LABEL"
+  EXEC_NAME=$(echo "$EXEC_LABEL" | awk '{print $1}')
+  echo -e "       Fetching error logs..."
+  gcloud logging read \
+    "resource.type=cloud_run_job AND labels.\"run.googleapis.com/execution_name\"=${EXEC_NAME}" \
+    --limit=15 --format="value(timestamp,textPayload)" \
+    --project="$PROJECT" 2>/dev/null | grep -v '^$' | head -15 | sed 's/^/         /'
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -270,11 +300,12 @@ else
   fail "Cloud Run service is NOT ready ($COND_TYPE=$COND_STATUS)"
 fi
 
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${API_URL}/healthz" 2>/dev/null || echo "000")
+# Note: /healthz is intercepted by Cloud Run infrastructure. Use /health.
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${API_URL}/health" 2>/dev/null || echo "000")
 if [[ "$HTTP_CODE" == "200" ]]; then
-  pass "/healthz returned $HTTP_CODE"
+  pass "/health returned $HTTP_CODE"
 else
-  fail "/healthz returned $HTTP_CODE (expected 200)"
+  fail "/health returned $HTTP_CODE (expected 200)"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────

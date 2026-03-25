@@ -261,11 +261,13 @@ gcloud run services describe collection-market-tracker \
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}" \
-  https://collection-market-tracker-c2zyiz24hq-uc.a.run.app/healthz
+  https://collection-market-tracker-c2zyiz24hq-uc.a.run.app/health
 ```
 
 **Pass:** `200`.
 **Fail:** Any non-200 response, or connection timeout.
+
+> Note: `/healthz` is intercepted by Cloud Run's serving infrastructure and returns a Google 404 before reaching the app. Use `/health` instead.
 
 ### 4c. Check recent error rate (optional)
 
