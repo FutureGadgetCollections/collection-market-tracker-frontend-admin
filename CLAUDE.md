@@ -13,6 +13,7 @@ Run `./setup.sh` after cloning this repo to clone all sibling repos to the corre
 | Repo | GitHub | Local Path | Purpose |
 |------|--------|-----------|---------|
 | Frontend admin (this repo) | `FutureGadgetCollections/collection-market-tracker-frontend-admin` | `../collection-market-tracker-frontend-admin` | Hugo admin UI — CRUD via backend API |
+| **Public frontend** | `FutureGadgetCollections/collection-market-tracker-frontend` | `../collection-market-tracker-frontend` | Hugo public site — read-only; sealed products, single cards, pull rates; no auth |
 | Backend (Go / Cloud Run) | `FutureGadgetCollections/collection-market-tracker-backend` | `../collection-market-tracker-backend` | API microservice + scheduled Cloud Run jobs |
 | Data files (static JSON) | `FutureGadgetCollections/collection-market-tracker-data` | `../collection-market-tracker-data` | JSON published by backend; read by frontends |
 | Showcase frontend (public) | `FutureGadgetCollections/collection-showcase-frontend` | `../collection-showcase-frontend` | Public-facing Hugo site; read-only, no auth |

@@ -44,6 +44,7 @@ Verifies the new revision is serving 100% of traffic, `/health` returns 200, con
 | 6 | BigQuery — yesterday's rows in price history | `bq query` |
 | 7 | API service — Ready and `/healthz` returns 200 | `gcloud run services describe` + `curl` |
 | 8 | All Cloud Schedulers — ENABLED | `gcloud scheduler jobs describe` |
+| 9 | Public frontend — GitHub Pages returns 200 | `curl` |
 
 If any check fails, the script automatically fetches the relevant error logs.
 

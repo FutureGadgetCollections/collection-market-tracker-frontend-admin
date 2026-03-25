@@ -330,6 +330,17 @@ for JOB in collection-showcase-daily-sync sync-tcgplayer-prices-weekly tcgplayer
 done
 
 # ─────────────────────────────────────────────────────────────────────────────
+section "9. GitHub Pages — Public Frontend"
+
+PUBLIC_FRONTEND_URL="https://futuregadgetcollections.github.io/collection-market-tracker-frontend/"
+HTTP_PF=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$PUBLIC_FRONTEND_URL" 2>/dev/null || echo "000")
+if [[ "$HTTP_PF" == "200" ]]; then
+  pass "Public frontend is up: $PUBLIC_FRONTEND_URL"
+else
+  warn "Public frontend returned $HTTP_PF — may not be deployed yet: $PUBLIC_FRONTEND_URL"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
 echo -e "\n${BOLD}─────────────────────────────────────────────────────${RESET}"
 echo -e "${BOLD}Summary${RESET}"
 echo -e "  ${GREEN}PASS${RESET}  $PASS"
