@@ -2,19 +2,30 @@
 
 Use this runbook to verify all scheduled jobs and the API service are healthy.
 
-## Running the Health Check
+## Scripts
+
+### Health Check (ops monitoring)
 
 **Ask Claude to run it:**
 > "Can you check if the jobs were all successful?"
 
 Claude will execute `scripts/health-check.sh`, interpret the results, and report any failures or warnings — no manual steps required.
 
-**Run it yourself:**
 ```bash
 bash scripts/health-check.sh
 ```
 
-The script checks all four areas below in sequence and prints a pass/warn/fail summary. Exits non-zero if any check fails.
+Checks all jobs, GCS/GitHub data files, BQ price data, API service, and schedulers. Exits non-zero on any failure.
+
+### Post-Deploy Validation
+
+After deploying a new version of the API service, run:
+
+```bash
+bash scripts/post-deploy-check.sh
+```
+
+Verifies the new revision is serving 100% of traffic, `/health` returns 200, config is sane, and all three public read endpoints return non-empty data. Prints a rollback command if anything fails. Completes in ~10 seconds.
 
 > **Project:** `future-gadget-labs-483502`
 > **Region:** `us-central1`
