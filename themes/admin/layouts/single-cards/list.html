@@ -19,6 +19,12 @@
       <button class="btn btn-outline-secondary"  onclick="refreshItems('api')"
               data-bs-toggle="tooltip" title="Reload data live from the backend API and BigQuery (always up-to-date, but slower)."><i class="bi bi-plug me-1"></i>API</button>
     </div>
+    <span data-bs-toggle="tooltip" title="Fetch all cards for a set by pasting its TCGPlayer search URL.">
+      <button id="btn-fetch-tcg" class="btn btn-outline-success btn-sm d-none"
+              data-bs-toggle="modal" data-bs-target="#fetchTCGModal">
+        <i class="bi bi-cloud-download me-1"></i>Fetch from TCGPlayer
+      </button>
+    </span>
     <span data-bs-toggle="tooltip" title="Paste a JSON array to create multiple single cards at once.">
       <button id="btn-bulk" class="btn btn-outline-primary btn-sm d-none"
               data-bs-toggle="modal" data-bs-target="#bulkModal" onclick="openBulkModal()">
@@ -167,6 +173,32 @@
   </div>
 </div>
 
+<!-- Fetch from TCGPlayer modal -->
+<div class="modal fade" id="fetchTCGModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title"><i class="bi bi-cloud-download me-2 text-success"></i>Fetch from TCGPlayer</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3">Paste a TCGPlayer set search URL. The backend will scrape all cards and insert them into the catalog — no duplicates.</p>
+        <label class="form-label small fw-medium" for="tcg-fetch-url">TCGPlayer Set URL</label>
+        <input type="url" class="form-control" id="tcg-fetch-url"
+               placeholder="https://www.tcgplayer.com/search/pokemon/sv08-surging-sparks?productLineName=pokemon&setName=sv08-surging-sparks&productTypeName=Cards">
+        <div id="tcg-fetch-error"  class="alert alert-danger  py-2 small d-none mt-2"></div>
+        <div id="tcg-fetch-result" class="alert alert-success py-2 small d-none mt-2"></div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-success btn-sm" id="tcg-fetch-btn" onclick="fetchFromTCGPlayer()">
+          <i class="bi bi-cloud-download me-1"></i>Fetch Cards
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Delete confirm -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
   <div class="modal-dialog modal-sm">
@@ -207,13 +239,50 @@
     }
     document.getElementById('btn-sync').classList.remove('d-none');
     document.getElementById('btn-sync-prices').classList.remove('d-none');
+    document.getElementById('btn-fetch-tcg').classList.remove('d-none');
     document.getElementById('btn-bulk').classList.remove('d-none');
     document.getElementById('btn-add').classList.remove('d-none');
     document.getElementById('btn-refresh-group').classList.remove('d-none');
     await loadItems();
   });
 
-  const bulkModal = new bootstrap.Modal(document.getElementById('bulkModal'));
+  const bulkModal     = new bootstrap.Modal(document.getElementById('bulkModal'));
+  const fetchTCGModal = new bootstrap.Modal(document.getElementById('fetchTCGModal'));
+
+  document.getElementById('fetchTCGModal').addEventListener('show.bs.modal', () => {
+    document.getElementById('tcg-fetch-url').value = '';
+    document.getElementById('tcg-fetch-error').classList.add('d-none');
+    document.getElementById('tcg-fetch-result').classList.add('d-none');
+    document.getElementById('tcg-fetch-btn').disabled = false;
+    document.getElementById('tcg-fetch-btn').innerHTML = '<i class="bi bi-cloud-download me-1"></i>Fetch Cards';
+  });
+
+  async function fetchFromTCGPlayer() {
+    const url    = document.getElementById('tcg-fetch-url').value.trim();
+    const errEl  = document.getElementById('tcg-fetch-error');
+    const resEl  = document.getElementById('tcg-fetch-result');
+    const btn    = document.getElementById('tcg-fetch-btn');
+    errEl.classList.add('d-none');
+    resEl.classList.add('d-none');
+    if (!url) { errEl.textContent = 'URL is required.'; errEl.classList.remove('d-none'); return; }
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Fetching…';
+    try {
+      const data = await api('POST', '/single-cards/fetch-from-tcgplayer', { url });
+      resEl.innerHTML =
+        `<strong>${data.inserted}</strong> cards inserted, <strong>${data.skipped}</strong> skipped ` +
+        `(${data.game} / ${data.set_code})<br>` +
+        `Rarities: <code>${(data.rarities || []).sort().join(', ')}</code>`;
+      resEl.classList.remove('d-none');
+      btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Done';
+      if (data.inserted > 0) await loadItems('api');
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.classList.remove('d-none');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-cloud-download me-1"></i>Fetch Cards';
+    }
+  }
 
   function openBulkModal() {
     document.getElementById('bulk-input').value = '';
