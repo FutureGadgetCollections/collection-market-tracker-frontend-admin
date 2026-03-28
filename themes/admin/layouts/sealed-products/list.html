@@ -79,6 +79,7 @@
             <th>Product Type</th>
             <th>Game</th>
             <th>Era / Set</th>
+            <th>TCG ID</th>
             <th>Released</th>
             <th>MSRP</th>
             <th>Packs</th>
@@ -355,6 +356,7 @@
           <span class="d-block">${escHtml(p.era)}</span>
           <span class="small text-secondary">${escHtml(p.set_code)}</span>
         </td>
+        <td class="text-muted small">${p.tcgplayer_id ? `<code>${escHtml(String(p.tcgplayer_id))}</code>` : '—'}</td>
         <td class="text-muted small">${escHtml(p.release_date || '—')}</td>
         <td class="text-muted">${p.msrp != null ? '$' + Number(p.msrp).toFixed(2) : '—'}</td>
         <td class="text-muted">${escHtml(String(p.packs_per_product))}</td>
