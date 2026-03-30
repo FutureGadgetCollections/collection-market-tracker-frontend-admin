@@ -38,6 +38,23 @@
   <p class="text-muted mt-2">No pull rate data yet.</p>
 </div>
 
+<!-- Page tabs -->
+<ul class="nav nav-tabs mb-3" id="page-tabs">
+  <li class="nav-item">
+    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-data">
+      <i class="bi bi-table me-1"></i>Data
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-calc">
+      <i class="bi bi-calculator me-1"></i>Calculator
+    </button>
+  </li>
+</ul>
+
+<div class="tab-content">
+<div class="tab-pane fade show active" id="tab-data">
+
 <!-- Filters -->
 <div class="card shadow-sm border-0 d-none mb-3" id="filters-card">
   <div class="card-body py-2">
@@ -72,8 +89,9 @@
             <th>Rarity</th>
             <th>Rate / Pack</th>
             <th>Unique Cards</th>
-            <th>Card Rate</th>
-            <th>Master Score</th>
+            <th title="Packs needed to complete this rarity at the 50th percentile (Gumbel coupon-collector)">p50</th>
+            <th title="Packs needed to complete this rarity at the 75th percentile (Gumbel coupon-collector)">p75</th>
+            <th title="Packs needed to complete this rarity at the 90th percentile (Gumbel coupon-collector)">p90</th>
             <th class="text-end pe-3">Actions</th>
           </tr>
         </thead>
@@ -82,6 +100,55 @@
     </div>
   </div>
 </div>
+
+</div> <!-- end tab-data -->
+
+<!-- Calculator tab -->
+<div class="tab-pane fade" id="tab-calc">
+  <p class="text-muted small mb-3">Select a set and rarity to calculate pack odds, expected pulls, and completion probability.</p>
+
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-body py-2">
+      <div class="row g-2">
+        <div class="col-sm-6">
+          <select class="form-select form-select-sm" id="calc-filter-era" onchange="calcOnEraChange()">
+            <option value="">All Eras</option>
+          </select>
+        </div>
+        <div class="col-sm-6">
+          <select class="form-select form-select-sm" id="calc-filter-set" onchange="calcOnSetChange()">
+            <option value="">Select Set</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0 d-none" id="calc-card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3">Rank</th>
+              <th>Rarity</th>
+              <th>Rate/pack</th>
+              <th>Unique cards</th>
+              <th>Hits/box</th>
+              <th title="Packs to collect all unique cards of this rarity at 50th percentile">p50 (packs)</th>
+              <th title="Packs to collect all unique cards of this rarity at 75th percentile">p75 (packs)</th>
+              <th title="Packs to collect all unique cards of this rarity at 90th percentile">p90 (packs)</th>
+              <th title="Expected unique cards of this rarity from 1 box (36 packs)">E[unique]/box</th>
+            </tr>
+          </thead>
+          <tbody id="calc-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div> <!-- end tab-calc -->
+
+</div> <!-- end tab-content -->
 
 <!-- Create / Edit Modal -->
 <div class="modal fade" id="itemModal" tabindex="-1">
@@ -307,8 +374,7 @@
         <td class="text-muted">${escHtml(r.rarity)}</td>
         <td class="fw-medium">${fmtRate(r.pull_rate_per_pack)}</td>
         <td class="text-muted">${r.unique_card_count != null ? r.unique_card_count : '—'}</td>
-        <td class="text-muted">${r.individual_card_pull_rate != null ? fmtRate(r.individual_card_pull_rate) : '—'}</td>
-        <td class="text-muted">${r.master_difficulty_score != null ? r.master_difficulty_score : '—'}</td>
+        ${fmtPercentileCells(r)}
         <td class="text-end pe-3">
           <button class="btn btn-sm btn-outline-secondary me-1" onclick='openEditModal(${JSON.stringify(r)})'>
             <i class="bi bi-pencil"></i>
@@ -413,5 +479,93 @@
 
   function escHtml(s) { const d = document.createElement('div'); d.appendChild(document.createTextNode(String(s))); return d.innerHTML; }
   function fmtRate(v) { return v != null ? (Number(v) * 100).toFixed(3) + '%' : '—'; }
+
+  // Gumbel coupon-collector approximation.
+  // packs(p) = (H_n - ln(-ln(p))) / q
+  // where H_n = harmonic number, q = individual card pull rate = pull_rate_per_pack / unique_card_count
+  function harmonicNumber(n) {
+    let h = 0;
+    for (let i = 1; i <= n; i++) h += 1 / i;
+    return h;
+  }
+
+  function gumbelPacks(pullRatePerPack, uniqueCardCount, percentile) {
+    if (!pullRatePerPack || !uniqueCardCount || uniqueCardCount < 1) return null;
+    const q  = pullRatePerPack / uniqueCardCount;
+    const hn = harmonicNumber(uniqueCardCount);
+    return Math.round((hn - Math.log(-Math.log(percentile))) / q);
+  }
+
+  function fmtPercentileCells(r) {
+    const p50 = gumbelPacks(r.pull_rate_per_pack, r.unique_card_count, 0.50);
+    const p75 = gumbelPacks(r.pull_rate_per_pack, r.unique_card_count, 0.75);
+    const p90 = gumbelPacks(r.pull_rate_per_pack, r.unique_card_count, 0.90);
+    const fmt = v => v != null ? v.toLocaleString() : '<span class="text-muted">—</span>';
+    return `<td class="text-muted">${fmt(p50)}</td><td class="text-muted">${fmt(p75)}</td><td class="text-muted">${fmt(p90)}</td>`;
+  }
+
+  // ── Calculator tab ────────────────────────────────────────────────────
+
+  // ── Calculator tab ────────────────────────────────────────────────────
+
+  function populateCalcFilters() {
+    const eras = [...new Set(allItems.map(r => r.era).filter(Boolean))].sort();
+    const sel  = document.getElementById('calc-filter-era');
+    sel.innerHTML = '<option value="">All Eras</option>' +
+      eras.map(e => `<option value="${escHtml(e)}">${escHtml(e)}</option>`).join('');
+  }
+
+  function calcOnEraChange() {
+    const era  = document.getElementById('calc-filter-era').value;
+    const rows = era ? allItems.filter(r => r.era === era) : allItems;
+    const sets = [...new Map(rows.map(r => [r.set_code, r.set_name])).entries()].sort((a,b) => a[0].localeCompare(b[0]));
+    document.getElementById('calc-filter-set').innerHTML = '<option value="">Select Set</option>' +
+      sets.map(([code, name]) => `<option value="${escHtml(code)}">${escHtml(name)}</option>`).join('');
+    document.getElementById('calc-card').classList.add('d-none');
+  }
+
+  function calcOnSetChange() {
+    const era     = document.getElementById('calc-filter-era').value;
+    const setCode = document.getElementById('calc-filter-set').value;
+    if (!setCode) { document.getElementById('calc-card').classList.add('d-none'); return; }
+
+    const rows = allItems
+      .filter(r => (!era || r.era === era) && r.set_code === setCode)
+      .sort((a, b) => (a.rarity_rank ?? 999) - (b.rarity_rank ?? 999));
+
+    document.getElementById('calc-card').classList.remove('d-none');
+    document.getElementById('calc-tbody').innerHTML = rows.map(r => {
+      const P = r.pull_rate_per_pack, N = r.unique_card_count;
+      const p50 = calcGumbelPacks(P, N, 0.50);
+      const p75 = calcGumbelPacks(P, N, 0.75);
+      const p90 = calcGumbelPacks(P, N, 0.90);
+      const hitsPerBox = P ? (P * 36).toFixed(2) : '—';
+      const expUniq    = (P && N) ? (N * (1 - Math.pow(1 - P/N, 36))).toFixed(2) : '—';
+      const fmtPacks   = v => v != null ? v.toLocaleString() : '—';
+      const rank       = r.rarity_rank != null ? `<span class="badge bg-secondary">#${r.rarity_rank}</span>` : '—';
+      return `<tr>
+        <td class="ps-3">${rank}</td>
+        <td class="fw-medium">${escHtml(r.rarity)}</td>
+        <td>${fmtRate(P)}</td>
+        <td>${N ?? '—'}</td>
+        <td>${hitsPerBox}</td>
+        <td class="fw-medium text-primary">${fmtPacks(p50)}</td>
+        <td>${fmtPacks(p75)}</td>
+        <td>${fmtPacks(p90)}</td>
+        <td>${expUniq}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function calcGumbelPacks(rate, n, pct) {
+    if (!rate || !n) return null;
+    const q = rate / n;
+    return Math.round((harmonicNumber(n) - Math.log(-Math.log(pct))) / q);
+  }
+
+  // Populate calc filters when calc tab is shown
+  document.querySelector('[data-bs-target="#tab-calc"]').addEventListener('shown.bs.tab', () => {
+    if (allItems.length) populateCalcFilters();
+  });
 </script>
 {{ end }}
