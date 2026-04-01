@@ -13,6 +13,7 @@ repos=(
   "collection-market-tracker-backend"
   "collection-market-tracker-data"
   "collection-showcase-frontend"
+  "collection-market-tracker-ev-simulator"
 )
 
 echo "Cloning sibling repos into: $PARENT_DIR"
