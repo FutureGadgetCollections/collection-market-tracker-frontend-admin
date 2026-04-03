@@ -71,6 +71,7 @@ The backend has three distinct concerns:
 | `sealed_products` | Sealed product catalog — PK `(game, set_code, product_type)` |
 | `single_cards` | Single card catalog — PK `(game, set_code, card_number)` |
 | `set_pull_rates` | Pull rate data — PK `(set_code, rarity)` |
+| `pack_slots` | Per-slot probability distributions for booster products — PK `(game, set_code, product_type, slot_index)`. Columns: `slot_name`, `is_foil`, `p_common/uncommon/rare/mythic/special` (sum to ~1.0 per slot), `card_pool`, `notes`. Used for EV calculation and pack opening simulation. Populated by `scripts/catalog/create_pack_slots_table.py`. |
 
 ### Pull rate coverage & pack construction
 
@@ -80,6 +81,7 @@ The backend has three distinct concerns:
 | One Piece | op01–op14 (Main Series) | 12 cards: 7C + 3UC + 1 DON!! + 1 hit slot (R/SR/SEC) | same |
 | Pokemon | sv01–sv10 + sub-sets (SV era) | 10 cards: 4C + 3UC + 2 reverse holo + 1 holo | same |
 | Pokemon | swsh01–swsh12 + sub-sets (SWSH era) | 10 cards: 5C + 3UC + 1 reverse holo + 1 holo | same |
+| MTG | tla (Avatar: The Last Airbender) | 14 cards: 6C + 3UC + 1 wildcard + 1 R/M + 1 foil + 1 land + 1 token | same (aggregated) + `create_pack_slots_table.py` (per-slot) |
 | One Piece | eb01–eb03, prb01–prb02 | different structure — not yet researched | — |
 | Pokemon | older eras (XY, SM, DP, Base, etc.) | vary significantly per era — not yet added | — |
 
@@ -112,7 +114,68 @@ Target variables: `log_return_1yr` = `log(price_1yr / market_price)`, same for 2
 
 **TODO:** `ml_price_features_singles` — separate ML table for individual cards; adds `card_number`, `rarity`, `card_pct_of_set_value`. Singles price scraper should run **weekly** (not daily).
 
+## MTG TLA Set Details (Avatar: The Last Airbender)
+
+| Field | Value |
+|-------|-------|
+| Set code | `tla` |
+| Game | `mtg` |
+| Era | `Universes Beyond` |
+| Release date | 2025-11-21 |
+| Base set size | 286 cards: 96 commons (81 draftable), 110 uncommons, 60 rares, 20 mythics |
+| Products | play-booster-box (30 packs, TCGPlayer 648643), collector-booster-box (12, 648650), jumpstart-booster-box (24, 648679) |
+| Pull rates source | magic.wizards.com/en/news/feature/collecting-avatar-the-last-airbender |
+| Single cards | Fetch via `fetch_single_cards.py` with TCGPlayer magic/avatar-the-last-airbender URL; game slug "magic" maps to our "mtg" — script will prompt for set_code, enter `tla` |
+
+**Play Booster slot breakdown (14 cards — 13 game cards + 1 token):**
+
+| Slot | Name | C | U | R | M | Special | Foil | Pool |
+|------|------|---|---|---|---|---------|------|------|
+| 1–6 | common_1–6 | 96.2% | — | — | — | 3.85% (source material) | No | 81 draftable commons |
+| 7–9 | uncommon_1–3 | — | 96.4% | — | — | 3.6% (scene cards) | No | 110 uncommons |
+| 10 | wildcard | 4.2% | 74.1% | 16.7% | 2.6% | 2.4% | No | all main set |
+| 11 | rare_mythic | — | — | 80% | 12.6% | 7.4% (booster fun) | No | main rares/mythics |
+| 12 | foil | 53.9% | 36.7% | 6.7% | 1.2% | 1.5% | Yes | all main set |
+| 13 | land | — | — | — | — | 100% | No | land pool |
+
+**Aggregated pull rates per play booster** (stored in `set_pull_rates`):
+- common: ~6.35 | uncommon: ~4.00 | rare: ~1.034 | mythic: ~0.164
+
+Per-slot data in `catalog.pack_slots` — query via MCP `catalog_pack_slots(game='mtg', set_code='tla')`.
+
 ## Open TODOs
+
+### Self-hosted PostgreSQL database (TODO)
+
+Goal: host a PostgreSQL instance on Proxmox as the primary DB for frontends, with BQ as source of truth and backup.
+
+- BQ is source of truth; PG is synced on every BQ write (dual-write from Go API)
+- Tables to mirror: `catalog.sealed_products`, `catalog.single_cards`, `catalog.set_pull_rates`, `catalog.pack_slots`, `market_data.tcgplayer_price_history`, `market_data.pricecharting_price_history`, `market_data.set_market_metrics`
+- ML tables (`ml_price_features_sealed`) stay in BQ only
+- Go API queries PG primarily; Cloud Run fallback still hits BQ
+- PG schema should match BQ grain/column names exactly for easy sync
+- Steps: design PG schema DDL → add PG dual-write to Go API → initial backfill from BQ → update frontend data source priority
+
+### Expected Value (EV) tab — admin panel (IN PROGRESS)
+
+Goal: add an "Expected Value" tab to the admin panel as a staging ground for the EV feature before it's spun into its own repo/frontend (like `collection-market-tracker-ev-simulator`).
+
+Starting with MTG Avatar: The Last Airbender (TLA) play booster as the first set.
+
+Prerequisites completed:
+- `catalog.sealed_products`: TLA products added (play/collector/jumpstart booster boxes)
+- `catalog.pack_slots`: TLA play booster slot breakdown created
+- `catalog.set_pull_rates`: TLA aggregated rates added, `unique_card_count` populated (81C/110U/60R/20M)
+- `catalog.single_cards`: 475 TLA cards fetched (game fixed from `magic` → `mtg`)
+- `market_data.tcgplayer_price_history`: 449/475 TLA card price snapshots fetched (2026-04-02)
+  - **TODO:** Retry 26 failed cards (TCGPlayer 403 rate limit). Use `backfill_set.py mtg tla 3` in `scripts/tcgplayer_prices/`.
+
+Next steps:
+1. ~~Fetch TLA single cards into `catalog.single_cards`~~ ✅ DONE
+2. ~~Run TCGPlayer price scraper backfill for TLA cards~~ ✅ 449/475 DONE (26 pending retry)
+3. Add "Expected Value" tab to admin panel — shows EV breakdown per set/product type
+4. EV formula: `pack_ev = Σ(pull_rate_per_pack[rarity] / unique_card_count[rarity]) × avg_price[rarity]` across all rarities
+5. Eventually move to standalone frontend (see `collection-market-tracker-ev-simulator`)
 
 ### Precon deck support (deferred)
 EV simulator JS + HTML tab structure complete. Remaining:
@@ -123,7 +186,7 @@ EV simulator JS + HTML tab structure complete. Remaining:
     "cards":[{"card_number":"001","quantity":4}, ...]}
    ```
 
-### PriceCharting historical data pipeline (IN PROGRESS — next session pick up at Step 4)
+### PriceCharting historical data pipeline (IN PROGRESS — next session pick up at Step 5)
 
 Goal: populate `market_data.pricecharting_price_history` with monthly sealed product price history so `set_market_metrics` can be backfilled beyond TCGPlayer's 1-year window.
 
@@ -144,11 +207,11 @@ Target table: `market_data.pricecharting_price_history` — grain `(game, set_co
 **Step 3 — Run backfill ✅ DONE**
 - `MODE=backfill` executed 2026-03-31; scraped 378 products into `pricecharting_price_history`
 
-**Step 4 — Deploy and run `set-market-metrics` (NEXT)**
-- `set_market_metrics` BQ table doesn't exist yet — job creates it on first MERGE
-- `compute_set_metrics.py` is ready in `scripts/set_market_metrics/` — just needs deploying
-- Run `./scripts/deploy-set-metrics-job.sh` then trigger `MODE=backfill`
-- Then enable weekly Cloud Scheduler
+**Step 4 — Deploy and run `set-market-metrics` ✅ DONE**
+- Deployed Cloud Run job `set-market-metrics`; scheduler `compute-set-market-metrics-weekly` runs Mondays 12:00 UTC
+- Backfill executed 2026-04-01; merged 55 rows across 26 dates (2025-11-06 → 2026-03-30) into `market_data.set_market_metrics`
+- Fixed 3 bugs in `compute_set_metrics.py`: graceful handling of missing `set_market_metrics`, `precon_deck_lists` tables; `create_table(exists_ok=True)` before MERGE
+- Fixed deploy script SA: now uses `evupdate-runner@future-gadget-labs-483502.iam.gserviceaccount.com`
 
 **Step 5 — One Piece eb/prb pack structure**
 - Extra boosters (eb01–eb03) and premium boosters (prb01–prb02) have different pack construction; needs research before adding pull rates.
@@ -158,6 +221,60 @@ Target table: `market_data.pricecharting_price_history` — grain `(game, set_co
 
 ### EV simulator (collection-market-tracker-ev-simulator)
 - CLAUDE.md created; precon-deck-lists.json data format documented there
+
+### GCP cost reduction
+
+**TODO: Migrate images from Artifact Registry to Docker Hub**
+- All Cloud Run job images are currently pushed to `us-central1-docker.pkg.dev/future-gadget-labs-483502/tcg-collection/` — Artifact Registry charges for storage
+- Move to Docker Hub (public or private repo) to eliminate registry storage costs
+- Update all `cloudbuild.*.yaml` files and deploy scripts to push to `docker.io/<org>/<image>` instead
+- Cloud Run jobs can pull from Docker Hub directly
+
+**TODO: Homeserver-primary / Cloud Run-fallback API architecture**
+- Goal: backend API (`collection-market-tracker` Cloud Run service) runs primarily on homeserver; Cloud Run is the fallback if the local API process is down
+- Approach: **Nginx reverse proxy on homeserver** with `proxy_pass` to Cloud Run as upstream fallback
+  - Nginx receives all API traffic, forwards to local Go API service
+  - If local service is unresponsive (connect error / timeout), Nginx retries the request against the Cloud Run URL
+  - Cloud Run stays at scale-to-zero — only cold-starts when local service is down
+  - Limitation: if the entire Proxmox node goes down, Nginx goes with it and there's no failover — acceptable trade-off for zero cost
+- Nginx config sketch:
+  ```nginx
+  upstream api_primary  { server 127.0.0.1:8080; }
+  upstream api_fallback { server <cloud-run-host>:443; }
+
+  server {
+    location / {
+      proxy_pass http://api_primary;
+      proxy_next_upstream error timeout;
+      proxy_next_upstream_tries 1;
+      # on failure, retry against Cloud Run
+      error_page 502 503 504 = @fallback;
+    }
+    location @fallback {
+      proxy_pass https://api_fallback;
+      proxy_ssl_server_name on;
+    }
+  }
+  ```
+- Steps:
+  1. Deploy the Go API on the homeserver (Docker Compose or systemd unit); expose on `127.0.0.1:8080`
+  2. Configure Nginx as above; point the API domain (via Cloudflare DNS) at the homeserver IP
+  3. Set Cloud Run min-instances = 0 (already scale-to-zero)
+  4. Copy all env vars (Firebase config, `ALLOWED_EMAILS`, BQ project, etc.) to homeserver deployment
+- Note: the Cloud Run service still needs to exist as the fallback — just won't be hit under normal operation
+
+**TODO: Homeserver-primary / Cloud Run-fallback job architecture**
+- Goal: scheduled jobs run primarily on homeserver (Proxmox nodes), Cloud Run acts as a cheap safety net
+- Design: each Cloud Run job is rescheduled to run ~30–60 min after the homeserver cron; on start it checks a "heartbeat" record (e.g. a BQ row or GCS file written by the homeserver job) to see if the job already ran for today/this week
+  - If heartbeat found → log "homeserver already ran" and exit 0 immediately (minimal cost — just job startup)
+  - If no heartbeat → run the full job in Cloud Run as fallback
+- Homeserver jobs write the heartbeat on success (e.g. insert a row into a `market_data.job_heartbeats` table with `(job_name, run_date, status)`)
+- Applies to: `tcgplayer-price-scraper` (daily), `set-market-metrics` (weekly), `pricecharting-scraper` (monthly)
+- Steps:
+  1. Define `market_data.job_heartbeats` BQ table: `(job_name STRING, run_date DATE, ran_at TIMESTAMP, source STRING)`
+  2. Add heartbeat write to each homeserver job script on success
+  3. Add heartbeat check at the top of each Cloud Run job entrypoint; exit 0 if found
+  4. Adjust Cloud Scheduler triggers to fire 30–60 min after homeserver cron
 
 
 ## Data Flow

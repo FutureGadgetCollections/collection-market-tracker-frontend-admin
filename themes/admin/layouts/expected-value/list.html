@@ -1,0 +1,756 @@
+{{ define "main" }}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h2 class="h5 mb-0 fw-semibold"><i class="bi bi-calculator me-2 text-primary"></i>Expected Value</h2>
+  <div class="d-flex gap-2">
+    <div id="btn-refresh-group" class="btn-group btn-group-sm d-none" role="group">
+      <button class="btn btn-outline-primary"   onclick="refreshData('github')"><i class="bi bi-github me-1"></i>GitHub</button>
+      <button class="btn btn-outline-secondary" onclick="refreshData('gcs')"><i class="bi bi-cloud me-1"></i>GCS</button>
+      <button class="btn btn-outline-secondary" onclick="refreshData('api')"><i class="bi bi-plug me-1"></i>API</button>
+    </div>
+  </div>
+</div>
+
+<div id="auth-guard"  class="alert alert-warning  d-none"><i class="bi bi-lock me-1"></i>You must be <a href="{{ "" | relURL }}">signed in</a> to view expected value data.</div>
+<div id="admin-guard" class="alert alert-secondary d-none"><i class="bi bi-shield-lock me-1"></i>You need to be an admin to access this page.</div>
+<div id="loading" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+
+<!-- ── Filters + Options ────────────────────────────────────────────── -->
+<div class="card shadow-sm border-0 d-none mb-3" id="filters-card">
+  <div class="card-body py-2">
+    <div class="row g-2 align-items-end">
+      <div class="col-sm-3">
+        <label class="form-label small mb-0">Game</label>
+        <select class="form-select form-select-sm" id="filter-game" onchange="onGameChange()">
+          <option value="">Select Game</option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <label class="form-label small mb-0">Set</label>
+        <select class="form-select form-select-sm" id="filter-set" onchange="onSetChange()">
+          <option value="">Select Set</option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <label class="form-label small mb-0">Product</label>
+        <select class="form-select form-select-sm" id="filter-product" onchange="recompute()">
+          <option value="">Select Product</option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <label class="form-label small mb-0">Price Floor (sift)</label>
+        <div class="input-group input-group-sm">
+          <span class="input-group-text">$</span>
+          <input type="number" class="form-control" id="opt-sift" value="0.25" min="0" step="0.05" onchange="recompute()">
+        </div>
+      </div>
+    </div>
+    <div class="row g-2 mt-1 align-items-center">
+      <div class="col-sm-3">
+        <label class="form-label small mb-0">Fees</label>
+        <select class="form-select form-select-sm" id="opt-fees" onchange="recompute()">
+          <option value="none">No Fees (gross)</option>
+          <option value="tcgplayer">TCGPlayer (13.25%)</option>
+          <option value="manapool">Mana Pool (7.9%)</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div class="col-sm-3 d-none" id="custom-fee-group">
+        <label class="form-label small mb-0">Commission + Processing</label>
+        <div class="input-group input-group-sm">
+          <input type="number" class="form-control" id="opt-fee-pct" value="13.25" step="0.1" placeholder="%">
+          <span class="input-group-text">%</span>
+          <span class="input-group-text">+</span>
+          <span class="input-group-text">$</span>
+          <input type="number" class="form-control" id="opt-fee-flat" value="0.30" step="0.01" placeholder="flat">
+        </div>
+      </div>
+      <div class="col-sm-3">
+        <label class="form-label small mb-0">Box Cost (for sim)</label>
+        <div class="input-group input-group-sm">
+          <span class="input-group-text">$</span>
+          <input type="number" class="form-control" id="opt-box-cost" value="120" min="0" step="1">
+        </div>
+      </div>
+      <div class="col-sm-3 d-flex align-items-end">
+        <span class="text-muted small" id="ev-price-date"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Quick EV Summary ─────────────────────────────────────────────── -->
+<div class="card shadow-sm border-0 d-none mb-3" id="ev-card">
+  <div class="card-header bg-white border-0 py-2">
+    <span class="fw-semibold small" id="ev-title">Quick EV Summary</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3">Category</th>
+            <th>Cards (priced / pool)</th>
+            <th>Pulls / Pack</th>
+            <th>Avg Card Price</th>
+            <th class="text-end pe-3">EV Contribution</th>
+          </tr>
+        </thead>
+        <tbody id="ev-tbody"></tbody>
+        <tfoot class="table-light">
+          <tr class="fw-bold">
+            <td class="ps-3" colspan="4">Total Pack EV</td>
+            <td class="text-end pe-3" id="ev-total">—</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Box EV summary -->
+<div class="card shadow-sm border-0 d-none mb-3" id="box-card">
+  <div class="card-body">
+    <div class="row g-3 text-center" id="box-stats-row"></div>
+    <div class="text-center mt-3" id="box-ratio-row" style="display:none!important">
+      <span class="badge fs-6 px-3 py-2" id="box-ratio-badge">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Slot-by-Slot Breakdown ───────────────────────────────────────── -->
+<div class="card shadow-sm border-0 d-none mb-3" id="slot-card">
+  <div class="card-header bg-white border-0 py-2">
+    <span class="fw-semibold small">Slot-by-Slot EV Breakdown</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3">Slot</th>
+            <th>Name</th>
+            <th>Foil</th>
+            <th class="text-center">P(C)</th>
+            <th class="text-center">P(U)</th>
+            <th class="text-center">P(R)</th>
+            <th class="text-center">P(M)</th>
+            <th class="text-center">P(Spc)</th>
+            <th class="text-end pe-3">Slot EV</th>
+          </tr>
+        </thead>
+        <tbody id="slot-tbody"></tbody>
+        <tfoot class="table-light">
+          <tr class="fw-bold">
+            <td class="ps-3" colspan="8">Total Pack EV (slot-based)</td>
+            <td class="text-end pe-3" id="slot-total">—</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── Monte Carlo Simulator ────────────────────────────────────────── -->
+<div class="card shadow-sm border-0 d-none mb-3" id="sim-card">
+  <div class="card-header bg-white border-0 py-2 d-flex align-items-center justify-content-between">
+    <span class="fw-semibold small"><i class="bi bi-dice-5 me-1"></i>Box Opening Simulator</span>
+    <div class="d-flex gap-2 align-items-center">
+      <label class="small text-muted mb-0">Boxes:</label>
+      <input type="number" class="form-control form-control-sm" id="sim-boxes" value="1" min="1" max="100" style="width:60px">
+      <label class="small text-muted mb-0">Iterations:</label>
+      <select class="form-select form-select-sm" id="sim-iters" style="width:100px">
+        <option value="1000">1,000</option>
+        <option value="5000" selected>5,000</option>
+        <option value="10000">10,000</option>
+        <option value="25000">25,000</option>
+      </select>
+      <button class="btn btn-primary btn-sm" id="sim-run-btn" onclick="runSimulation()">
+        <i class="bi bi-play-fill me-1"></i>Run
+      </button>
+    </div>
+  </div>
+  <div class="card-body d-none" id="sim-results">
+    <div class="row g-3 text-center mb-3" id="sim-stats-row"></div>
+    <div class="small text-muted mb-2">Distribution of total card value across <span id="sim-n"></span> simulations</div>
+    <div id="sim-histogram" style="height:200px; position:relative"></div>
+  </div>
+  <div class="card-body d-none text-center py-3" id="sim-loading">
+    <div class="spinner-border spinner-border-sm text-primary me-2"></div>Running simulation...
+  </div>
+</div>
+
+<!-- ── Card Lists by Rarity ─────────────────────────────────────────── -->
+<div class="d-none" id="card-lists">
+  <h5 class="fw-semibold mb-3"><i class="bi bi-list-ul me-2 text-primary"></i>Card Prices by Category</h5>
+  <div id="card-lists-container"></div>
+</div>
+
+<!-- Collector-only exclusions -->
+<div class="card shadow-sm border-0 d-none mb-3" id="excluded-card">
+  <div class="card-header bg-white border-0 py-2">
+    <span class="fw-semibold small text-muted">Excluded — Collector Booster Only</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="table-light">
+          <tr><th class="ps-3">Card</th><th>Treatment</th><th class="text-end pe-3">Market Price</th></tr>
+        </thead>
+        <tbody id="excluded-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="d-none small text-muted mt-2" id="ev-notes"></div>
+{{ end }}
+
+{{ define "page-scripts" }}
+<script>
+  // ── Globals ─────────────────────────────────────────────────────────
+  let allCards = [], allPullRates = [], allSealed = [], allPackSlots = [];
+  let priceMap = new Map();
+  // Cached computation state for sim reuse
+  let cachedPools = null, cachedSlots = [], cachedProduct = null;
+
+  // ── Fee presets ─────────────────────────────────────────────────────
+  const FEE_PRESETS = {
+    none:      { pct: 0,    flat: 0 },
+    tcgplayer: { pct: 13.25, flat: 0 }, // 10.75% commission + 2.5% processing
+    manapool:  { pct: 7.9,   flat: 0 }, // 5% marketplace + 2.9% processing
+  };
+
+  function getFeeConfig() {
+    const sel = document.getElementById('opt-fees').value;
+    if (sel === 'custom') {
+      return { pct: parseFloat(document.getElementById('opt-fee-pct').value) || 0, flat: parseFloat(document.getElementById('opt-fee-flat').value) || 0 };
+    }
+    return FEE_PRESETS[sel] || FEE_PRESETS.none;
+  }
+
+  function applyFees(grossPrice) {
+    if (grossPrice <= 0) return 0;
+    const { pct, flat } = getFeeConfig();
+    if (pct === 0 && flat === 0) return grossPrice;
+    return Math.max(0, grossPrice * (1 - pct / 100) - flat);
+  }
+
+  function getSiftFloor() {
+    return parseFloat(document.getElementById('opt-sift').value) || 0;
+  }
+
+  // Apply sift: cards below floor are worth $0
+  function effectivePrice(card) {
+    const p = getPrice(card);
+    if (p == null) return null;
+    const floor = getSiftFloor();
+    return p >= floor ? p : 0;
+  }
+
+  function effectivePoolStats(cards) {
+    let sum = 0, n = 0, sifted = 0;
+    const floor = getSiftFloor();
+    for (const c of cards) {
+      const p = getPrice(c);
+      if (p == null) continue;
+      n++;
+      if (p >= floor) { sum += p; } else { sifted++; }
+    }
+    return { avg: n > 0 ? sum / n : 0, priced: n, total: sum, sifted };
+  }
+
+  // ── Auth ─────────────────────────────────────────────────────────────
+  firebase.auth().onAuthStateChanged(async user => {
+    if (!user) { hide('loading'); show('auth-guard'); return; }
+    if (!isEmailAllowed(user.email)) { hide('loading'); show('admin-guard'); return; }
+    show('btn-refresh-group');
+    await loadAllData();
+  });
+
+  async function refreshData(source) {
+    const btns = document.querySelectorAll('#btn-refresh-group button');
+    btns.forEach(b => b.disabled = true);
+    await loadAllData(source);
+    btns.forEach(b => b.disabled = false);
+  }
+
+  // ── Data loading ────────────────────────────────────────────────────
+  async function loadAllData(source = 'github') {
+    try {
+      const load = (file) => {
+        if (source === 'api') return api('GET', '/' + file.replace('data/', '').replace('.json', ''));
+        if (source === 'gcs') return loadFromGCS(file);
+        return loadJsonData(file);
+      };
+      const [cards, pullRates, prices, sealed, packSlots] = await Promise.all([
+        load('data/single-cards.json'),
+        load('data/set-pull-rates.json'),
+        load('data/tcgplayer-latest-prices.json'),
+        load('data/sealed-products.json'),
+        load('data/pack-slots.json').catch(() => []),
+      ]);
+      allCards = cards || []; allPullRates = pullRates || []; allSealed = sealed || []; allPackSlots = packSlots || [];
+      priceMap = new Map();
+      for (const p of (prices || [])) {
+        if (p.tcgplayer_id && p.market_price != null)
+          priceMap.set(String(p.tcgplayer_id), { market_price: p.market_price, date: p.date });
+      }
+      hide('loading');
+      populateGameFilter();
+    } catch (e) { hide('loading'); showToast('Failed to load data: ' + e.message, 'danger'); }
+  }
+
+  // ── Filter UI ───────────────────────────────────────────────────────
+  function populateGameFilter() {
+    const prSetCodes = new Set(allPullRates.map(r => r.set_code));
+    const games = [...new Set(allCards.filter(c => prSetCodes.has(c.set_code)).map(c => c.game))].sort();
+    const sel = document.getElementById('filter-game');
+    sel.innerHTML = '<option value="">Select Game</option>' + games.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
+    show('filters-card');
+    if (games.length === 1) { sel.value = games[0]; onGameChange(); }
+  }
+
+  function onGameChange() {
+    const game = document.getElementById('filter-game').value;
+    hideResults();
+    if (!game) { document.getElementById('filter-set').innerHTML = '<option value="">Select Set</option>'; return; }
+    const prSetCodes = new Set(allPullRates.map(r => r.set_code));
+    const setMap = new Map();
+    for (const c of allCards.filter(c => c.game === game && prSetCodes.has(c.set_code)))
+      if (!setMap.has(c.set_code)) { const pr = allPullRates.find(r => r.set_code === c.set_code); setMap.set(c.set_code, pr?.set_name || c.set_code); }
+    const sets = [...setMap.entries()].sort((a,b) => a[0].localeCompare(b[0]));
+    const ss = document.getElementById('filter-set');
+    ss.innerHTML = '<option value="">Select Set</option>' + sets.map(([c,n]) => `<option value="${esc(c)}">${esc(n)} (${esc(c)})</option>`).join('');
+    if (sets.length === 1) { ss.value = sets[0][0]; onSetChange(); }
+  }
+
+  function onSetChange() {
+    const game = document.getElementById('filter-game').value, setCode = document.getElementById('filter-set').value;
+    const ps = document.getElementById('filter-product');
+    hideResults();
+    if (!setCode) { ps.innerHTML = '<option value="">Select Product</option>'; return; }
+    const products = allSealed.filter(p => p.game === game && p.set_code === setCode && p.packs_per_product);
+    ps.innerHTML = '<option value="">Select Product</option>' + products.map(p => `<option value="${esc(p.product_type)}">${esc(fmtPT(p.product_type))} (${p.packs_per_product} packs)</option>`).join('');
+    if (products.length >= 1) { const play = products.find(p => p.product_type.includes('play-booster')); ps.value = play ? play.product_type : products[0].product_type; }
+    // Auto-fill box cost from market price
+    const pt = ps.value;
+    if (pt) { const prod = products.find(p => p.product_type === pt); const bp = prod ? priceMap.get(String(prod.tcgplayer_id)) : null; if (bp) document.getElementById('opt-box-cost').value = Math.round(bp.market_price); }
+    recompute();
+  }
+
+  function recompute() {
+    // Toggle custom fee fields
+    document.getElementById('custom-fee-group').classList.toggle('d-none', document.getElementById('opt-fees').value !== 'custom');
+    computeEV();
+  }
+
+  function hideResults() {
+    for (const id of ['ev-card','box-card','slot-card','sim-card','card-lists','excluded-card','ev-notes']) hide(id);
+    document.getElementById('sim-results').classList.add('d-none');
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────
+  function getPrice(card) { const p = priceMap.get(String(card.tcgplayer_id)); return p ? p.market_price : null; }
+  function esc(s) { const d = document.createElement('div'); d.appendChild(document.createTextNode(String(s ?? ''))); return d.innerHTML; }
+  function $(v) { return v != null ? '$' + v.toFixed(2) : '—'; }
+  function pct(v) { return v != null ? (v * 100).toFixed(1) + '%' : '—'; }
+  function fmtPT(pt) { return pt.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
+  function show(id) { document.getElementById(id).classList.remove('d-none'); }
+  function hide(id) { document.getElementById(id).classList.add('d-none'); }
+
+  // ── Card pools ──────────────────────────────────────────────────────
+  function buildCardPools(game, setCode) {
+    const play = allCards.filter(c => c.game === game && c.set_code === setCode && !c.collector_only);
+    const base = play.filter(c => !c.treatment || c.treatment === 'base');
+    return {
+      base_common:     base.filter(c => c.rarity === 'common'),
+      base_uncommon:   base.filter(c => c.rarity === 'uncommon'),
+      base_rare:       base.filter(c => c.rarity === 'rare'),
+      base_mythic:     base.filter(c => c.rarity === 'mythic'),
+      variants:        play.filter(c => c.treatment && c.treatment !== 'base' && c.treatment !== 'token' && c.treatment !== 'source_material'),
+      source_material: play.filter(c => c.treatment === 'source_material'),
+      lands:           play.filter(c => c.rarity === 'land'),
+      tokens:          play.filter(c => c.rarity === 'token'),
+      all_play:        play.filter(c => c.rarity !== 'token' && c.rarity !== 'land'),
+    };
+  }
+
+  // ── Slot EV (with sift + fees) ──────────────────────────────────────
+  function slotAvg(cards) { return effectivePoolStats(cards).avg; }
+
+  function specialPoolForSlot(slot, pools) {
+    const cp = slot.card_pool || '';
+    if (cp === 'main_commons') return pools.source_material;
+    if (cp === 'main_uncommons') { const su = pools.variants.filter(c => c.rarity === 'uncommon'); return su.length > 0 ? su : pools.variants; }
+    if (cp === 'main_rares_mythics') return pools.variants.filter(c => c.rarity === 'rare' || c.rarity === 'mythic');
+    if (cp === 'all_main_set') return pools.variants;
+    if (cp === 'lands') return pools.lands;
+    return pools.variants;
+  }
+
+  function computeSlotEV(slot, pools) {
+    const avgC = slotAvg(pools.base_common), avgU = slotAvg(pools.base_uncommon);
+    const avgR = slotAvg(pools.base_rare),   avgM = slotAvg(pools.base_mythic);
+    const avgS = slotAvg(specialPoolForSlot(slot, pools));
+    const grossEV = (slot.p_common||0)*avgC + (slot.p_uncommon||0)*avgU + (slot.p_rare||0)*avgR + (slot.p_mythic||0)*avgM + (slot.p_special||0)*avgS;
+    return { ev: applyFees(grossEV), grossEV, avgC, avgU, avgR, avgM, avgS };
+  }
+
+  // ── Main computation ────────────────────────────────────────────────
+  function computeEV() {
+    const game = document.getElementById('filter-game').value;
+    const setCode = document.getElementById('filter-set').value;
+    const productType = document.getElementById('filter-product').value;
+    if (!game || !setCode) { hideResults(); return; }
+
+    const allSetCards = allCards.filter(c => c.game === game && c.set_code === setCode);
+    const playCards = allSetCards.filter(c => !c.collector_only);
+    const collectorOnly = allSetCards.filter(c => c.collector_only);
+    const setPR = allPullRates.filter(r => r.set_code === setCode);
+    const pools = buildCardPools(game, setCode);
+    cachedPools = pools;
+
+    let priceDate = null;
+    for (const c of playCards) { const p = priceMap.get(String(c.tcgplayer_id)); if (p) { priceDate = p.date; break; } }
+    document.getElementById('ev-price-date').textContent = priceDate ? `Prices as of ${priceDate}` : '';
+
+    const feeName = document.getElementById('opt-fees').value;
+    const feeLabel = feeName !== 'none' ? ` (after ${feeName === 'custom' ? 'custom' : feeName} fees)` : '';
+    const sift = getSiftFloor();
+    const siftLabel = sift > 0 ? ` | sift $${sift.toFixed(2)}` : '';
+
+    // ── Quick EV ──────────────────────────────────────────────────────
+    const RARITY_ORDER = ['mythic','rare','uncommon','common'];
+    const evRows = [];
+    let quickTotal = 0;
+    for (const rarity of RARITY_ORDER) {
+      const pr = setPR.find(r => r.rarity === rarity);
+      if (!pr) continue;
+      const pool = pools[`base_${rarity}`] || [];
+      const stats = effectivePoolStats(pool);
+      const grossEV = pr.pull_rate_per_pack * stats.avg;
+      const ev = applyFees(grossEV);
+      quickTotal += ev;
+      evRows.push({ label: rarity, rarity, priced: stats.priced, sifted: stats.sifted, poolSize: pr.unique_card_count || pool.length, pullRate: pr.pull_rate_per_pack, avgPrice: stats.avg, ev });
+    }
+
+    const vs = effectivePoolStats(pools.variants);
+    if (pools.variants.length > 0 && vs.priced > 0) {
+      const pSlug = productType.replace('-box','');
+      const sl = allPackSlots.filter(s => s.game === game && s.set_code === setCode && s.product_type === pSlug);
+      let ts = 0; for (const s of sl) { if (s.card_pool !== 'lands') ts += (s.p_special||0); }
+      if (ts === 0) ts = 0.452;
+      const grossEV = ts * vs.avg;
+      const ev = applyFees(grossEV);
+      quickTotal += ev;
+      evRows.push({ label: 'variants', rarity: 'special', priced: vs.priced, sifted: vs.sifted, poolSize: pools.variants.length, pullRate: ts, avgPrice: vs.avg, ev });
+    }
+
+    document.getElementById('ev-tbody').innerHTML = evRows.map(r => `<tr>
+      <td class="ps-3"><span class="badge ${badgeClass(r.rarity)}">${esc(r.label)}</span>${r.sifted ? `<span class="text-muted small ms-1">(${r.sifted} sifted)</span>` : ''}</td>
+      <td>${r.priced} / ${r.poolSize}</td><td>${r.pullRate.toFixed(3)}</td><td>${$(r.avgPrice)}</td>
+      <td class="text-end pe-3 fw-medium">${$(r.ev)}</td></tr>`).join('');
+    document.getElementById('ev-total').textContent = $(quickTotal);
+    document.getElementById('ev-title').textContent = `Quick EV Summary — ${fmtPT(productType)}${feeLabel}${siftLabel}`;
+    show('ev-card');
+
+    // ── Slot-by-slot ──────────────────────────────────────────────────
+    const pSlug = productType.replace('-box','');
+    const slots = allPackSlots.filter(s => s.game === game && s.set_code === setCode && s.product_type === pSlug);
+    cachedSlots = slots;
+
+    if (slots.length > 0) {
+      let slotTotal = 0;
+      document.getElementById('slot-tbody').innerHTML = slots.map(s => {
+        const r = computeSlotEV(s, pools);
+        slotTotal += r.ev;
+        const pF = v => v ? `<span class="${v>0.5?'fw-medium':'text-muted'}">${pct(v)}</span>` : '<span class="text-muted">—</span>';
+        return `<tr><td class="ps-3 fw-medium">${s.slot_index}</td><td>${esc(s.slot_name)}</td>
+          <td>${s.is_foil?'<i class="bi bi-stars text-warning"></i>':''}</td>
+          <td class="text-center">${pF(s.p_common)}</td><td class="text-center">${pF(s.p_uncommon)}</td>
+          <td class="text-center">${pF(s.p_rare)}</td><td class="text-center">${pF(s.p_mythic)}</td>
+          <td class="text-center">${pF(s.p_special)}</td><td class="text-end pe-3 fw-medium">${$(r.ev)}</td></tr>`;
+      }).join('');
+      document.getElementById('slot-total').textContent = $(slotTotal);
+      show('slot-card');
+    }
+
+    // ── Box EV ────────────────────────────────────────────────────────
+    const product = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
+    cachedProduct = product;
+    const packEV = slots.length > 0 ? parseFloat(document.getElementById('slot-total').textContent.replace('$','')) : quickTotal;
+    if (product && product.packs_per_product) {
+      const packs = product.packs_per_product;
+      const boxEV = packEV * packs;
+      const boxCost = parseFloat(document.getElementById('opt-box-cost').value) || 0;
+      const boxMktPrice = priceMap.get(String(product.tcgplayer_id));
+
+      let statsHTML = `
+        <div class="col"><div class="text-muted small">Pack EV</div><div class="fs-5 fw-bold text-primary">${$(packEV)}</div></div>
+        <div class="col"><div class="text-muted small">Packs / Box</div><div class="fs-5 fw-bold">${packs}</div></div>
+        <div class="col"><div class="text-muted small">Box EV</div><div class="fs-5 fw-bold text-success">${$(boxEV)}</div></div>`;
+      if (boxMktPrice) statsHTML += `<div class="col"><div class="text-muted small">Box Market</div><div class="fs-5 fw-bold">${$(boxMktPrice.market_price)}</div></div>`;
+      statsHTML += `<div class="col"><div class="text-muted small">Box Cost</div><div class="fs-5 fw-bold">${$(boxCost)}</div></div>`;
+      document.getElementById('box-stats-row').innerHTML = statsHTML;
+
+      if (boxCost > 0) {
+        const ratio = boxEV / boxCost;
+        const badge = document.getElementById('box-ratio-badge');
+        badge.textContent = `Value Ratio: ${ratio.toFixed(2)}x (${boxEV > boxCost ? '+' : ''}${$(boxEV - boxCost)} per box)`;
+        badge.className = `badge fs-6 px-3 py-2 ${ratio >= 1.0 ? 'bg-success' : 'bg-danger'}`;
+        document.getElementById('box-ratio-row').style.display = '';
+      } else { document.getElementById('box-ratio-row').style.display = 'none'; }
+      show('box-card');
+    }
+
+    // Show simulator
+    if (slots.length > 0) show('sim-card');
+
+    // ── Card lists ────────────────────────────────────────────────────
+    renderCardLists(pools);
+
+    // ── Collector-only ────────────────────────────────────────────────
+    if (collectorOnly.length > 0) {
+      document.getElementById('excluded-tbody').innerHTML = collectorOnly.map(c => {
+        const p = getPrice(c);
+        return `<tr><td class="ps-3">${esc(c.name)}</td><td><span class="badge bg-dark">${esc(c.treatment)}</span></td>
+          <td class="text-end pe-3">${p!=null?$(p):'<span class="text-muted">N/A</span>'}</td></tr>`;
+      }).join('');
+      show('excluded-card');
+    }
+
+    // ── Notes ─────────────────────────────────────────────────────────
+    const tp = effectivePoolStats(playCards);
+    const notes = [];
+    if (tp.priced < playCards.length) notes.push(`${tp.priced}/${playCards.length} play-eligible cards have price data.`);
+    if (collectorOnly.length > 0) notes.push(`${collectorOnly.length} collector-booster-only card(s) excluded.`);
+    if (sift > 0) notes.push(`Cards under $${sift.toFixed(2)} treated as $0 (sift threshold).`);
+    if (feeName !== 'none') { const f = getFeeConfig(); notes.push(`Fees applied: ${f.pct}% + $${f.flat.toFixed(2)} per card sold.`); }
+    document.getElementById('ev-notes').innerHTML = notes.map(n => `<div>${esc(n)}</div>`).join('');
+    show('ev-notes');
+  }
+
+  // ── Card list rendering ─────────────────────────────────────────────
+  function renderCardLists(pools) {
+    const categories = [
+      { key: 'base_mythic',  label: 'Mythic (base)',   badge: 'bg-warning text-dark' },
+      { key: 'base_rare',    label: 'Rare (base)',     badge: 'bg-info text-dark' },
+      { key: 'base_uncommon',label: 'Uncommon (base)', badge: 'bg-secondary' },
+      { key: 'base_common',  label: 'Common (base)',   badge: 'bg-light text-dark border' },
+      { key: 'variants',     label: 'Variants',        badge: 'bg-purple text-white' },
+      { key: 'lands',        label: 'Lands',           badge: 'bg-success' },
+      { key: 'tokens',       label: 'Tokens',          badge: 'bg-dark' },
+    ];
+    const container = document.getElementById('card-lists-container');
+    container.innerHTML = '';
+    const sift = getSiftFloor();
+
+    for (const cat of categories) {
+      const cards = pools[cat.key] || [];
+      if (cards.length === 0) continue;
+      const sorted = [...cards].sort((a,b) => (getPrice(b)||0) - (getPrice(a)||0));
+      const stats = effectivePoolStats(sorted);
+      const id = `cards-${cat.key}`;
+
+      const el = document.createElement('div');
+      el.className = 'card shadow-sm border-0 mb-2';
+      el.innerHTML = `
+        <div class="card-header bg-white border-0 py-2" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#${id}">
+          <span class="badge ${cat.badge} me-2">${esc(cat.label)}</span>
+          <span class="small text-muted">${sorted.length} cards &middot; avg ${$(stats.avg)} &middot; total ${$(stats.total)}${stats.sifted ? ` &middot; ${stats.sifted} sifted` : ''}</span>
+          <i class="bi bi-chevron-down float-end mt-1 text-muted"></i>
+        </div>
+        <div class="collapse" id="${id}">
+          <div class="card-body p-0"><div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+              <thead class="table-light"><tr><th class="ps-3">#</th><th>Name</th><th>Treatment</th><th class="text-end pe-3">Market Price</th></tr></thead>
+              <tbody>${sorted.map(c => {
+                const p = getPrice(c);
+                const sifted = p != null && p < sift;
+                return `<tr class="${sifted ? 'text-decoration-line-through text-muted' : ''}">
+                  <td class="ps-3 text-muted">${esc(c.card_number)}</td><td>${esc(c.name)}</td>
+                  <td>${c.treatment && c.treatment !== 'base' ? `<span class="badge bg-light text-dark border">${esc(c.treatment)}</span>` : ''}</td>
+                  <td class="text-end pe-3 ${!sifted && p!=null && p>=5 ? 'fw-medium' : ''}">${p!=null?$(p):'<span class="text-muted">N/A</span>'}</td></tr>`;
+              }).join('')}</tbody>
+            </table>
+          </div></div>
+        </div>`;
+      container.appendChild(el);
+    }
+    show('card-lists');
+  }
+
+  // ── Monte Carlo Simulator ───────────────────────────────────────────
+
+  function buildSlotWeights(slot, pools) {
+    // Build a weighted card list for this slot: [{card, weight}]
+    // Probabilities: p_common -> base commons, p_uncommon -> base uncommons, etc.
+    // p_special -> special pool for this slot
+    const entries = [];
+    const addPool = (prob, cards) => {
+      if (!prob || cards.length === 0) return;
+      const w = prob / cards.length; // equal weight per card within rarity
+      for (const c of cards) entries.push({ card: c, weight: w });
+    };
+    addPool(slot.p_common, pools.base_common);
+    addPool(slot.p_uncommon, pools.base_uncommon);
+    addPool(slot.p_rare, pools.base_rare);
+    addPool(slot.p_mythic, pools.base_mythic);
+    addPool(slot.p_special, specialPoolForSlot(slot, pools));
+    return entries;
+  }
+
+  function weightedRandomPick(entries) {
+    // entries: [{card, weight}] where sum of weights ≈ 1
+    let r = Math.random();
+    for (const e of entries) {
+      r -= e.weight;
+      if (r <= 0) return e.card;
+    }
+    return entries[entries.length - 1].card; // fallback
+  }
+
+  function simulateOnePack(slotWeights) {
+    let total = 0;
+    const sift = getSiftFloor();
+    for (const sw of slotWeights) {
+      const card = weightedRandomPick(sw);
+      const p = getPrice(card);
+      if (p != null && p >= sift) total += p;
+    }
+    return total;
+  }
+
+  async function runSimulation() {
+    if (!cachedPools || cachedSlots.length === 0 || !cachedProduct) return;
+
+    const btn = document.getElementById('sim-run-btn');
+    btn.disabled = true;
+    show('sim-loading');
+    hide('sim-results');
+
+    // Yield to UI
+    await new Promise(r => setTimeout(r, 50));
+
+    const numBoxes = parseInt(document.getElementById('sim-boxes').value) || 1;
+    const iters = parseInt(document.getElementById('sim-iters').value) || 5000;
+    const packsPerBox = cachedProduct.packs_per_product;
+    const boxCost = parseFloat(document.getElementById('opt-box-cost').value) || 0;
+    const totalPacks = numBoxes * packsPerBox;
+    const totalCost = numBoxes * boxCost;
+
+    // Pre-build slot weight tables
+    const slotWeights = cachedSlots.map(s => buildSlotWeights(s, cachedPools));
+
+    // Run simulation in chunks to avoid blocking UI
+    const results = new Float64Array(iters);
+    const CHUNK = 500;
+
+    for (let i = 0; i < iters; i += CHUNK) {
+      const end = Math.min(i + CHUNK, iters);
+      for (let j = i; j < end; j++) {
+        let grossTotal = 0;
+        for (let p = 0; p < totalPacks; p++) grossTotal += simulateOnePack(slotWeights);
+        // Apply fees to total (as if selling all cards in one order)
+        results[j] = applyFees(grossTotal);
+      }
+      if (i % 2000 === 0 && i > 0) await new Promise(r => setTimeout(r, 0)); // yield
+    }
+
+    // Compute stats
+    let sum = 0, min = Infinity, max = -Infinity, lossCount = 0;
+    for (let i = 0; i < iters; i++) {
+      sum += results[i];
+      if (results[i] < min) min = results[i];
+      if (results[i] > max) max = results[i];
+      if (results[i] < totalCost) lossCount++;
+    }
+    const mean = sum / iters;
+    let variance = 0;
+    for (let i = 0; i < iters; i++) variance += (results[i] - mean) ** 2;
+    const stddev = Math.sqrt(variance / iters);
+
+    // Percentiles
+    const sorted = Array.from(results).sort((a,b) => a - b);
+    const p5  = sorted[Math.floor(iters * 0.05)];
+    const p25 = sorted[Math.floor(iters * 0.25)];
+    const p50 = sorted[Math.floor(iters * 0.50)];
+    const p75 = sorted[Math.floor(iters * 0.75)];
+    const p95 = sorted[Math.floor(iters * 0.95)];
+    const lossPct = (lossCount / iters * 100).toFixed(1);
+
+    // Render stats
+    document.getElementById('sim-n').textContent = iters.toLocaleString();
+    const lossColor = lossCount / iters > 0.5 ? 'text-danger' : 'text-success';
+    document.getElementById('sim-stats-row').innerHTML = `
+      <div class="col"><div class="text-muted small">Mean Value</div><div class="fs-6 fw-bold">${$(mean)}</div></div>
+      <div class="col"><div class="text-muted small">Median (p50)</div><div class="fs-6 fw-bold">${$(p50)}</div></div>
+      <div class="col"><div class="text-muted small">Std Dev</div><div class="fs-6 fw-bold">${$(stddev)}</div></div>
+      <div class="col"><div class="text-muted small">Range</div><div class="fs-6 fw-bold">${$(min)} — ${$(max)}</div></div>
+      <div class="col"><div class="text-muted small">Loss Rate</div><div class="fs-6 fw-bold ${lossColor}">${lossPct}%</div><div class="text-muted small">below ${$(totalCost)}</div></div>
+      <div class="col"><div class="text-muted small">p5 / p25 / p75 / p95</div><div class="small fw-medium">${$(p5)} / ${$(p25)} / ${$(p75)} / ${$(p95)}</div></div>
+    `;
+
+    // Render histogram
+    renderHistogram(sorted, totalCost);
+
+    show('sim-results');
+    hide('sim-loading');
+    btn.disabled = false;
+  }
+
+  function renderHistogram(sorted, costLine) {
+    const container = document.getElementById('sim-histogram');
+    container.innerHTML = '';
+    const n = sorted.length;
+    const min = sorted[0], max = sorted[n-1];
+    const bucketCount = 40;
+    const range = max - min || 1;
+    const bucketSize = range / bucketCount;
+    const buckets = new Array(bucketCount).fill(0);
+    for (const v of sorted) {
+      let idx = Math.floor((v - min) / bucketSize);
+      if (idx >= bucketCount) idx = bucketCount - 1;
+      buckets[idx]++;
+    }
+    const maxBucket = Math.max(...buckets);
+
+    // SVG histogram
+    const W = container.clientWidth || 600, H = 200;
+    const barW = W / bucketCount;
+    let svg = `<svg width="${W}" height="${H}" style="display:block">`;
+
+    // Cost line
+    if (costLine >= min && costLine <= max) {
+      const x = ((costLine - min) / range) * W;
+      svg += `<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="#dc3545" stroke-width="2" stroke-dasharray="4,3"/>`;
+      svg += `<text x="${x+4}" y="12" fill="#dc3545" font-size="11">Cost ${$(costLine)}</text>`;
+    }
+
+    for (let i = 0; i < bucketCount; i++) {
+      const h = maxBucket > 0 ? (buckets[i] / maxBucket) * (H - 20) : 0;
+      const x = i * barW;
+      const bMin = min + i * bucketSize;
+      const isLoss = (bMin + bucketSize / 2) < costLine;
+      svg += `<rect x="${x+1}" y="${H-h}" width="${barW-2}" height="${h}" fill="${isLoss ? '#f8d7da' : '#d1e7dd'}" rx="1"/>`;
+    }
+
+    // X-axis labels
+    for (let i = 0; i <= 4; i++) {
+      const x = (i / 4) * W;
+      const val = min + (i / 4) * range;
+      svg += `<text x="${x}" y="${H-2}" fill="#6c757d" font-size="10" text-anchor="middle">${$(val)}</text>`;
+    }
+
+    svg += '</svg>';
+    container.innerHTML = svg;
+  }
+
+  function badgeClass(rarity) {
+    switch(rarity){case 'mythic':return 'bg-warning text-dark';case 'rare':return 'bg-info text-dark';case 'uncommon':return 'bg-secondary';case 'common':return 'bg-light text-dark border';default:return 'bg-dark';}
+  }
+</script>
+<style>
+  .bg-purple { background-color: #6f42c1 !important; }
+</style>
+{{ end }}
