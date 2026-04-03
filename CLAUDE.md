@@ -31,7 +31,7 @@ Run `./setup.sh` after cloning this repo to clone all sibling repos to the corre
 | GCS bucket | `collection-tracker-data` |
 | BigQuery | Project `future-gadget-labs-483502` — datasets: `catalog` (reference), `market_data` (price history + ML features) |
 | Firebase project | `collection-showcase-auth` (Google sign-in; config goes in `.env`, never committed) |
-| Artifact Registry | `us-central1-docker.pkg.dev/future-gadget-labs-483502/tcg-collection/` |
+| Docker Hub | `philwin/collection-market-tracker`, `philwin/tcgplayer-price-scraper`, `philwin/set-market-metrics`, `philwin/pricecharting-scraper`, `philwin/tcgplayer-price-sync` |
 
 ## Architecture
 
