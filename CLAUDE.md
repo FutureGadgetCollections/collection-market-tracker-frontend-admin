@@ -61,15 +61,18 @@ The backend has three distinct concerns:
 | `set_market_metrics` | `(game, set_code, snapshot_date)` | Weekly set-level metrics computed from single card prices + pull rates. `set_market_value` = sum of all singles prices; `pack_ev` = expected value of a single pack. Updated Monday 12:00 UTC by `set-market-metrics` job. Feeds `set_market_value`/`pack_expected_value` columns in `ml_price_features_sealed`. |
 | `pricecharting_price_history` | `(game, set_code, product_type, date)` | Historical prices from PriceCharting. Partitioned by `date`, clustered by `(game, set_code)`. Columns: `market_price`. Planned: `sell_through_rate`. Raw source — consumed by `ml_price_features_sealed`. |
 | `ml_price_features_sealed` | `(game, set_code, product_type, snapshot_date)` | ML feature table for sealed price prediction. Partitioned by `snapshot_date`, clustered by `(game, set_code)`. See ML section below. |
+| `ev_set_history` | `(game, set_code, product_type, snapshot_date)` | Weekly EV snapshots per set/product. Partitioned by `snapshot_date`, clustered by `(game, set_code)`. Per-rarity avg prices (sifted), pack EV (gross/TCGPlayer/Manapool), box EV, value ratio, card coverage. Populated by a weekly job (TODO). |
 | `price_history` | — | Legacy placeholder — empty, not used. |
-| `latest_tcgplayer_prices` | — | Latest TCGPlayer prices view/table. |
+| `latest_tcgplayer_prices` | — | View: latest row per `tcgplayer_id` from `tcgplayer_price_history`. |
+| `ev_card_prices` | — | View: `single_cards` LEFT JOIN `latest_tcgplayer_prices` on `tcgplayer_id`. Columns: game, set_code, card_number, name, rarity, treatment, collector_only, market_price, avg_daily_sold, listed_median, sellers, price_date. |
+| `ev_set_summary` | — | View: aggregated card prices by `(game, set_code, rarity, treatment, collector_only)`. Columns: card_count, priced_count, avg_price, avg_price_sifted_025, total_price, total_price_sifted_025. |
 
 ### catalog dataset
 
 | Table | Purpose |
 |-------|---------|
 | `sealed_products` | Sealed product catalog — PK `(game, set_code, product_type)` |
-| `single_cards` | Single card catalog — PK `(game, set_code, card_number)` |
+| `single_cards` | Single card catalog — PK `(game, set_code, card_number)`. Columns include `treatment` (base, borderless, showcase, extended_art, neon_ink, raised_foil, source_material, token) and `collector_only` (bool — TRUE for collector-booster-exclusive cards). |
 | `set_pull_rates` | Pull rate data — PK `(set_code, rarity)` |
 | `pack_slots` | Per-slot probability distributions for booster products — PK `(game, set_code, product_type, slot_index)`. Columns: `slot_name`, `is_foil`, `p_common/uncommon/rare/mythic/special` (sum to ~1.0 per slot), `card_pool`, `notes`. Used for EV calculation and pack opening simulation. Populated by `scripts/catalog/create_pack_slots_table.py`. |
 
