@@ -352,7 +352,7 @@
   // ── Helpers ─────────────────────────────────────────────────────────
   function getPrice(card) { const p = priceMap.get(String(card.tcgplayer_id)); return p ? p.market_price : null; }
   function esc(s) { const d = document.createElement('div'); d.appendChild(document.createTextNode(String(s ?? ''))); return d.innerHTML; }
-  function $(v) { return v != null ? '$' + v.toFixed(2) : '—'; }
+  function fmtUSD(v) { return v != null ? '$' + v.toFixed(2) : '—'; }
   function pct(v) { return v != null ? (v * 100).toFixed(1) + '%' : '—'; }
   function fmtPT(pt) { return pt.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
   function show(id) { document.getElementById(id).classList.remove('d-none'); }
@@ -448,9 +448,9 @@
 
     document.getElementById('ev-tbody').innerHTML = evRows.map(r => `<tr>
       <td class="ps-3"><span class="badge ${badgeClass(r.rarity)}">${esc(r.label)}</span>${r.sifted ? `<span class="text-muted small ms-1">(${r.sifted} sifted)</span>` : ''}</td>
-      <td>${r.priced} / ${r.poolSize}</td><td>${r.pullRate.toFixed(3)}</td><td>${$(r.avgPrice)}</td>
-      <td class="text-end pe-3 fw-medium">${$(r.ev)}</td></tr>`).join('');
-    document.getElementById('ev-total').textContent = $(quickTotal);
+      <td>${r.priced} / ${r.poolSize}</td><td>${r.pullRate.toFixed(3)}</td><td>${fmtUSD(r.avgPrice)}</td>
+      <td class="text-end pe-3 fw-medium">${fmtUSD(r.ev)}</td></tr>`).join('');
+    document.getElementById('ev-total').textContent = fmtUSD(quickTotal);
     document.getElementById('ev-title').textContent = `Quick EV Summary — ${fmtPT(productType)}${feeLabel}${siftLabel}`;
     show('ev-card');
 
@@ -469,9 +469,9 @@
           <td>${s.is_foil?'<i class="bi bi-stars text-warning"></i>':''}</td>
           <td class="text-center">${pF(s.p_common)}</td><td class="text-center">${pF(s.p_uncommon)}</td>
           <td class="text-center">${pF(s.p_rare)}</td><td class="text-center">${pF(s.p_mythic)}</td>
-          <td class="text-center">${pF(s.p_special)}</td><td class="text-end pe-3 fw-medium">${$(r.ev)}</td></tr>`;
+          <td class="text-center">${pF(s.p_special)}</td><td class="text-end pe-3 fw-medium">${fmtUSD(r.ev)}</td></tr>`;
       }).join('');
-      document.getElementById('slot-total').textContent = $(slotTotal);
+      document.getElementById('slot-total').textContent = fmtUSD(slotTotal);
       show('slot-card');
     }
 
@@ -486,17 +486,17 @@
       const boxMktPrice = priceMap.get(String(product.tcgplayer_id));
 
       let statsHTML = `
-        <div class="col"><div class="text-muted small">Pack EV</div><div class="fs-5 fw-bold text-primary">${$(packEV)}</div></div>
+        <div class="col"><div class="text-muted small">Pack EV</div><div class="fs-5 fw-bold text-primary">${fmtUSD(packEV)}</div></div>
         <div class="col"><div class="text-muted small">Packs / Box</div><div class="fs-5 fw-bold">${packs}</div></div>
-        <div class="col"><div class="text-muted small">Box EV</div><div class="fs-5 fw-bold text-success">${$(boxEV)}</div></div>`;
-      if (boxMktPrice) statsHTML += `<div class="col"><div class="text-muted small">Box Market</div><div class="fs-5 fw-bold">${$(boxMktPrice.market_price)}</div></div>`;
-      statsHTML += `<div class="col"><div class="text-muted small">Box Cost</div><div class="fs-5 fw-bold">${$(boxCost)}</div></div>`;
+        <div class="col"><div class="text-muted small">Box EV</div><div class="fs-5 fw-bold text-success">${fmtUSD(boxEV)}</div></div>`;
+      if (boxMktPrice) statsHTML += `<div class="col"><div class="text-muted small">Box Market</div><div class="fs-5 fw-bold">${fmtUSD(boxMktPrice.market_price)}</div></div>`;
+      statsHTML += `<div class="col"><div class="text-muted small">Box Cost</div><div class="fs-5 fw-bold">${fmtUSD(boxCost)}</div></div>`;
       document.getElementById('box-stats-row').innerHTML = statsHTML;
 
       if (boxCost > 0) {
         const ratio = boxEV / boxCost;
         const badge = document.getElementById('box-ratio-badge');
-        badge.textContent = `Value Ratio: ${ratio.toFixed(2)}x (${boxEV > boxCost ? '+' : ''}${$(boxEV - boxCost)} per box)`;
+        badge.textContent = `Value Ratio: ${ratio.toFixed(2)}x (${boxEV > boxCost ? '+' : ''}${fmtUSD(boxEV - boxCost)} per box)`;
         badge.className = `badge fs-6 px-3 py-2 ${ratio >= 1.0 ? 'bg-success' : 'bg-danger'}`;
         document.getElementById('box-ratio-row').style.display = '';
       } else { document.getElementById('box-ratio-row').style.display = 'none'; }
@@ -514,7 +514,7 @@
       document.getElementById('excluded-tbody').innerHTML = collectorOnly.map(c => {
         const p = getPrice(c);
         return `<tr><td class="ps-3">${esc(c.name)}</td><td><span class="badge bg-dark">${esc(c.treatment)}</span></td>
-          <td class="text-end pe-3">${p!=null?$(p):'<span class="text-muted">N/A</span>'}</td></tr>`;
+          <td class="text-end pe-3">${p!=null?fmtUSD(p):'<span class="text-muted">N/A</span>'}</td></tr>`;
       }).join('');
       show('excluded-card');
     }
@@ -557,7 +557,7 @@
       el.innerHTML = `
         <div class="card-header bg-white border-0 py-2" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#${id}">
           <span class="badge ${cat.badge} me-2">${esc(cat.label)}</span>
-          <span class="small text-muted">${sorted.length} cards &middot; avg ${$(stats.avg)} &middot; total ${$(stats.total)}${stats.sifted ? ` &middot; ${stats.sifted} sifted` : ''}</span>
+          <span class="small text-muted">${sorted.length} cards &middot; avg ${fmtUSD(stats.avg)} &middot; total ${fmtUSD(stats.total)}${stats.sifted ? ` &middot; ${stats.sifted} sifted` : ''}</span>
           <i class="bi bi-chevron-down float-end mt-1 text-muted"></i>
         </div>
         <div class="collapse" id="${id}">
@@ -570,7 +570,7 @@
                 return `<tr class="${sifted ? 'text-decoration-line-through text-muted' : ''}">
                   <td class="ps-3 text-muted">${esc(c.card_number)}</td><td>${esc(c.name)}</td>
                   <td>${c.treatment && c.treatment !== 'base' ? `<span class="badge bg-light text-dark border">${esc(c.treatment)}</span>` : ''}</td>
-                  <td class="text-end pe-3 ${!sifted && p!=null && p>=5 ? 'fw-medium' : ''}">${p!=null?$(p):'<span class="text-muted">N/A</span>'}</td></tr>`;
+                  <td class="text-end pe-3 ${!sifted && p!=null && p>=5 ? 'fw-medium' : ''}">${p!=null?fmtUSD(p):'<span class="text-muted">N/A</span>'}</td></tr>`;
               }).join('')}</tbody>
             </table>
           </div></div>
@@ -683,12 +683,12 @@
     document.getElementById('sim-n').textContent = iters.toLocaleString();
     const lossColor = lossCount / iters > 0.5 ? 'text-danger' : 'text-success';
     document.getElementById('sim-stats-row').innerHTML = `
-      <div class="col"><div class="text-muted small">Mean Value</div><div class="fs-6 fw-bold">${$(mean)}</div></div>
-      <div class="col"><div class="text-muted small">Median (p50)</div><div class="fs-6 fw-bold">${$(p50)}</div></div>
-      <div class="col"><div class="text-muted small">Std Dev</div><div class="fs-6 fw-bold">${$(stddev)}</div></div>
-      <div class="col"><div class="text-muted small">Range</div><div class="fs-6 fw-bold">${$(min)} — ${$(max)}</div></div>
-      <div class="col"><div class="text-muted small">Loss Rate</div><div class="fs-6 fw-bold ${lossColor}">${lossPct}%</div><div class="text-muted small">below ${$(totalCost)}</div></div>
-      <div class="col"><div class="text-muted small">p5 / p25 / p75 / p95</div><div class="small fw-medium">${$(p5)} / ${$(p25)} / ${$(p75)} / ${$(p95)}</div></div>
+      <div class="col"><div class="text-muted small">Mean Value</div><div class="fs-6 fw-bold">${fmtUSD(mean)}</div></div>
+      <div class="col"><div class="text-muted small">Median (p50)</div><div class="fs-6 fw-bold">${fmtUSD(p50)}</div></div>
+      <div class="col"><div class="text-muted small">Std Dev</div><div class="fs-6 fw-bold">${fmtUSD(stddev)}</div></div>
+      <div class="col"><div class="text-muted small">Range</div><div class="fs-6 fw-bold">${fmtUSD(min)} — ${fmtUSD(max)}</div></div>
+      <div class="col"><div class="text-muted small">Loss Rate</div><div class="fs-6 fw-bold ${lossColor}">${lossPct}%</div><div class="text-muted small">below ${fmtUSD(totalCost)}</div></div>
+      <div class="col"><div class="text-muted small">p5 / p25 / p75 / p95</div><div class="small fw-medium">${fmtUSD(p5)} / ${fmtUSD(p25)} / ${fmtUSD(p75)} / ${fmtUSD(p95)}</div></div>
     `;
 
     // Render histogram
@@ -724,7 +724,7 @@
     if (costLine >= min && costLine <= max) {
       const x = ((costLine - min) / range) * W;
       svg += `<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="#dc3545" stroke-width="2" stroke-dasharray="4,3"/>`;
-      svg += `<text x="${x+4}" y="12" fill="#dc3545" font-size="11">Cost ${$(costLine)}</text>`;
+      svg += `<text x="${x+4}" y="12" fill="#dc3545" font-size="11">Cost ${fmtUSD(costLine)}</text>`;
     }
 
     for (let i = 0; i < bucketCount; i++) {
@@ -739,7 +739,7 @@
     for (let i = 0; i <= 4; i++) {
       const x = (i / 4) * W;
       const val = min + (i / 4) * range;
-      svg += `<text x="${x}" y="${H-2}" fill="#6c757d" font-size="10" text-anchor="middle">${$(val)}</text>`;
+      svg += `<text x="${x}" y="${H-2}" fill="#6c757d" font-size="10" text-anchor="middle">${fmtUSD(val)}</text>`;
     }
 
     svg += '</svg>';
