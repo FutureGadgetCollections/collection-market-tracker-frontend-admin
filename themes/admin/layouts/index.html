@@ -1,5 +1,5 @@
 {{ define "main" }}
-<div class="row justify-content-center mt-5">
+<div class="row justify-content-center mt-5" id="auth-row">
   <div class="col-md-5 col-lg-4">
     <div class="card shadow-sm border-0">
       <div class="card-body p-4">
@@ -40,6 +40,9 @@
             <a id="btn-go-rates" href="{{ "set-pull-rates/" | relURL }}" class="btn btn-outline-secondary">
               <i class="bi bi-bar-chart me-1"></i>Pull Rates
             </a>
+            <a href="{{ "expected-value/" | relURL }}" class="btn btn-outline-secondary">
+              <i class="bi bi-calculator me-1"></i>Expected Value
+            </a>
             <p id="admin-hint" class="text-muted small mb-0 d-none">
               <i class="bi bi-lock me-1"></i>You need admin access to use this app.
             </p>
@@ -49,11 +52,75 @@
     </div>
   </div>
 </div>
+
+<!-- ── Dashboard (visible after sign-in) ────────────────────────────── -->
+<div class="d-none mt-4" id="dashboard">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="h5 mb-0 fw-semibold"><i class="bi bi-speedometer2 me-2 text-primary"></i>Dashboard</h2>
+    <span class="text-muted small" id="dash-updated"></span>
+  </div>
+
+  <!-- Top-level stats -->
+  <div class="row g-3 mb-4" id="dash-stats"></div>
+
+  <!-- EV overview table -->
+  <div class="card shadow-sm border-0 mb-3" id="dash-ev-card">
+    <div class="card-header bg-white border-0 py-2">
+      <span class="fw-semibold small">EV Overview by Set</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3">Game</th>
+              <th>Set</th>
+              <th class="text-center">Total Cards</th>
+              <th class="text-center">Priced</th>
+              <th class="text-center">Coverage</th>
+              <th class="text-end">Avg Mythic</th>
+              <th class="text-end">Avg Rare</th>
+              <th class="text-end">Avg Variant</th>
+              <th class="text-end pe-3">Total Value</th>
+            </tr>
+          </thead>
+          <tbody id="dash-ev-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data health -->
+  <div class="card shadow-sm border-0 mb-3" id="dash-health-card">
+    <div class="card-header bg-white border-0 py-2">
+      <span class="fw-semibold small">Data Health</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3">Game</th>
+              <th>Set</th>
+              <th class="text-center">Cards</th>
+              <th class="text-center">Has Treatment</th>
+              <th class="text-center">Pull Rates</th>
+              <th class="text-center">Pack Slots</th>
+              <th class="text-center">Sealed Products</th>
+              <th class="text-center pe-3">EV Ready</th>
+            </tr>
+          </thead>
+          <tbody id="dash-health-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 {{ end }}
 
 {{ define "page-scripts" }}
 <script>
-  firebase.auth().onAuthStateChanged(user => {
+  firebase.auth().onAuthStateChanged(async user => {
     if (user) {
       document.getElementById('auth-section').classList.add('d-none');
       document.getElementById('signed-in-section').classList.remove('d-none');
@@ -66,11 +133,143 @@
           btn.classList.add('disabled');
         });
         document.getElementById('admin-hint').classList.remove('d-none');
+      } else {
+        await loadDashboard();
       }
     } else {
       document.getElementById('auth-section').classList.remove('d-none');
       document.getElementById('signed-in-section').classList.add('d-none');
+      document.getElementById('dashboard').classList.add('d-none');
     }
   });
+
+  async function loadDashboard() {
+    try {
+      const [cards, pullRates, prices, sealed, packSlots] = await Promise.all([
+        loadJsonData('data/single-cards.json'),
+        loadJsonData('data/set-pull-rates.json'),
+        loadJsonData('data/tcgplayer-latest-prices.json'),
+        loadJsonData('data/sealed-products.json'),
+        loadJsonData('data/pack-slots.json').catch(() => []),
+      ]);
+
+      const priceMap = new Map();
+      for (const p of (prices || [])) {
+        if (p.tcgplayer_id && p.market_price != null)
+          priceMap.set(String(p.tcgplayer_id), p.market_price);
+      }
+
+      // Find a price date
+      const dateEntry = (prices || []).find(p => p.date);
+      if (dateEntry) document.getElementById('dash-updated').textContent = `Price data: ${dateEntry.date}`;
+
+      const prSetCodes = new Set((pullRates || []).map(r => r.set_code));
+      const slotSetCodes = new Set((packSlots || []).map(s => `${s.game}|${s.set_code}`));
+      const sealedBySet = new Map();
+      for (const p of (sealed || [])) {
+        const key = `${p.game}|${p.set_code}`;
+        if (!sealedBySet.has(key)) sealedBySet.set(key, []);
+        sealedBySet.get(key).push(p);
+      }
+
+      // Group cards by game+set
+      const setGroups = new Map();
+      for (const c of (cards || [])) {
+        const key = `${c.game}|${c.set_code}`;
+        if (!setGroups.has(key)) setGroups.set(key, { game: c.game, set_code: c.set_code, cards: [] });
+        setGroups.get(key).cards.push(c);
+      }
+
+      // Top-level stats
+      const totalCards = (cards || []).length;
+      const totalPriced = (cards || []).filter(c => priceMap.has(String(c.tcgplayer_id))).length;
+      const totalSets = setGroups.size;
+      const evReadySets = [...setGroups.values()].filter(g => prSetCodes.has(g.set_code)).length;
+
+      document.getElementById('dash-stats').innerHTML = `
+        <div class="col-sm-3"><div class="card border-0 shadow-sm"><div class="card-body text-center py-3">
+          <div class="text-muted small">Total Cards</div><div class="fs-4 fw-bold">${totalCards.toLocaleString()}</div>
+        </div></div></div>
+        <div class="col-sm-3"><div class="card border-0 shadow-sm"><div class="card-body text-center py-3">
+          <div class="text-muted small">Priced Cards</div><div class="fs-4 fw-bold">${totalPriced.toLocaleString()}</div>
+          <div class="text-muted small">${totalCards > 0 ? (totalPriced/totalCards*100).toFixed(1) : 0}%</div>
+        </div></div></div>
+        <div class="col-sm-3"><div class="card border-0 shadow-sm"><div class="card-body text-center py-3">
+          <div class="text-muted small">Total Sets</div><div class="fs-4 fw-bold">${totalSets}</div>
+        </div></div></div>
+        <div class="col-sm-3"><div class="card border-0 shadow-sm"><div class="card-body text-center py-3">
+          <div class="text-muted small">EV-Ready Sets</div><div class="fs-4 fw-bold text-success">${evReadySets}</div>
+          <div class="text-muted small">have pull rates</div>
+        </div></div></div>
+      `;
+
+      // EV overview — only sets with pull rates AND prices
+      const evSets = [...setGroups.values()]
+        .filter(g => prSetCodes.has(g.set_code))
+        .sort((a, b) => a.game.localeCompare(b.game) || a.set_code.localeCompare(b.set_code));
+
+      document.getElementById('dash-ev-tbody').innerHTML = evSets.map(g => {
+        const base = g.cards.filter(c => !c.collector_only);
+        const priced = base.filter(c => priceMap.has(String(c.tcgplayer_id)));
+        const coverage = base.length > 0 ? (priced.length / base.length * 100).toFixed(0) : 0;
+
+        const mythics = base.filter(c => c.rarity === 'mythic' && (!c.treatment || c.treatment === 'base'));
+        const rares = base.filter(c => c.rarity === 'rare' && (!c.treatment || c.treatment === 'base'));
+        const variants = base.filter(c => c.treatment && c.treatment !== 'base' && c.treatment !== 'token' && c.treatment !== 'source_material' && c.rarity !== 'land');
+
+        const avgOf = arr => { let s=0,n=0; for(const c of arr){const p=priceMap.get(String(c.tcgplayer_id)); if(p!=null){s+=p;n++;}} return n>0?s/n:0; };
+        const totalVal = priced.reduce((s, c) => s + (priceMap.get(String(c.tcgplayer_id)) || 0), 0);
+
+        const covClass = coverage >= 90 ? 'text-success' : coverage >= 50 ? 'text-warning' : 'text-danger';
+        const pr = (pullRates || []).find(r => r.set_code === g.set_code);
+        const setName = pr ? pr.set_name : g.set_code;
+
+        return `<tr>
+          <td class="ps-3"><span class="badge bg-dark">${esc(g.game)}</span></td>
+          <td><a href="expected-value/" class="text-decoration-none fw-medium">${esc(setName)}</a><br><span class="text-muted">${esc(g.set_code)}</span></td>
+          <td class="text-center">${base.length}</td>
+          <td class="text-center">${priced.length}</td>
+          <td class="text-center ${covClass} fw-medium">${coverage}%</td>
+          <td class="text-end">${fmtUSD(avgOf(mythics))}</td>
+          <td class="text-end">${fmtUSD(avgOf(rares))}</td>
+          <td class="text-end">${fmtUSD(avgOf(variants))}</td>
+          <td class="text-end pe-3 fw-medium">${fmtUSD(totalVal)}</td>
+        </tr>`;
+      }).join('');
+
+      // Data health — ALL sets
+      const allSets = [...setGroups.values()].sort((a, b) => a.game.localeCompare(b.game) || a.set_code.localeCompare(b.set_code));
+
+      document.getElementById('dash-health-tbody').innerHTML = allSets.map(g => {
+        const hasTreatment = g.cards.some(c => c.treatment && c.treatment !== 'base');
+        const hasPR = prSetCodes.has(g.set_code);
+        const hasSlots = slotSetCodes.has(`${g.game}|${g.set_code}`);
+        const hasSealed = sealedBySet.has(`${g.game}|${g.set_code}`);
+        const sealedCount = hasSealed ? sealedBySet.get(`${g.game}|${g.set_code}`).length : 0;
+        const evReady = hasPR && hasSealed;
+
+        const check = '<i class="bi bi-check-circle-fill text-success"></i>';
+        const cross = '<i class="bi bi-x-circle text-muted"></i>';
+
+        return `<tr>
+          <td class="ps-3"><span class="badge bg-dark">${esc(g.game)}</span></td>
+          <td>${esc(g.set_code)}</td>
+          <td class="text-center">${g.cards.length}</td>
+          <td class="text-center">${hasTreatment ? check : cross}</td>
+          <td class="text-center">${hasPR ? check : cross}</td>
+          <td class="text-center">${hasSlots ? check : cross}</td>
+          <td class="text-center">${hasSealed ? `${sealedCount}` : cross}</td>
+          <td class="text-center pe-3">${evReady ? '<span class="badge bg-success">Ready</span>' : '<span class="badge bg-secondary">Incomplete</span>'}</td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('dashboard').classList.remove('d-none');
+    } catch (e) {
+      console.error('Dashboard load failed:', e);
+    }
+  }
+
+  function esc(s) { const d = document.createElement('div'); d.appendChild(document.createTextNode(String(s ?? ''))); return d.innerHTML; }
+  function fmtUSD(v) { return v != null && v > 0 ? '$' + v.toFixed(2) : '—'; }
 </script>
 {{ end }}
