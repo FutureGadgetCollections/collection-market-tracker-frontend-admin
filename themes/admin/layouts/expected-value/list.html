@@ -275,19 +275,20 @@
   }
 
   // ── Data loading ────────────────────────────────────────────────────
+  function fetchDataFile(source, file) {
+    if (source === 'api') return api('GET', '/' + file.replace('data/', '').replace('.json', ''));
+    if (source === 'gcs') return loadFromGCS(file);
+    return loadJsonData(file);
+  }
+
   async function loadAllData(source = 'github') {
     try {
-      const load = (file) => {
-        if (source === 'api') return api('GET', '/' + file.replace('data/', '').replace('.json', ''));
-        if (source === 'gcs') return loadFromGCS(file);
-        return loadJsonData(file);
-      };
       const [cards, pullRates, prices, sealed, packSlots] = await Promise.all([
-        load('data/single-cards.json'),
-        load('data/set-pull-rates.json'),
-        load('data/tcgplayer-latest-prices.json'),
-        load('data/sealed-products.json'),
-        load('data/pack-slots.json').catch(() => []),
+        fetchDataFile(source, 'data/single-cards.json'),
+        fetchDataFile(source, 'data/set-pull-rates.json'),
+        fetchDataFile(source, 'data/tcgplayer-latest-prices.json'),
+        fetchDataFile(source, 'data/sealed-products.json'),
+        fetchDataFile(source, 'data/pack-slots.json').catch(() => []),
       ]);
       allCards = cards || []; allPullRates = pullRates || []; allSealed = sealed || []; allPackSlots = packSlots || [];
       priceMap = new Map();
