@@ -302,9 +302,23 @@
   }
 
   // ── Filter UI ───────────────────────────────────────────────────────
-  function populateGameFilter() {
+  // Sets with pull rates (booster products) OR fixed-contents products (precons/box sets)
+  function setsWithEVData() {
     const prSetCodes = new Set(allPullRates.map(r => r.set_code));
-    const games = [...new Set(allCards.filter(c => prSetCodes.has(c.set_code)).map(c => c.game))].sort();
+    const sealedSetCodes = new Set(allSealed.map(p => `${p.game}|${p.set_code}`));
+    // A set is EV-eligible if it has pull rates OR it's a sealed product with cards
+    return new Set(allCards.filter(c => prSetCodes.has(c.set_code) || sealedSetCodes.has(`${c.game}|${c.set_code}`)).map(c => `${c.game}|${c.set_code}`));
+  }
+
+  function isFixedContents(game, setCode) {
+    const hasPR = allPullRates.some(r => r.set_code === setCode);
+    const hasSlots = allPackSlots.some(s => s.game === game && s.set_code === setCode);
+    return !hasPR && !hasSlots;
+  }
+
+  function populateGameFilter() {
+    const evSets = setsWithEVData();
+    const games = [...new Set(allCards.filter(c => evSets.has(`${c.game}|${c.set_code}`)).map(c => c.game))].sort();
     const sel = document.getElementById('filter-game');
     sel.innerHTML = '<option value="">Select Game</option>' + games.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
     show('filters-card');
@@ -315,9 +329,9 @@
     const game = document.getElementById('filter-game').value;
     hideResults();
     if (!game) { document.getElementById('filter-set').innerHTML = '<option value="">Select Set</option>'; return; }
-    const prSetCodes = new Set(allPullRates.map(r => r.set_code));
+    const evSets = setsWithEVData();
     const setMap = new Map();
-    for (const c of allCards.filter(c => c.game === game && prSetCodes.has(c.set_code)))
+    for (const c of allCards.filter(c => c.game === game && evSets.has(`${c.game}|${c.set_code}`)))
       if (!setMap.has(c.set_code)) { const pr = allPullRates.find(r => r.set_code === c.set_code); setMap.set(c.set_code, pr?.set_name || c.set_code); }
     const sets = [...setMap.entries()].sort((a,b) => a[0].localeCompare(b[0]));
     const ss = document.getElementById('filter-set');
@@ -405,6 +419,13 @@
     if (!game || !setCode) { hideResults(); return; }
 
     const allSetCards = allCards.filter(c => c.game === game && c.set_code === setCode);
+
+    // ── Fixed-contents products (precons, box sets) ───────────────────
+    if (isFixedContents(game, setCode)) {
+      computeFixedEV(game, setCode, productType, allSetCards);
+      return;
+    }
+
     const playCards = allSetCards.filter(c => !c.collector_only);
     const collectorOnly = allSetCards.filter(c => c.collector_only);
     const setPR = allPullRates.filter(r => r.set_code === setCode);
@@ -419,6 +440,10 @@
     const feeLabel = feeName !== 'none' ? ` (after ${feeName === 'custom' ? 'custom' : feeName} fees)` : '';
     const sift = getSiftFloor();
     const siftLabel = sift > 0 ? ` | sift $${sift.toFixed(2)}` : '';
+
+    // Reset table headers (may have been changed by fixed-contents view)
+    document.querySelector('#ev-card thead tr').innerHTML = '<th class="ps-3">Category</th><th>Cards (priced / pool)</th><th>Pulls / Pack</th><th>Avg Card Price</th><th class="text-end pe-3">EV Contribution</th>';
+    document.querySelector('#ev-card tfoot tr').innerHTML = '<td class="ps-3 fw-bold" colspan="4">Total Pack EV</td><td class="text-end pe-3 fw-bold" id="ev-total">—</td>';
 
     // ── Quick EV ──────────────────────────────────────────────────────
     const RARITY_ORDER = ['mythic','rare','uncommon','common'];
@@ -529,6 +554,82 @@
     if (feeName !== 'none') { const f = getFeeConfig(); notes.push(`Fees applied: ${f.pct}% + $${f.flat.toFixed(2)} per card sold.`); }
     document.getElementById('ev-notes').innerHTML = notes.map(n => `<div>${esc(n)}</div>`).join('');
     show('ev-notes');
+  }
+
+  // ── Fixed-contents EV (precons, box sets) ───────────────────────────
+  function computeFixedEV(game, setCode, productType, allSetCards) {
+    const sift = getSiftFloor();
+    const feeName = document.getElementById('opt-fees').value;
+    const feeLabel = feeName !== 'none' ? ` (after ${feeName === 'custom' ? 'custom' : feeName} fees)` : '';
+
+    let priceDate = null;
+    const sorted = [...allSetCards].sort((a, b) => (getPrice(b) || 0) - (getPrice(a) || 0));
+
+    let grossTotal = 0, netTotal = 0, pricedCount = 0;
+    const rows = sorted.map(c => {
+      const p = getPrice(c);
+      if (!priceDate && p != null) { const pd = priceMap.get(String(c.tcgplayer_id)); if (pd) priceDate = pd.date; }
+      const effective = (p != null && p >= sift) ? p : 0;
+      const net = applyFees(effective);
+      if (p != null) { pricedCount++; grossTotal += effective; netTotal += net; }
+      return { card: c, price: p, effective, net };
+    });
+
+    document.getElementById('ev-price-date').textContent = priceDate ? `Prices as of ${priceDate}` : '';
+
+    // Render as a simple card list in the EV table
+    document.getElementById('ev-title').textContent = `Fixed Contents — ${fmtPT(productType)}${feeLabel}`;
+    document.getElementById('ev-tbody').innerHTML = rows.map(r => `<tr>
+      <td class="ps-3">${esc(r.card.name)}${r.card.rarity ? ` <span class="badge bg-light text-dark border small">${esc(r.card.rarity)}</span>` : ''}</td>
+      <td>${esc(r.card.card_number)}</td>
+      <td>${r.price != null ? fmtUSD(r.price) : '<span class="text-muted">N/A</span>'}</td>
+      <td>${r.effective < (r.price || 0) ? '<span class="text-muted">sifted</span>' : ''}</td>
+      <td class="text-end pe-3 fw-medium">${fmtUSD(r.net)}</td>
+    </tr>`).join('');
+    document.getElementById('ev-total').textContent = fmtUSD(netTotal);
+
+    // Update table headers for fixed contents
+    const thead = document.querySelector('#ev-card thead tr');
+    thead.innerHTML = '<th class="ps-3">Card</th><th>#</th><th>Market Price</th><th></th><th class="text-end pe-3">Net Value</th>';
+    const tfoot = document.querySelector('#ev-card tfoot tr');
+    tfoot.innerHTML = `<td class="ps-3 fw-bold" colspan="4">Total Product Value</td><td class="text-end pe-3 fw-bold">${fmtUSD(netTotal)}</td>`;
+    show('ev-card');
+
+    // Box summary
+    const product = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
+    const boxCost = parseFloat(document.getElementById('opt-box-cost').value) || 0;
+    if (product) {
+      const boxMktPrice = priceMap.get(String(product.tcgplayer_id));
+      let statsHTML = `
+        <div class="col"><div class="text-muted small">Total Card Value</div><div class="fs-5 fw-bold text-primary">${fmtUSD(grossTotal)}</div></div>
+        <div class="col"><div class="text-muted small">After Fees</div><div class="fs-5 fw-bold text-success">${fmtUSD(netTotal)}</div></div>`;
+      if (boxMktPrice) statsHTML += `<div class="col"><div class="text-muted small">Market Price</div><div class="fs-5 fw-bold">${fmtUSD(boxMktPrice.market_price)}</div></div>`;
+      statsHTML += `<div class="col"><div class="text-muted small">Cost</div><div class="fs-5 fw-bold">${fmtUSD(boxCost)}</div></div>`;
+      if (product.msrp) statsHTML += `<div class="col"><div class="text-muted small">MSRP</div><div class="fs-5 fw-bold text-muted">${fmtUSD(product.msrp)}</div></div>`;
+      document.getElementById('box-stats-row').innerHTML = statsHTML;
+
+      if (boxCost > 0) {
+        const ratio = netTotal / boxCost;
+        const profit = netTotal - boxCost;
+        const badge = document.getElementById('box-ratio-badge');
+        badge.textContent = `Value Ratio: ${ratio.toFixed(2)}x (${profit >= 0 ? '+' : ''}${fmtUSD(profit)} profit)`;
+        badge.className = `badge fs-6 px-3 py-2 ${ratio >= 1.0 ? 'bg-success' : 'bg-danger'}`;
+        document.getElementById('box-ratio-row').style.display = '';
+      } else { document.getElementById('box-ratio-row').style.display = 'none'; }
+      show('box-card');
+    }
+
+    // Notes
+    const notes = [`Fixed-contents product: you get exactly ${allSetCards.length} card(s).`];
+    if (pricedCount < allSetCards.length) notes.push(`${pricedCount}/${allSetCards.length} cards have price data.`);
+    if (feeName !== 'none') { const f = getFeeConfig(); notes.push(`Fees applied: ${f.pct}%.`); }
+    document.getElementById('ev-notes').innerHTML = notes.map(n => `<div>${esc(n)}</div>`).join('');
+    show('ev-notes');
+
+    // No simulator or slot breakdown for fixed contents
+    cachedSlots = [];
+    cachedPools = null;
+    cachedProduct = null;
   }
 
   // ── Card list rendering ─────────────────────────────────────────────
