@@ -227,11 +227,24 @@ Target table: `market_data.pricecharting_price_history` — grain `(game, set_co
 
 ### GCP cost reduction
 
-**TODO: Migrate images from Artifact Registry to Docker Hub**
-- All Cloud Run job images are currently pushed to `us-central1-docker.pkg.dev/future-gadget-labs-483502/tcg-collection/` — Artifact Registry charges for storage
-- Move to Docker Hub (public or private repo) to eliminate registry storage costs
-- Update all `cloudbuild.*.yaml` files and deploy scripts to push to `docker.io/<org>/<image>` instead
-- Cloud Run jobs can pull from Docker Hub directly
+**Migrate images from Artifact Registry to Docker Hub (IN PROGRESS)**
+- Docker Hub account: `philwin` — using personal access token (stored as GitHub secret `DOCKERHUB_TOKEN`)
+- **TODO: Rotate Docker Hub PAT** — token was exposed in a chat session; regenerate at hub.docker.com/settings/security and update `DOCKERHUB_TOKEN` secret in all repos
+- Old Docker Hub repos cleaned up (8 deleted: options-ingest, lotto-analysis, market_data_loader, etc.)
+
+**collection-market-tracker-backend — ✅ DONE (2026-04-03)**
+- Workflows + deploy scripts updated to push to `docker.io/philwin/<image>`
+- Images: `collection-market-tracker`, `tcgplayer-price-scraper`, `set-market-metrics`, `pricecharting-scraper`, `tcgplayer-price-sync`
+- GitHub secrets `DOCKERHUB_USERNAME` + `DOCKERHUB_TOKEN` added
+- Repos auto-create on first push; next workflow trigger will push to Docker Hub
+- **TODO: Delete AR repo** `us-central1-docker.pkg.dev/future-gadget-labs-483502/tcg-collection/` after verifying Docker Hub images work on Cloud Run
+
+**Other repos — TODO**
+- `collection-showcase-backend` — `collection-showcase` image still on AR
+- `cloud-predict-analytics` — `polymarket`, `nbm-noaa` images on AR (`fg-polylabs/polymarket` repo)
+- `doomsday-predict-analytics` — `doomsday-polymarket`, `doomsday-exporter`, `doomsday-api` on AR (`fg-polylabs/doomsday` repo)
+- `set-value-tracking-backend` — `evupdate` image on AR (`tcg` repo)
+- For each: add `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` secrets, update workflows + deploy scripts, verify, then delete AR repos
 
 **TODO: Homeserver-primary / Cloud Run-fallback API architecture**
 - Goal: backend API (`collection-market-tracker` Cloud Run service) runs primarily on homeserver; Cloud Run is the fallback if the local API process is down
