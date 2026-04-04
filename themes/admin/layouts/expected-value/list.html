@@ -808,25 +808,35 @@
     return entries;
   }
 
-  function weightedRandomPick(entries) {
-    // entries: [{card, weight}] where sum of weights ≈ 1
-    let r = Math.random();
-    for (const e of entries) {
-      r -= e.weight;
-      if (r <= 0) return e.card;
+  // Pre-compile a slot into a fast lookup: cumulative probability array + price array
+  // Binary search on cumulative weights is O(log n) vs O(n) linear scan
+  function compileSlot(entries, sift) {
+    const n = entries.length;
+    const cumWeights = new Float64Array(n);
+    const prices = new Float64Array(n);
+    let cumSum = 0;
+    for (let i = 0; i < n; i++) {
+      cumSum += entries[i].weight;
+      cumWeights[i] = cumSum;
+      const p = getPrice(entries[i].card);
+      prices[i] = (p != null && p >= sift) ? p : 0;
     }
-    return entries[entries.length - 1].card; // fallback
+    // Normalize to exactly 1.0
+    if (cumSum > 0) for (let i = 0; i < n; i++) cumWeights[i] /= cumSum;
+    cumWeights[n - 1] = 1.0;
+    return { cumWeights, prices, n };
   }
 
-  function simulateOnePack(slotWeights) {
-    let total = 0;
-    const sift = getSiftFloor();
-    for (const sw of slotWeights) {
-      const card = weightedRandomPick(sw);
-      const p = getPrice(card);
-      if (p != null && p >= sift) total += p;
+  function sampleSlot(compiled) {
+    const r = Math.random();
+    // Binary search for the first cumWeight >= r
+    let lo = 0, hi = compiled.n - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (compiled.cumWeights[mid] < r) lo = mid + 1;
+      else hi = mid;
     }
-    return total;
+    return compiled.prices[lo];
   }
 
   async function runSimulation() {
@@ -837,7 +847,6 @@
     show('sim-loading');
     hide('sim-results');
 
-    // Yield to UI
     await new Promise(r => setTimeout(r, 50));
 
     const numBoxes = parseInt(document.getElementById('sim-boxes').value) || 1;
@@ -846,23 +855,29 @@
     const boxCost = parseFloat(document.getElementById('opt-box-cost').value) || 0;
     const totalPacks = numBoxes * packsPerBox;
     const totalCost = numBoxes * boxCost;
+    const sift = getSiftFloor();
 
-    // Pre-build slot weight tables
-    const slotWeights = cachedSlots.map(s => buildSlotWeights(s, cachedPools, cachedPR));
+    // Pre-compile slots into fast typed arrays for simulation
+    const slotEntries = cachedSlots.map(s => buildSlotWeights(s, cachedPools, cachedPR));
+    const compiledSlots = slotEntries.map(e => compileSlot(e, sift));
+    const numSlots = compiledSlots.length;
 
     // Run simulation in chunks to avoid blocking UI
     const results = new Float64Array(iters);
-    const CHUNK = 500;
+    const CHUNK = 1000;
 
     for (let i = 0; i < iters; i += CHUNK) {
       const end = Math.min(i + CHUNK, iters);
       for (let j = i; j < end; j++) {
         let grossTotal = 0;
-        for (let p = 0; p < totalPacks; p++) grossTotal += simulateOnePack(slotWeights);
-        // Apply fees to total (as if selling all cards in one order)
+        for (let p = 0; p < totalPacks; p++) {
+          for (let s = 0; s < numSlots; s++) {
+            grossTotal += sampleSlot(compiledSlots[s]);
+          }
+        }
         results[j] = applyFees(grossTotal);
       }
-      if (i % 2000 === 0 && i > 0) await new Promise(r => setTimeout(r, 0)); // yield
+      if (i % 2000 === 0 && i > 0) await new Promise(r => setTimeout(r, 0));
     }
 
     // Compute stats
