@@ -61,7 +61,7 @@ The backend has three distinct concerns:
 | `set_market_metrics` | `(game, set_code, snapshot_date)` | Weekly set-level metrics computed from single card prices + pull rates. `set_market_value` = sum of all singles prices; `pack_ev` = expected value of a single pack. Updated Monday 12:00 UTC by `set-market-metrics` job. Feeds `set_market_value`/`pack_expected_value` columns in `ml_price_features_sealed`. |
 | `pricecharting_price_history` | `(game, set_code, product_type, date)` | Historical prices from PriceCharting. Partitioned by `date`, clustered by `(game, set_code)`. Columns: `market_price`. Planned: `sell_through_rate`. Raw source — consumed by `ml_price_features_sealed`. |
 | `ml_price_features_sealed` | `(game, set_code, product_type, snapshot_date)` | ML feature table for sealed price prediction. Partitioned by `snapshot_date`, clustered by `(game, set_code)`. See ML section below. |
-| `ev_set_history` | `(game, set_code, product_type, snapshot_date)` | Weekly EV snapshots per set/product. Partitioned by `snapshot_date`, clustered by `(game, set_code)`. Per-rarity avg prices (sifted), pack EV (gross/TCGPlayer/Manapool), box EV, value ratio, card coverage. Populated by a weekly job (TODO). |
+| `ev_set_history` | `(game, set_code, product_type, snapshot_date)` | Weekly EV snapshots per set/product. Partitioned by `snapshot_date`, clustered by `(game, set_code)`. Per-rarity avg prices (sifted $0.25), pack EV (gross/TCGPlayer 13.25%/Manapool 7.9%), box EV, value ratio, card coverage. Populated by `ev-history` Cloud Run job (`scripts/ev_history/`). Weekly mode: latest date. Backfill mode: all missing dates. |
 | `price_history` | — | Legacy placeholder — empty, not used. |
 | `latest_tcgplayer_prices` | — | View: latest row per `tcgplayer_id` from `tcgplayer_price_history`. |
 | `ev_card_prices` | — | View: `single_cards` LEFT JOIN `latest_tcgplayer_prices` on `tcgplayer_id`. Columns: game, set_code, card_number, name, rarity, treatment, collector_only, market_price, avg_daily_sold, listed_median, sellers, price_date. |
@@ -221,6 +221,15 @@ Target table: `market_data.pricecharting_price_history` — grain `(game, set_co
 
 **Step 6 — Pokemon older eras pull rates**
 - XY, Sun & Moon, Diamond & Pearl, Base Set era all have different pack structures; add separately once needed.
+
+### EV history backfill (TODO)
+
+Goal: populate `market_data.ev_set_history` with historical EV snapshots going back beyond TCGPlayer's 1-year window.
+
+- **Step 1**: Run `ev-history` job in backfill mode to compute EV for all existing dates in `tcgplayer_price_history` — gives ~1 year of weekly snapshots for sets that have been scraped.
+- **Step 2**: Backfill singles price history using PriceCharting data. `pricecharting_price_history` has monthly sealed product prices but NOT singles prices. Need a new data source or scraper for historical singles prices to extend EV history further back.
+- **Step 3**: Once historical singles prices are available, re-run `ev-history backfill` to fill in older EV snapshots.
+- **Step 4**: Add EV-over-time chart to the Expected Value tab using `ev_set_history` data.
 
 ### EV simulator (collection-market-tracker-ev-simulator)
 - CLAUDE.md created; precon-deck-lists.json data format documented there
