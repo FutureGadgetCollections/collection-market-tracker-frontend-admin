@@ -53,13 +53,13 @@
   <div class="card-body py-2">
     <div class="row g-2">
       <div class="col-sm-3">
-        <select class="form-select form-select-sm" id="filter-game" onchange="applyFilters()">
-          <option value="">All Games</option>
+        <select class="form-select form-select-sm" id="filter-game" onchange="onGameChange()">
+          <option value="">Select Game</option>
         </select>
       </div>
       <div class="col-sm-3">
-        <select class="form-select form-select-sm" id="filter-set" onchange="applyFilters()">
-          <option value="">All Sets</option>
+        <select class="form-select form-select-sm" id="filter-set" onchange="onSetChange()">
+          <option value="">Select Set</option>
         </select>
       </div>
       <div class="col-sm-3">
@@ -73,6 +73,11 @@
       </div>
     </div>
   </div>
+</div>
+
+<div id="select-prompt" class="text-center py-5 d-none">
+  <i class="bi bi-funnel fs-1 text-muted"></i>
+  <p class="text-muted mt-2">Select a game and set to view cards.</p>
 </div>
 
 <div class="card shadow-sm border-0 d-none" id="items-card">
@@ -321,10 +326,12 @@
 
   let allItems = [];
   let priceMap = {};
+  let dataSource = 'github';
 
   async function refreshItems(source) {
     const btns = document.querySelectorAll('#btn-refresh-group button');
     btns.forEach(b => b.disabled = true);
+    dataSource = source;
     await loadItems(source);
     btns.forEach(b => b.disabled = false);
   }
@@ -353,7 +360,9 @@
       if (!items || items.length === 0) { document.getElementById('empty-state').classList.remove('d-none'); return; }
       allItems = items;
       populateFilters(items);
-      renderItems(items);
+      // Don't render table until user selects a game + set
+      document.getElementById('items-card').classList.add('d-none');
+      document.getElementById('select-prompt').classList.remove('d-none');
     } catch (e) {
       document.getElementById('loading').classList.add('d-none');
       showToast('Failed to load single cards: ' + e.message, 'danger');
@@ -361,28 +370,60 @@
   }
 
   function populateFilters(items) {
-    const games    = [...new Set(items.map(c => c.game).filter(Boolean))].sort();
-    const sets     = [...new Set(items.map(c => c.set_code).filter(Boolean))].sort();
-    const rarities = [...new Set(items.map(c => c.rarity).filter(Boolean))].sort();
-    const fill = (id, opts) => {
+    const games = [...new Set(items.map(c => c.game).filter(Boolean))].sort();
+    const fill = (id, opts, label) => {
       const sel = document.getElementById(id);
-      const first = sel.options[0].outerHTML;
-      sel.innerHTML = first + opts.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+      sel.innerHTML = `<option value="">${label}</option>` + opts.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
     };
-    fill('filter-game', games);
-    fill('filter-set', sets);
-    fill('filter-rarity', rarities);
+    fill('filter-game', games, 'Select Game');
+    document.getElementById('filter-set').innerHTML = '<option value="">Select Set</option>';
+    document.getElementById('filter-rarity').innerHTML = '<option value="">All Rarities</option>';
     document.getElementById('filters-card').classList.remove('d-none');
+  }
+
+  function onGameChange() {
+    const game = document.getElementById('filter-game').value;
+    const setSel = document.getElementById('filter-set');
+    const rarSel = document.getElementById('filter-rarity');
+    if (!game) {
+      setSel.innerHTML = '<option value="">Select Set</option>';
+      rarSel.innerHTML = '<option value="">All Rarities</option>';
+      document.getElementById('items-card').classList.add('d-none');
+      document.getElementById('select-prompt').classList.remove('d-none');
+      return;
+    }
+    const sets = [...new Set(allItems.filter(c => c.game === game).map(c => c.set_code).filter(Boolean))].sort();
+    setSel.innerHTML = '<option value="">Select Set</option>' + sets.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+    rarSel.innerHTML = '<option value="">All Rarities</option>';
+    document.getElementById('items-card').classList.add('d-none');
+    document.getElementById('select-prompt').classList.remove('d-none');
+  }
+
+  function onSetChange() {
+    const game = document.getElementById('filter-game').value;
+    const set = document.getElementById('filter-set').value;
+    if (!game || !set) {
+      document.getElementById('items-card').classList.add('d-none');
+      document.getElementById('select-prompt').classList.remove('d-none');
+      return;
+    }
+    const setCards = allItems.filter(c => c.game === game && c.set_code === set);
+    const rarities = [...new Set(setCards.map(c => c.rarity).filter(Boolean))].sort();
+    const rarSel = document.getElementById('filter-rarity');
+    rarSel.innerHTML = '<option value="">All Rarities</option>' + rarities.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+    document.getElementById('select-prompt').classList.add('d-none');
+    applyFilters();
   }
 
   function applyFilters() {
     const game   = document.getElementById('filter-game').value;
     const set    = document.getElementById('filter-set').value;
+    if (!game || !set) return;
     const rarity = document.getElementById('filter-rarity').value;
     const search = document.getElementById('filter-search').value.toLowerCase();
     renderItems(allItems.filter(c =>
-      (!game   || c.game === game) &&
-      (!set    || c.set_code === set) &&
+      c.game === game &&
+      c.set_code === set &&
       (!rarity || c.rarity === rarity) &&
       (!search || (c.name || '').toLowerCase().includes(search))
     ));

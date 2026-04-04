@@ -47,13 +47,13 @@
   <div class="card-body py-2">
     <div class="row g-2">
       <div class="col-sm-3">
-        <select class="form-select form-select-sm" id="filter-game" onchange="applyFilters()">
-          <option value="">All Games</option>
+        <select class="form-select form-select-sm" id="filter-game" onchange="onGameChange()">
+          <option value="">Select Game</option>
         </select>
       </div>
       <div class="col-sm-3">
-        <select class="form-select form-select-sm" id="filter-era" onchange="applyFilters()">
-          <option value="">All Eras</option>
+        <select class="form-select form-select-sm" id="filter-era" onchange="onEraChange()">
+          <option value="">Select Era</option>
         </select>
       </div>
       <div class="col-sm-3">
@@ -67,6 +67,11 @@
       </div>
     </div>
   </div>
+</div>
+
+<div id="select-prompt" class="text-center py-5 d-none">
+  <i class="bi bi-funnel fs-1 text-muted"></i>
+  <p class="text-muted mt-2">Select a game and era to view products.</p>
 </div>
 
 <div class="card shadow-sm border-0 d-none" id="items-card">
@@ -301,7 +306,8 @@
       if (!items || items.length === 0) { document.getElementById('empty-state').classList.remove('d-none'); return; }
       allItems = items;
       populateFilters(items);
-      renderItems(items);
+      document.getElementById('items-card').classList.add('d-none');
+      document.getElementById('select-prompt').classList.remove('d-none');
     } catch (e) {
       document.getElementById('loading').classList.add('d-none');
       showToast('Failed to load sealed products: ' + e.message, 'danger');
@@ -310,26 +316,53 @@
 
   function populateFilters(items) {
     const games = [...new Set(items.map(p => p.game).filter(Boolean))].sort();
-    const eras  = [...new Set(items.map(p => p.era).filter(Boolean))].sort();
-    const types = [...new Set(items.map(p => p.product_type).filter(Boolean))].sort();
-    const fill = (id, opts) => {
-      const sel = document.getElementById(id);
-      const first = sel.options[0].outerHTML;
-      sel.innerHTML = first + opts.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
-    };
-    fill('filter-game', games);
-    fill('filter-era', eras);
-    fill('filter-product-type', types);
+    document.getElementById('filter-game').innerHTML = '<option value="">Select Game</option>' +
+      games.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+    document.getElementById('filter-era').innerHTML = '<option value="">Select Era</option>';
+    document.getElementById('filter-product-type').innerHTML = '<option value="">All Types</option>';
     document.getElementById('filters-card').classList.remove('d-none');
   }
 
+  function onGameChange() {
+    const game = document.getElementById('filter-game').value;
+    const eraSel = document.getElementById('filter-era');
+    if (!game) {
+      eraSel.innerHTML = '<option value="">Select Era</option>';
+      document.getElementById('filter-product-type').innerHTML = '<option value="">All Types</option>';
+      document.getElementById('items-card').classList.add('d-none');
+      document.getElementById('select-prompt').classList.remove('d-none');
+      return;
+    }
+    const eras = [...new Set(allItems.filter(p => p.game === game).map(p => p.era).filter(Boolean))].sort();
+    eraSel.innerHTML = '<option value="">All Eras</option>' + eras.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+    if (eras.length === 1) { eraSel.value = eras[0]; }
+    onEraChange();
+  }
+
+  function onEraChange() {
+    const game = document.getElementById('filter-game').value;
+    const era  = document.getElementById('filter-era').value;
+    if (!game) {
+      document.getElementById('items-card').classList.add('d-none');
+      document.getElementById('select-prompt').classList.remove('d-none');
+      return;
+    }
+    const filtered = allItems.filter(p => p.game === game && (!era || p.era === era));
+    const types = [...new Set(filtered.map(p => p.product_type).filter(Boolean))].sort();
+    document.getElementById('filter-product-type').innerHTML = '<option value="">All Types</option>' +
+      types.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+    document.getElementById('select-prompt').classList.add('d-none');
+    applyFilters();
+  }
+
   function applyFilters() {
-    const game   = document.getElementById('filter-game').value;
+    const game = document.getElementById('filter-game').value;
+    if (!game) return;
     const era    = document.getElementById('filter-era').value;
     const type   = document.getElementById('filter-product-type').value;
     const search = document.getElementById('filter-search').value.toLowerCase();
     renderItems(allItems.filter(p =>
-      (!game   || p.game === game) &&
+      p.game === game &&
       (!era    || p.era === era) &&
       (!type   || p.product_type === type) &&
       (!search || (p.set_code || '').toLowerCase().includes(search))
