@@ -377,6 +377,23 @@
   function fmtUSD(v) { return v != null ? '$' + v.toFixed(2) : '—'; }
   function pct(v) { return v != null ? (v * 100).toFixed(1) + '%' : '—'; }
   function fmtPT(pt) { return pt.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
+
+  // Resolve a sealed product type to the matching pack_slots product_type.
+  // E.g. "booster-display" or "booster-box" → "booster-pack" if that's what pack_slots has.
+  function findPackSlotType(game, setCode, productType) {
+    const candidates = [
+      productType,
+      productType.replace('-box', ''),
+      productType.replace('-display', '-pack'),
+      productType.replace('-box', '-pack'),
+      'booster-pack',
+      'play-booster',
+    ];
+    for (const c of candidates) {
+      if (allPackSlots.some(s => s.game === game && s.set_code === setCode && s.product_type === c)) return c;
+    }
+    return productType;
+  }
   function show(id) { document.getElementById(id).classList.remove('d-none'); }
   function hide(id) { document.getElementById(id).classList.add('d-none'); }
 
@@ -479,7 +496,7 @@
     // Variant line (for games like MTG where treatment != rarity)
     const vs = effectivePoolStats(pools.variants);
     if (pools.variants.length > 0 && vs.priced > 0) {
-      const pSlug = productType.replace('-box','');
+      const pSlug = findPackSlotType(game, setCode, productType);
       const sl = allPackSlots.filter(s => s.game === game && s.set_code === setCode && s.product_type === pSlug);
       let ts = 0; for (const s of sl) { if (s.card_pool !== 'lands') ts += (s.p_special||0); }
       if (ts === 0) ts = 0.452;
@@ -498,7 +515,7 @@
     show('ev-card');
 
     // ── Slot-by-slot ──────────────────────────────────────────────────
-    const pSlug = productType.replace('-box','');
+    const pSlug = findPackSlotType(game, setCode, productType);
     const slots = allPackSlots.filter(s => s.game === game && s.set_code === setCode && s.product_type === pSlug);
     cachedSlots = slots;
 
