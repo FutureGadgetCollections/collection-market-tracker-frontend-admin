@@ -57,7 +57,7 @@
         </div>
       </div>
       <div class="col-auto">
-        <select class="form-select form-select-sm" id="opt-fees" onchange="recompute()">
+        <select class="form-select form-select-sm" id="opt-fees" onchange="recompute()" oninput="recompute()">
           <option value="none">No Fees</option>
           <option value="tcgplayer">TCGPlayer (13.25%)</option>
           <option value="manapool">Mana Pool (7.9%)</option>
@@ -419,8 +419,11 @@
     const pr = allPullRates.find(r => r.set_code === setCode);
     const setName = pr?.set_name || setCode;
 
-    // Auto-select the best product: prefer box/display, then first with packs
-    const box = products.find(p => /box|display/.test(p.product_type)) || products[0];
+    // Auto-select the best product: prefer play-booster-box > booster-box/display > first
+    const box = products.find(p => /play-booster-box/.test(p.product_type))
+             || products.find(p => /booster-box|booster-display/.test(p.product_type))
+             || products.find(p => /box|display/.test(p.product_type))
+             || products[0];
     const pt = box?.product_type || '';
     document.getElementById('filter-product').value = pt;
     if (box) {
