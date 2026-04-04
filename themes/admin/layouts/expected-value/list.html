@@ -14,64 +14,77 @@
 <div id="admin-guard" class="alert alert-secondary d-none"><i class="bi bi-shield-lock me-1"></i>You need to be an admin to access this page.</div>
 <div id="loading" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
 
-<!-- ── Filters + Options ────────────────────────────────────────────── -->
-<div class="card shadow-sm border-0 d-none mb-3" id="filters-card">
+<!-- Hidden dropdowns (used by JS logic) -->
+<select class="d-none" id="filter-game"></select>
+<select class="d-none" id="filter-set"></select>
+<select class="d-none" id="filter-product"></select>
+
+<!-- ── Visual Set Picker ───────────────────────────────────────────── -->
+<div class="d-none mb-4" id="picker">
+  <!-- Step 1: Game -->
+  <div id="pick-game">
+    <p class="text-muted small mb-2">Select a game</p>
+    <div class="row g-3" id="game-cards"></div>
+  </div>
+
+  <!-- Step 2: Set -->
+  <div id="pick-set" class="d-none">
+    <div class="d-flex align-items-center mb-2">
+      <button class="btn btn-sm btn-outline-secondary me-2" onclick="backToGames()"><i class="bi bi-arrow-left"></i></button>
+      <span class="text-muted small" id="pick-set-label">Select a set</span>
+    </div>
+    <div class="row g-3" id="set-cards"></div>
+  </div>
+
+  <!-- Step 3: Product -->
+  <div id="pick-product" class="d-none">
+    <div class="d-flex align-items-center mb-2">
+      <button class="btn btn-sm btn-outline-secondary me-2" onclick="backToSets()"><i class="bi bi-arrow-left"></i></button>
+      <span class="text-muted small" id="pick-product-label">Select a product</span>
+    </div>
+    <div class="row g-3" id="product-cards"></div>
+  </div>
+</div>
+
+<!-- ── Selected + Options bar ──────────────────────────────────────── -->
+<div class="card shadow-sm border-0 d-none mb-3" id="options-bar">
   <div class="card-body py-2">
-    <div class="row g-2 align-items-end">
-      <div class="col-sm-3">
-        <label class="form-label small mb-0">Game</label>
-        <select class="form-select form-select-sm" id="filter-game" onchange="onGameChange()">
-          <option value="">Select Game</option>
-        </select>
+    <div class="row g-2 align-items-center">
+      <div class="col-auto">
+        <button class="btn btn-sm btn-outline-primary" onclick="backToGames()">
+          <i class="bi bi-arrow-left me-1"></i>Change Set
+        </button>
       </div>
-      <div class="col-sm-3">
-        <label class="form-label small mb-0">Set</label>
-        <select class="form-select form-select-sm" id="filter-set" onchange="onSetChange()">
-          <option value="">Select Set</option>
-        </select>
+      <div class="col-auto">
+        <span class="fw-semibold" id="selected-label"></span>
       </div>
-      <div class="col-sm-3">
-        <label class="form-label small mb-0">Product</label>
-        <select class="form-select form-select-sm" id="filter-product" onchange="recompute()">
-          <option value="">Select Product</option>
-        </select>
-      </div>
-      <div class="col-sm-3">
-        <label class="form-label small mb-0">Price Floor (sift)</label>
+      <div class="col-auto ms-auto">
         <div class="input-group input-group-sm">
-          <span class="input-group-text">$</span>
-          <input type="number" class="form-control" id="opt-sift" value="0.25" min="0" step="0.05" onchange="recompute()">
+          <span class="input-group-text">Sift $</span>
+          <input type="number" class="form-control" id="opt-sift" value="0.25" min="0" step="0.05" onchange="recompute()" style="width:70px">
         </div>
       </div>
-    </div>
-    <div class="row g-2 mt-1 align-items-center">
-      <div class="col-sm-3">
-        <label class="form-label small mb-0">Fees</label>
+      <div class="col-auto">
         <select class="form-select form-select-sm" id="opt-fees" onchange="recompute()">
-          <option value="none">No Fees (gross)</option>
+          <option value="none">No Fees</option>
           <option value="tcgplayer">TCGPlayer (13.25%)</option>
           <option value="manapool">Mana Pool (7.9%)</option>
           <option value="custom">Custom</option>
         </select>
       </div>
-      <div class="col-sm-3 d-none" id="custom-fee-group">
-        <label class="form-label small mb-0">Commission + Processing</label>
+      <div class="col-auto d-none" id="custom-fee-group">
         <div class="input-group input-group-sm">
-          <input type="number" class="form-control" id="opt-fee-pct" value="13.25" step="0.1" placeholder="%">
+          <input type="number" class="form-control" id="opt-fee-pct" value="13.25" step="0.1" style="width:60px">
           <span class="input-group-text">%</span>
-          <span class="input-group-text">+</span>
-          <span class="input-group-text">$</span>
-          <input type="number" class="form-control" id="opt-fee-flat" value="0.30" step="0.01" placeholder="flat">
         </div>
       </div>
-      <div class="col-sm-3">
-        <label class="form-label small mb-0">Box Cost (for sim)</label>
+      <div class="col-auto">
         <div class="input-group input-group-sm">
-          <span class="input-group-text">$</span>
-          <input type="number" class="form-control" id="opt-box-cost" value="120" min="0" step="1">
+          <span class="input-group-text">Cost $</span>
+          <input type="number" class="form-control" id="opt-box-cost" value="120" min="0" step="1" style="width:70px">
         </div>
       </div>
-      <div class="col-sm-3 d-flex align-items-end">
+      <div class="col-auto">
         <span class="text-muted small" id="ev-price-date"></span>
       </div>
     </div>
@@ -324,52 +337,184 @@
     return false;
   }
 
+  // ── Game metadata for visual picker ──────────────────────────────
+  const GAME_META = {
+    pokemon:   { label: 'Pokemon',   icon: 'bi-lightning-charge-fill', color: '#FFCB05', textColor: '#1D4E89' },
+    riftbound: { label: 'Riftbound', icon: 'bi-shield-fill',          color: '#7B2D8B', textColor: '#fff' },
+    mtg:       { label: 'Magic: The Gathering', icon: 'bi-suit-spade-fill', color: '#1a1a2e', textColor: '#fff' },
+  };
+
   function populateGameFilter() {
     const evSets = setsWithEVData();
     const games = [...new Set(allCards.filter(c => evSets.has(`${c.game}|${c.set_code}`)).map(c => c.game))].sort();
-    const sel = document.getElementById('filter-game');
-    sel.innerHTML = '<option value="">Select Game</option>' + games.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
-    show('filters-card');
-    if (games.length === 1) { sel.value = games[0]; onGameChange(); }
+
+    const container = document.getElementById('game-cards');
+    container.innerHTML = games.map(g => {
+      const m = GAME_META[g] || { label: g, icon: 'bi-collection', color: '#6c757d', textColor: '#fff' };
+      const setCount = new Set(allCards.filter(c => c.game === g && evSets.has(`${c.game}|${c.set_code}`)).map(c => c.set_code)).size;
+      return `<div class="col-sm-4 col-md-3">
+        <div class="card border-0 shadow-sm h-100 picker-card" style="cursor:pointer;transition:transform .15s" onclick="selectGame('${esc(g)}')"
+             onmouseenter="this.style.transform='scale(1.03)'" onmouseleave="this.style.transform=''">
+          <div class="card-body text-center py-4" style="background:${m.color};color:${m.textColor};border-radius:.375rem">
+            <i class="bi ${m.icon} fs-1 d-block mb-2"></i>
+            <div class="fw-bold fs-5">${esc(m.label)}</div>
+            <div class="small mt-1" style="opacity:.8">${setCount} set${setCount !== 1 ? 's' : ''}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    show('picker');
   }
 
-  function onGameChange() {
-    const game = document.getElementById('filter-game').value;
+  function selectGame(game) {
+    document.getElementById('filter-game').value = game;
     hideResults();
-    if (!game) { document.getElementById('filter-set').innerHTML = '<option value="">Select Set</option>'; return; }
+    hide('pick-game');
+
     const evSets = setsWithEVData();
+    const m = GAME_META[game] || { label: game };
+
+    // Group sets by era
     const setMap = new Map();
-    for (const c of allCards.filter(c => c.game === game && evSets.has(`${c.game}|${c.set_code}`)))
-      if (!setMap.has(c.set_code)) { const pr = allPullRates.find(r => r.set_code === c.set_code); setMap.set(c.set_code, pr?.set_name || c.set_code); }
-    const sets = [...setMap.entries()].sort((a,b) => a[0].localeCompare(b[0]));
-    const ss = document.getElementById('filter-set');
-    ss.innerHTML = '<option value="">Select Set</option>' + sets.map(([c,n]) => `<option value="${esc(c)}">${esc(n)} (${esc(c)})</option>`).join('');
-    if (sets.length === 1) { ss.value = sets[0][0]; onSetChange(); }
+    for (const c of allCards.filter(c => c.game === game && evSets.has(`${c.game}|${c.set_code}`))) {
+      if (!setMap.has(c.set_code)) {
+        const pr = allPullRates.find(r => r.set_code === c.set_code);
+        const era = pr?.era || c.era || '';
+        setMap.set(c.set_code, { name: pr?.set_name || c.set_code, era, code: c.set_code });
+      }
+    }
+    const sets = [...setMap.values()].sort((a, b) => a.code.localeCompare(b.code));
+
+    // Group by era
+    const eras = new Map();
+    for (const s of sets) {
+      if (!eras.has(s.era)) eras.set(s.era, []);
+      eras.get(s.era).push(s);
+    }
+
+    let html = '';
+    for (const [era, eraSets] of eras) {
+      if (eras.size > 1) html += `<div class="col-12"><h6 class="text-muted mb-1 mt-2">${esc(era)}</h6></div>`;
+      html += eraSets.map(s => {
+        const cardCount = allCards.filter(c => c.game === game && c.set_code === s.code).length;
+        const isFixed = isFixedContents(game, s.code, '');
+        return `<div class="col-sm-4 col-md-3">
+          <div class="card border-0 shadow-sm h-100 picker-card" style="cursor:pointer;transition:transform .15s" onclick="selectSet('${esc(game)}','${esc(s.code)}')"
+               onmouseenter="this.style.transform='scale(1.03)'" onmouseleave="this.style.transform=''">
+            <div class="card-body text-center py-3">
+              <div class="fw-bold">${esc(s.name)}</div>
+              <div class="text-muted small">${esc(s.code)}</div>
+              <div class="small mt-1">${cardCount} cards${isFixed ? ' <span class="badge bg-secondary">Fixed</span>' : ''}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    document.getElementById('set-cards').innerHTML = html;
+    document.getElementById('pick-set-label').textContent = `${m.label} — Select a set`;
+    show('pick-set');
   }
 
-  function onSetChange() {
-    const game = document.getElementById('filter-game').value, setCode = document.getElementById('filter-set').value;
-    const ps = document.getElementById('filter-product');
+  function selectSet(game, setCode) {
+    document.getElementById('filter-game').value = game;
+    document.getElementById('filter-set').value = setCode;
     hideResults();
-    if (!setCode) { ps.innerHTML = '<option value="">Select Product</option>'; return; }
+    hide('pick-set');
+
     const products = allSealed.filter(p => p.game === game && p.set_code === setCode && p.packs_per_product);
-    ps.innerHTML = '<option value="">Select Product</option>' + products.map(p => `<option value="${esc(p.product_type)}">${esc(fmtPT(p.product_type))} (${p.packs_per_product} packs)</option>`).join('');
-    if (products.length >= 1) { const play = products.find(p => p.product_type.includes('play-booster')); ps.value = play ? play.product_type : products[0].product_type; }
-    // Auto-fill box cost from market price
-    const pt = ps.value;
-    if (pt) { const prod = products.find(p => p.product_type === pt); const bp = prod ? priceMap.get(String(prod.tcgplayer_id)) : null; if (bp) document.getElementById('opt-box-cost').value = Math.round(bp.market_price); }
+    const pr = allPullRates.find(r => r.set_code === setCode);
+    const setName = pr?.set_name || setCode;
+
+    // If only one product or fixed contents, go straight to EV
+    if (products.length <= 1 || isFixedContents(game, setCode, products[0]?.product_type)) {
+      const pt = products[0]?.product_type || '';
+      document.getElementById('filter-product').value = pt;
+      if (products[0]) {
+        const bp = priceMap.get(String(products[0].tcgplayer_id));
+        if (bp) document.getElementById('opt-box-cost').value = Math.round(bp.market_price);
+      }
+      showSelectedBar(game, setName, pt);
+      recompute();
+      return;
+    }
+
+    // Show product picker
+    document.getElementById('product-cards').innerHTML = products.map(p => {
+      const bp = priceMap.get(String(p.tcgplayer_id));
+      const icon = p.product_type.includes('booster-box') || p.product_type.includes('booster-display') ? 'bi-box-seam'
+                 : p.product_type.includes('etb') || p.product_type.includes('elite') ? 'bi-trophy'
+                 : p.product_type.includes('bundle') ? 'bi-collection'
+                 : p.product_type.includes('pack') ? 'bi-card-heading'
+                 : 'bi-gift';
+      return `<div class="col-sm-4 col-md-3">
+        <div class="card border-0 shadow-sm h-100 picker-card" style="cursor:pointer;transition:transform .15s"
+             onclick="selectProduct('${esc(game)}','${esc(setCode)}','${esc(p.product_type)}')"
+             onmouseenter="this.style.transform='scale(1.03)'" onmouseleave="this.style.transform=''">
+          <div class="card-body text-center py-3">
+            <i class="bi ${icon} fs-3 text-primary d-block mb-1"></i>
+            <div class="fw-medium small">${esc(fmtPT(p.product_type))}</div>
+            <div class="text-muted small">${p.packs_per_product} packs</div>
+            ${bp ? `<div class="text-success small fw-medium mt-1">${fmtUSD(bp.market_price)}</div>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('pick-product-label').textContent = `${setName} — Select a product`;
+    show('pick-product');
+  }
+
+  function selectProduct(game, setCode, productType) {
+    document.getElementById('filter-game').value = game;
+    document.getElementById('filter-set').value = setCode;
+    document.getElementById('filter-product').value = productType;
+    hide('pick-product');
+
+    const prod = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
+    if (prod) {
+      const bp = priceMap.get(String(prod.tcgplayer_id));
+      if (bp) document.getElementById('opt-box-cost').value = Math.round(bp.market_price);
+    }
+
+    const pr = allPullRates.find(r => r.set_code === setCode);
+    showSelectedBar(game, pr?.set_name || setCode, productType);
     recompute();
   }
 
+  function showSelectedBar(game, setName, productType) {
+    const m = GAME_META[game] || { label: game };
+    document.getElementById('selected-label').innerHTML =
+      `<span class="badge me-1" style="background:${m.color};color:${m.textColor}">${esc(m.label)}</span> ` +
+      `${esc(setName)}` +
+      (productType ? ` <span class="text-muted">/ ${esc(fmtPT(productType))}</span>` : '');
+    hide('picker');
+    show('options-bar');
+  }
+
+  function backToGames() {
+    hideResults();
+    hide('options-bar');
+    hide('pick-set');
+    hide('pick-product');
+    show('pick-game');
+    show('picker');
+  }
+
+  function backToSets() {
+    hideResults();
+    hide('pick-product');
+    show('pick-set');
+  }
+
   function recompute() {
-    // Toggle custom fee fields
     document.getElementById('custom-fee-group').classList.toggle('d-none', document.getElementById('opt-fees').value !== 'custom');
     computeEV();
   }
 
   function hideResults() {
     for (const id of ['ev-card','box-card','slot-card','sim-card','card-lists','excluded-card','ev-notes']) hide(id);
-    document.getElementById('sim-results').classList.add('d-none');
+    const simRes = document.getElementById('sim-results');
+    if (simRes) simRes.classList.add('d-none');
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────
