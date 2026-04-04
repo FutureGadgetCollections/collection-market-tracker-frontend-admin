@@ -230,6 +230,44 @@ Goal: populate `market_data.ev_set_history` with historical EV snapshots going b
 - **Step 3**: Once historical singles prices are available, re-run `ev-history backfill` to fill in older EV snapshots.
 - **Step 4**: Add EV-over-time chart to the Expected Value tab using `ev_set_history` data.
 
+### Missing PriceCharting URLs (TODO — one set at a time)
+
+Products missing `pricecharting_url` in `catalog.sealed_products`. Look up each on pricecharting.com and update via `scripts/catalog/update_pricecharting_urls.py`.
+
+**MTG (43 products, 13 sets):**
+- [ ] tla — Avatar: The Last Airbender (3 products)
+- [ ] tdm — Tarkir Dragonstorm (2)
+- [ ] dft — Duskmourn: Foundation (2)
+- [ ] fdn — Foundations (2)
+- [ ] dsk — Duskmourn: House of Horror (2)
+- [ ] blb — Bloomburrow (2)
+- [ ] otj — Outlaws of Thunder Junction (2)
+- [ ] mkm — Murders at Karlov Manor (2)
+- [ ] mh3 — Modern Horizons 3 (2)
+- [ ] lci — Lost Caverns of Ixalan (3)
+- [ ] woe — Wilds of Eldraine (3)
+- [ ] mom — March of the Machine (3)
+- [ ] one — Phyrexia All Will Be One (3)
+- [ ] bro — Brothers War (3)
+- [ ] dmu — Dominaria United (3)
+- [ ] neo — Kamigawa Neon Dynasty (3)
+- [ ] snc — Streets of New Capenna (3)
+
+**Weiss Schwarz (33 products, 33 sets):**
+- [ ] spyxfamily, oshinoko-v1, oshinoko-v2, chainsaw-man, bocchi, frieren-v1, frieren-v2
+- [ ] dandadan, makeine, nikke, blue-archive, mushoku-tensei, konosuba-re
+- [ ] holo-ws-v1, holo-ws-v2, holo-ws-premium, holo-ws-summer
+- [ ] bdgp-5th-anniv, bdgp-countdown, bdgp-premium, mygo-avemujica, girls-band-cry
+- [ ] lycoris-recoil, lycoris-premium, eminence-shadow, nazarick-v3
+- [ ] jojo-stardust, jojo-stone-ocean, fairytail-100yq, fujimi-v2
+- [ ] hatsune-miku-cs, p3r-premium-v1, p3r-premium-v2
+
+**Hololive (7 products, 6 sets):**
+- [ ] hl01, hl02, hl03, hl04, hl05, hl06
+
+**Riftbound (2 products, 1 set):**
+- [ ] rb03 — Unleashed (booster-pack, booster-display) — may not be on PriceCharting yet
+
 ### EV simulator (collection-market-tracker-ev-simulator)
 - CLAUDE.md created; precon-deck-lists.json data format documented there
 
