@@ -812,6 +812,7 @@
   // Binary search on cumulative weights is O(log n) vs O(n) linear scan
   function compileSlot(entries, sift) {
     const n = entries.length;
+    if (n === 0) return { cumWeights: null, prices: null, n: 0 };
     const cumWeights = new Float64Array(n);
     const prices = new Float64Array(n);
     let cumSum = 0;
@@ -828,8 +829,8 @@
   }
 
   function sampleSlot(compiled) {
+    if (compiled.n === 0) return 0;
     const r = Math.random();
-    // Binary search for the first cumWeight >= r
     let lo = 0, hi = compiled.n - 1;
     while (lo < hi) {
       const mid = (lo + hi) >> 1;
