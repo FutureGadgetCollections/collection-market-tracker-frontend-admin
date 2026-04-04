@@ -339,9 +339,10 @@
 
   // ── Game metadata for visual picker ──────────────────────────────
   const GAME_META = {
-    pokemon:   { label: 'Pokemon',   icon: 'bi-lightning-charge-fill', color: '#FFCB05', textColor: '#1D4E89' },
-    riftbound: { label: 'Riftbound', icon: 'bi-shield-fill',          color: '#7B2D8B', textColor: '#fff' },
-    mtg:       { label: 'Magic: The Gathering', icon: 'bi-suit-spade-fill', color: '#1a1a2e', textColor: '#fff' },
+    pokemon:     { label: 'Pokemon',              icon: 'bi-lightning-charge-fill', color: '#FFCB05', textColor: '#1D4E89' },
+    riftbound:   { label: 'Riftbound',            icon: 'bi-shield-fill',          color: '#7B2D8B', textColor: '#fff' },
+    mtg:         { label: 'Magic: The Gathering', icon: 'bi-suit-spade-fill',      color: '#1a1a2e', textColor: '#fff' },
+    'one-piece': { label: 'One Piece',            icon: 'bi-compass-fill',         color: '#D62828', textColor: '#fff' },
   };
 
   function populateGameFilter() {
@@ -578,7 +579,7 @@
     // Pokemon: chase rarities — use slot notes to determine which rarities
     if (cp === 'main_rares_chase') {
       const notes = (slot.notes || '').toLowerCase();
-      const chaseRarities = ['double_rare','ultra_rare','illustration_rare','special_illustration_rare','hyper_rare','mega_hyper_rare'];
+      const chaseRarities = ['double_rare','ultra_rare','illustration_rare','special_illustration_rare','hyper_rare','mega_hyper_rare','super_rare','secret_rare','leader','treasure_rare','manga_rare'];
       const matching = chaseRarities.filter(r => notes.includes(r.replace(/_/g,' ')) || notes.includes(r));
       if (matching.length > 0) {
         return (allCards || []).filter(c => c.game === game && c.set_code === setCode && !c.collector_only && matching.includes(c.rarity));
@@ -605,7 +606,7 @@
     } else if (cp === 'main_rares_chase') {
       // Parse from slot notes which chase rarities are in this slot
       const notes = (slot.notes || '').toLowerCase();
-      const allChase = ['double_rare','ultra_rare','illustration_rare','special_illustration_rare','hyper_rare','mega_hyper_rare'];
+      const allChase = ['double_rare','ultra_rare','illustration_rare','special_illustration_rare','hyper_rare','mega_hyper_rare','super_rare','secret_rare','leader','treasure_rare','manga_rare'];
       specialRarities = allChase.filter(r => notes.includes(r.replace(/_/g,' ')) || notes.includes(r));
       if (specialRarities.length === 0) specialRarities = allChase;
     }
