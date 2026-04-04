@@ -538,39 +538,61 @@
     return pools.variants.length > 0 ? pools.variants : pools.all_play;
   }
 
-  // Compute weighted average for the special pool using pull rates.
-  // Without this, a $1000 sig_overnumber (0.07% chance) gets the same weight
-  // as a $22 epic (11.9% chance) in a simple average.
+  // Parse percentages from slot notes like "Rare 58.3%, Super Rare 29.2%, Leader 8.3%"
+  // Returns {rarity: pct, ...} e.g. {super_rare: 0.292, secret_rare: 0.042, leader: 0.083}
+  function parseSlotNoteRates(notes) {
+    const rates = {};
+    const allRarities = ['double_rare','ultra_rare','illustration_rare','special_illustration_rare','hyper_rare','mega_hyper_rare','super_rare','secret_rare','leader','treasure_rare','manga_rare','epic','alt_art','overnumber','signature_overnumber'];
+    const lower = (notes || '').toLowerCase();
+    for (const r of allRarities) {
+      const label = r.replace(/_/g, ' ');
+      // Match "Super Rare 29.2%" or "Leader 8.3%" patterns
+      const regex = new RegExp(label + '\\s+([\\d.]+)%');
+      const m = lower.match(regex);
+      if (m) rates[r] = parseFloat(m[1]) / 100;
+    }
+    return rates;
+  }
+
+  // Compute weighted average for the special pool.
+  // Uses per-slot percentages from notes (not overall pull rates) to avoid
+  // weighting issues when a rarity appears in multiple slots at different rates.
   function weightedSpecialAvg(slot, pools, setPR) {
     const cp = slot.card_pool || '';
 
-    // Determine which sub-rarities this special pool covers
-    let specialRarities = [];
+    // For Riftbound (main_rares_epics): use overall pull rates — only one special slot
     if (cp === 'main_rares_epics') {
-      specialRarities = ['epic', 'alt_art', 'overnumber', 'signature_overnumber'];
-    } else if (cp === 'main_rares_chase') {
-      // Parse from slot notes which chase rarities are in this slot
-      const notes = (slot.notes || '').toLowerCase();
-      const allChase = ['double_rare','ultra_rare','illustration_rare','special_illustration_rare','hyper_rare','mega_hyper_rare','super_rare','secret_rare','leader','treasure_rare','manga_rare'];
-      specialRarities = allChase.filter(r => notes.includes(r.replace(/_/g,' ')) || notes.includes(r));
-      if (specialRarities.length === 0) specialRarities = allChase;
+      const specialRarities = ['epic', 'alt_art', 'overnumber', 'signature_overnumber'];
+      let totalRate = 0, weightedSum = 0;
+      for (const rarity of specialRarities) {
+        const pr = setPR.find(r => r.rarity === rarity);
+        if (!pr) continue;
+        const pool = pools[rarity] || [];
+        const avg = slotAvg(pool);
+        totalRate += pr.pull_rate_per_pack;
+        weightedSum += pr.pull_rate_per_pack * avg;
+      }
+      return totalRate > 0 ? weightedSum / totalRate : 0;
     }
 
-    if (specialRarities.length === 0) {
-      return slotAvg(specialPoolForSlot(slot, pools, allCards, cachedGame, cachedSetCode));
+    // For main_rares_chase (Pokemon, OP): parse per-slot rates from notes
+    if (cp === 'main_rares_chase') {
+      const slotRates = parseSlotNoteRates(slot.notes);
+      const rarities = Object.keys(slotRates);
+      if (rarities.length > 0) {
+        let totalRate = 0, weightedSum = 0;
+        for (const rarity of rarities) {
+          const rate = slotRates[rarity];
+          const pool = pools[rarity] || allCards.filter(c => c.game === cachedGame && c.set_code === cachedSetCode && c.rarity === rarity && !c.collector_only);
+          const avg = slotAvg(pool);
+          totalRate += rate;
+          weightedSum += rate * avg;
+        }
+        return totalRate > 0 ? weightedSum / totalRate : 0;
+      }
     }
 
-    // Weight each sub-rarity's avg price by its pull rate proportion
-    let totalRate = 0, weightedSum = 0;
-    for (const rarity of specialRarities) {
-      const pr = setPR.find(r => r.rarity === rarity);
-      if (!pr) continue;
-      const pool = pools[rarity] || allCards.filter(c => c.game === cachedGame && c.set_code === cachedSetCode && c.rarity === rarity && !c.collector_only);
-      const avg = slotAvg(pool);
-      totalRate += pr.pull_rate_per_pack;
-      weightedSum += pr.pull_rate_per_pack * avg;
-    }
-    return totalRate > 0 ? weightedSum / totalRate : 0;
+    return slotAvg(specialPoolForSlot(slot, pools, allCards, cachedGame, cachedSetCode));
   }
 
   function computeSlotEV(slot, pools, setPR) {
@@ -687,21 +709,19 @@
           }).filter(Boolean).join('');
           row += `<tr class="table-light"><td></td><td colspan="7" class="text-muted small py-1 ps-4">${details}</td><td></td></tr>`;
         } else if (s.p_special && s.card_pool === 'main_rares_chase') {
-          // Pokemon-style: chase rarities in hit slot
-          const chaseRarities = ['double_rare','illustration_rare','ultra_rare','special_illustration_rare','hyper_rare','mega_hyper_rare'];
-          let totalRate = 0;
-          for (const rr of chaseRarities) { const pr = setPR.find(p => p.rarity === rr); if (pr) totalRate += pr.pull_rate_per_pack; }
-          if (totalRate > 0) {
-            const details = chaseRarities.map(rr => {
-              const pr = setPR.find(p => p.rarity === rr);
-              if (!pr) return null;
-              const pctOfSpecial = pr.pull_rate_per_pack / totalRate;
-              const absProb = s.p_special * pctOfSpecial;
+          // Pokemon/OP: parse per-slot rates from notes
+          const slotRates = parseSlotNoteRates(s.notes);
+          const rarities = Object.keys(slotRates);
+          if (rarities.length > 0) {
+            let totalRate = 0;
+            for (const rr of rarities) totalRate += slotRates[rr];
+            const details = rarities.map(rr => {
+              const absProb = s.p_special * (slotRates[rr] / totalRate);
               const pool = playCards.filter(c => c.rarity === rr);
               const avg = slotAvg(pool);
               const ev = absProb * avg;
               return `<span class="me-3">${esc(rr)}: ${pct(absProb)} &middot; avg ${fmtUSD(avg)} &middot; EV ${fmtUSD(ev)}</span>`;
-            }).filter(Boolean).join('');
+            }).join('');
             row += `<tr class="table-light"><td></td><td colspan="7" class="text-muted small py-1 ps-4">${details}</td><td></td></tr>`;
           }
         }
@@ -907,9 +927,10 @@
     addPool(slot.p_rare, pools.base_rare);
     addPool(slot.p_mythic, pools.base_mythic);
 
-    // For special pool: distribute p_special across sub-rarities by pull rate weight
+    // For special pool: distribute p_special across sub-rarities
     const cp = slot.card_pool || '';
     if (cp === 'main_rares_epics' && slot.p_special) {
+      // Riftbound: use overall pull rates (single special slot)
       const specialRarities = ['epic', 'alt_art', 'overnumber', 'signature_overnumber'];
       let totalRate = 0;
       for (const r of specialRarities) { const pr = setPR.find(p => p.rarity === r); if (pr) totalRate += pr.pull_rate_per_pack; }
@@ -918,6 +939,22 @@
         if (!pr || !pools[r] || pools[r].length === 0) continue;
         const subProb = slot.p_special * (pr.pull_rate_per_pack / totalRate);
         addPool(subProb, pools[r]);
+      }
+    } else if (cp === 'main_rares_chase' && slot.p_special) {
+      // Pokemon/OP: use per-slot rates from notes
+      const slotRates = parseSlotNoteRates(slot.notes);
+      const rarities = Object.keys(slotRates);
+      if (rarities.length > 0) {
+        let totalRate = 0;
+        for (const r of rarities) totalRate += slotRates[r];
+        for (const r of rarities) {
+          const pool = pools[r] || allCards.filter(c => c.game === cachedGame && c.set_code === cachedSetCode && c.rarity === r && !c.collector_only);
+          if (pool.length === 0) continue;
+          const subProb = slot.p_special * (slotRates[r] / totalRate);
+          addPool(subProb, pool);
+        }
+      } else {
+        addPool(slot.p_special, specialPoolForSlot(slot, pools, allCards, cachedGame, cachedSetCode));
       }
     } else {
       addPool(slot.p_special, specialPoolForSlot(slot, pools, allCards, cachedGame, cachedSetCode));
