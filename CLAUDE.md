@@ -170,8 +170,7 @@ Prerequisites completed:
 - `catalog.pack_slots`: TLA play booster slot breakdown created
 - `catalog.set_pull_rates`: TLA aggregated rates added, `unique_card_count` populated (81C/110U/60R/20M)
 - `catalog.single_cards`: 475 TLA cards fetched (game fixed from `magic` → `mtg`)
-- `market_data.tcgplayer_price_history`: 449/475 TLA card price snapshots fetched (2026-04-02)
-  - **TODO:** Retry 26 failed cards (TCGPlayer 403 rate limit). Use `backfill_set.py mtg tla 3` in `scripts/tcgplayer_prices/`.
+- `market_data.tcgplayer_price_history`: 466/475 TLA card price snapshots (9 have no market price on TCGPlayer)
 
 Next steps:
 1. ~~Fetch TLA single cards into `catalog.single_cards`~~ ✅ DONE
@@ -246,14 +245,7 @@ Goal: populate `market_data.ev_set_history` with historical EV snapshots going b
 - Images: `collection-market-tracker`, `tcgplayer-price-scraper`, `set-market-metrics`, `pricecharting-scraper`, `tcgplayer-price-sync`
 - GitHub secrets `DOCKERHUB_USERNAME` + `DOCKERHUB_TOKEN` added
 - Repos auto-create on first push; next workflow trigger will push to Docker Hub
-- **TODO: Delete AR repo** `us-central1-docker.pkg.dev/future-gadget-labs-483502/tcg-collection/` after verifying Docker Hub images work on Cloud Run
-
-**Other repos — TODO**
-- `collection-showcase-backend` — `collection-showcase` image still on AR
-- `cloud-predict-analytics` — `polymarket`, `nbm-noaa` images on AR (`fg-polylabs/polymarket` repo)
-- `doomsday-predict-analytics` — `doomsday-polymarket`, `doomsday-exporter`, `doomsday-api` on AR (`fg-polylabs/doomsday` repo)
-- `set-value-tracking-backend` — `evupdate` image on AR (`tcg` repo)
-- For each: add `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` secrets, update workflows + deploy scripts, verify, then delete AR repos
+- AR repo `tcg-collection` deleted (2026-04-04) — was 4.9 GB
 
 **TODO: Homeserver-primary / Cloud Run-fallback API architecture**
 - Goal: backend API (`collection-market-tracker` Cloud Run service) runs primarily on homeserver; Cloud Run is the fallback if the local API process is down
