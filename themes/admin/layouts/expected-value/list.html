@@ -211,7 +211,7 @@
   let allCards = [], allPullRates = [], allSealed = [], allPackSlots = [];
   let priceMap = new Map();
   // Cached computation state for sim reuse
-  let cachedPools = null, cachedSlots = [], cachedProduct = null;
+  let cachedPools = null, cachedSlots = [], cachedProduct = null, cachedPR = [];
 
   // ── Fee presets ─────────────────────────────────────────────────────
   const FEE_PRESETS = {
@@ -435,10 +435,33 @@
     return pools.variants.length > 0 ? pools.variants : pools.all_play;
   }
 
-  function computeSlotEV(slot, pools) {
+  // Compute weighted average for the special pool using pull rates.
+  // Without this, a $1000 sig_overnumber (0.07% chance) gets the same weight
+  // as a $22 epic (11.9% chance) in a simple average.
+  function weightedSpecialAvg(slot, pools, setPR) {
+    const cp = slot.card_pool || '';
+    // For MTG-style (variants by treatment), simple avg is fine — p_special is small
+    if (cp !== 'main_rares_epics') return slotAvg(specialPoolForSlot(slot, pools));
+
+    // For Riftbound-style: p_special covers multiple sub-rarities with very different rates
+    // Weight each sub-rarity's avg price by its pull rate proportion
+    const specialRarities = ['epic', 'alt_art', 'overnumber', 'signature_overnumber'];
+    let totalRate = 0, weightedSum = 0;
+    for (const rarity of specialRarities) {
+      const pr = setPR.find(r => r.rarity === rarity);
+      if (!pr) continue;
+      const pool = pools[rarity] || [];
+      const avg = slotAvg(pool);
+      totalRate += pr.pull_rate_per_pack;
+      weightedSum += pr.pull_rate_per_pack * avg;
+    }
+    return totalRate > 0 ? weightedSum / totalRate : 0;
+  }
+
+  function computeSlotEV(slot, pools, setPR) {
     const avgC = slotAvg(pools.base_common), avgU = slotAvg(pools.base_uncommon);
     const avgR = slotAvg(pools.base_rare),   avgM = slotAvg(pools.base_mythic);
-    const avgS = slotAvg(specialPoolForSlot(slot, pools));
+    const avgS = weightedSpecialAvg(slot, pools, setPR);
     const grossEV = (slot.p_common||0)*avgC + (slot.p_uncommon||0)*avgU + (slot.p_rare||0)*avgR + (slot.p_mythic||0)*avgM + (slot.p_special||0)*avgS;
     return { ev: applyFees(grossEV), grossEV, avgC, avgU, avgR, avgM, avgS };
   }
@@ -463,6 +486,7 @@
     const setPR = allPullRates.filter(r => r.set_code === setCode);
     const pools = buildCardPools(game, setCode);
     cachedPools = pools;
+    cachedPR = setPR;
 
     let priceDate = null;
     for (const c of playCards) { const p = priceMap.get(String(c.tcgplayer_id)); if (p) { priceDate = p.date; break; } }
@@ -522,7 +546,7 @@
     if (slots.length > 0) {
       let slotTotal = 0;
       document.getElementById('slot-tbody').innerHTML = slots.map(s => {
-        const r = computeSlotEV(s, pools);
+        const r = computeSlotEV(s, pools, setPR);
         slotTotal += r.ev;
         const pF = v => v ? `<span class="${v>0.5?'fw-medium':'text-muted'}">${pct(v)}</span>` : '<span class="text-muted">—</span>';
         return `<tr><td class="ps-3 fw-medium">${s.slot_index}</td><td>${esc(s.slot_name)}</td>
@@ -718,21 +742,34 @@
 
   // ── Monte Carlo Simulator ───────────────────────────────────────────
 
-  function buildSlotWeights(slot, pools) {
+  function buildSlotWeights(slot, pools, setPR) {
     // Build a weighted card list for this slot: [{card, weight}]
-    // Probabilities: p_common -> base commons, p_uncommon -> base uncommons, etc.
-    // p_special -> special pool for this slot
     const entries = [];
     const addPool = (prob, cards) => {
       if (!prob || cards.length === 0) return;
-      const w = prob / cards.length; // equal weight per card within rarity
+      const w = prob / cards.length;
       for (const c of cards) entries.push({ card: c, weight: w });
     };
     addPool(slot.p_common, pools.base_common);
     addPool(slot.p_uncommon, pools.base_uncommon);
     addPool(slot.p_rare, pools.base_rare);
     addPool(slot.p_mythic, pools.base_mythic);
-    addPool(slot.p_special, specialPoolForSlot(slot, pools));
+
+    // For special pool: distribute p_special across sub-rarities by pull rate weight
+    const cp = slot.card_pool || '';
+    if (cp === 'main_rares_epics' && slot.p_special) {
+      const specialRarities = ['epic', 'alt_art', 'overnumber', 'signature_overnumber'];
+      let totalRate = 0;
+      for (const r of specialRarities) { const pr = setPR.find(p => p.rarity === r); if (pr) totalRate += pr.pull_rate_per_pack; }
+      for (const r of specialRarities) {
+        const pr = setPR.find(p => p.rarity === r);
+        if (!pr || !pools[r] || pools[r].length === 0) continue;
+        const subProb = slot.p_special * (pr.pull_rate_per_pack / totalRate);
+        addPool(subProb, pools[r]);
+      }
+    } else {
+      addPool(slot.p_special, specialPoolForSlot(slot, pools));
+    }
     return entries;
   }
 
@@ -776,7 +813,7 @@
     const totalCost = numBoxes * boxCost;
 
     // Pre-build slot weight tables
-    const slotWeights = cachedSlots.map(s => buildSlotWeights(s, cachedPools));
+    const slotWeights = cachedSlots.map(s => buildSlotWeights(s, cachedPools, cachedPR));
 
     // Run simulation in chunks to avoid blocking UI
     const results = new Float64Array(iters);
