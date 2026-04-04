@@ -36,14 +36,6 @@
     <div class="row g-3" id="set-cards"></div>
   </div>
 
-  <!-- Step 3: Product -->
-  <div id="pick-product" class="d-none">
-    <div class="d-flex align-items-center mb-2">
-      <button class="btn btn-sm btn-outline-secondary me-2" onclick="backToSets()"><i class="bi bi-arrow-left"></i></button>
-      <span class="text-muted small" id="pick-product-label">Select a product</span>
-    </div>
-    <div class="row g-3" id="product-cards"></div>
-  </div>
 </div>
 
 <!-- ── Selected + Options bar ──────────────────────────────────────── -->
@@ -427,58 +419,15 @@
     const pr = allPullRates.find(r => r.set_code === setCode);
     const setName = pr?.set_name || setCode;
 
-    // If only one product or fixed contents, go straight to EV
-    if (products.length <= 1 || isFixedContents(game, setCode, products[0]?.product_type)) {
-      const pt = products[0]?.product_type || '';
-      document.getElementById('filter-product').value = pt;
-      if (products[0]) {
-        const bp = priceMap.get(String(products[0].tcgplayer_id));
-        if (bp) document.getElementById('opt-box-cost').value = Math.round(bp.market_price);
-      }
-      showSelectedBar(game, setName, pt);
-      recompute();
-      return;
-    }
-
-    // Show product picker
-    document.getElementById('product-cards').innerHTML = products.map(p => {
-      const bp = priceMap.get(String(p.tcgplayer_id));
-      const icon = p.product_type.includes('booster-box') || p.product_type.includes('booster-display') ? 'bi-box-seam'
-                 : p.product_type.includes('etb') || p.product_type.includes('elite') ? 'bi-trophy'
-                 : p.product_type.includes('bundle') ? 'bi-collection'
-                 : p.product_type.includes('pack') ? 'bi-card-heading'
-                 : 'bi-gift';
-      return `<div class="col-sm-4 col-md-3">
-        <div class="card border-0 shadow-sm h-100 picker-card" style="cursor:pointer;transition:transform .15s"
-             onclick="selectProduct('${esc(game)}','${esc(setCode)}','${esc(p.product_type)}')"
-             onmouseenter="this.style.transform='scale(1.03)'" onmouseleave="this.style.transform=''">
-          <div class="card-body text-center py-3">
-            <i class="bi ${icon} fs-3 text-primary d-block mb-1"></i>
-            <div class="fw-medium small">${esc(fmtPT(p.product_type))}</div>
-            <div class="text-muted small">${p.packs_per_product} packs</div>
-            ${bp ? `<div class="text-success small fw-medium mt-1">${fmtUSD(bp.market_price)}</div>` : ''}
-          </div>
-        </div>
-      </div>`;
-    }).join('');
-    document.getElementById('pick-product-label').textContent = `${setName} — Select a product`;
-    show('pick-product');
-  }
-
-  function selectProduct(game, setCode, productType) {
-    document.getElementById('filter-game').value = game;
-    document.getElementById('filter-set').value = setCode;
-    document.getElementById('filter-product').value = productType;
-    hide('pick-product');
-
-    const prod = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
-    if (prod) {
-      const bp = priceMap.get(String(prod.tcgplayer_id));
+    // Auto-select the best product: prefer box/display, then first with packs
+    const box = products.find(p => /box|display/.test(p.product_type)) || products[0];
+    const pt = box?.product_type || '';
+    document.getElementById('filter-product').value = pt;
+    if (box) {
+      const bp = priceMap.get(String(box.tcgplayer_id));
       if (bp) document.getElementById('opt-box-cost').value = Math.round(bp.market_price);
     }
-
-    const pr = allPullRates.find(r => r.set_code === setCode);
-    showSelectedBar(game, pr?.set_name || setCode, productType);
+    showSelectedBar(game, setName, pt);
     recompute();
   }
 
@@ -496,15 +445,8 @@
     hideResults();
     hide('options-bar');
     hide('pick-set');
-    hide('pick-product');
     show('pick-game');
     show('picker');
-  }
-
-  function backToSets() {
-    hideResults();
-    hide('pick-product');
-    show('pick-set');
   }
 
   function recompute() {
