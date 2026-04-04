@@ -549,11 +549,46 @@
         const r = computeSlotEV(s, pools, setPR);
         slotTotal += r.ev;
         const pF = v => v ? `<span class="${v>0.5?'fw-medium':'text-muted'}">${pct(v)}</span>` : '<span class="text-muted">—</span>';
-        return `<tr><td class="ps-3 fw-medium">${s.slot_index}</td><td>${esc(s.slot_name)}</td>
+        let row = `<tr><td class="ps-3 fw-medium">${s.slot_index}</td><td>${esc(s.slot_name)}</td>
           <td>${s.is_foil?'<i class="bi bi-stars text-warning"></i>':''}</td>
           <td class="text-center">${pF(s.p_common)}</td><td class="text-center">${pF(s.p_uncommon)}</td>
           <td class="text-center">${pF(s.p_rare)}</td><td class="text-center">${pF(s.p_mythic)}</td>
           <td class="text-center">${pF(s.p_special)}</td><td class="text-end pe-3 fw-medium">${fmtUSD(r.ev)}</td></tr>`;
+        // Add special breakdown sub-row for slots with p_special
+        if (s.p_special && s.card_pool === 'main_rares_epics') {
+          const specialRarities = ['epic','alt_art','overnumber','signature_overnumber'];
+          let totalRate = 0;
+          for (const rr of specialRarities) { const pr = setPR.find(p => p.rarity === rr); if (pr) totalRate += pr.pull_rate_per_pack; }
+          const details = specialRarities.map(rr => {
+            const pr = setPR.find(p => p.rarity === rr);
+            if (!pr || !pools[rr] || pools[rr].length === 0) return null;
+            const pctOfSpecial = pr.pull_rate_per_pack / totalRate;
+            const absProb = s.p_special * pctOfSpecial;
+            const avg = slotAvg(pools[rr]);
+            const ev = absProb * avg;
+            return `<span class="me-3">${esc(rr)}: ${pct(absProb)} &middot; avg ${fmtUSD(avg)} &middot; EV ${fmtUSD(ev)}</span>`;
+          }).filter(Boolean).join('');
+          row += `<tr class="table-light"><td></td><td colspan="7" class="text-muted small py-1 ps-4">${details}</td><td></td></tr>`;
+        } else if (s.p_special && s.card_pool === 'main_rares_chase') {
+          // Pokemon-style: chase rarities in hit slot
+          const chaseRarities = ['double_rare','illustration_rare','ultra_rare','special_illustration_rare','hyper_rare','mega_hyper_rare'];
+          let totalRate = 0;
+          for (const rr of chaseRarities) { const pr = setPR.find(p => p.rarity === rr); if (pr) totalRate += pr.pull_rate_per_pack; }
+          if (totalRate > 0) {
+            const details = chaseRarities.map(rr => {
+              const pr = setPR.find(p => p.rarity === rr);
+              if (!pr) return null;
+              const pctOfSpecial = pr.pull_rate_per_pack / totalRate;
+              const absProb = s.p_special * pctOfSpecial;
+              const pool = playCards.filter(c => c.rarity === rr);
+              const avg = slotAvg(pool);
+              const ev = absProb * avg;
+              return `<span class="me-3">${esc(rr)}: ${pct(absProb)} &middot; avg ${fmtUSD(avg)} &middot; EV ${fmtUSD(ev)}</span>`;
+            }).filter(Boolean).join('');
+            row += `<tr class="table-light"><td></td><td colspan="7" class="text-muted small py-1 ps-4">${details}</td><td></td></tr>`;
+          }
+        }
+        return row;
       }).join('');
       document.getElementById('slot-total').textContent = fmtUSD(slotTotal);
       show('slot-card');
