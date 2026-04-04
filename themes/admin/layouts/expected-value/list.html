@@ -310,10 +310,17 @@
     return new Set(allCards.filter(c => prSetCodes.has(c.set_code) || sealedSetCodes.has(`${c.game}|${c.set_code}`)).map(c => `${c.game}|${c.set_code}`));
   }
 
-  function isFixedContents(game, setCode) {
-    const hasPR = allPullRates.some(r => r.set_code === setCode);
+  function isFixedContents(game, setCode, productType) {
     const hasSlots = allPackSlots.some(s => s.game === game && s.set_code === setCode);
-    return !hasPR && !hasSlots;
+    if (hasSlots) return false;
+    // Fixed if: no pack slots AND (no pull rates, OR every pull rate has individual_card_pull_rate = 1, OR product is packs_per_product = 1 with no booster-like type)
+    const pr = allPullRates.filter(r => r.set_code === setCode);
+    if (pr.length === 0) return true;
+    // All cards guaranteed = fixed contents (e.g. box set with pull_rate = card_count)
+    if (pr.every(r => r.individual_card_pull_rate === 1.0 || r.individual_card_pull_rate === 1)) return true;
+    // Product type hints: box-set, commander-deck, starter-deck, etc.
+    if (productType && /box-set|commander|starter|precon|deck/.test(productType)) return true;
+    return false;
   }
 
   function populateGameFilter() {
@@ -421,7 +428,7 @@
     const allSetCards = allCards.filter(c => c.game === game && c.set_code === setCode);
 
     // ── Fixed-contents products (precons, box sets) ───────────────────
-    if (isFixedContents(game, setCode)) {
+    if (isFixedContents(game, setCode, productType)) {
       computeFixedEV(game, setCode, productType, allSetCards);
       return;
     }
