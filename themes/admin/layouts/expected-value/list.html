@@ -559,8 +559,8 @@
     const lower = (notes || '').toLowerCase();
     for (const r of allRarities) {
       const label = r.replace(/_/g, ' ');
-      // Match "Super Rare 29.2%" or "SP 1.67%" or "LRP 97.8%" patterns
-      const regex = new RegExp('(?:^|[,.]\\s*|\\s)' + label + '\\s+([\\d.]+)%', 'i');
+      // Match "Super Rare 29.2%" or "SP 1.67%" patterns — simple label + number%
+      const regex = new RegExp(label + '\\s+([\\d.]+)%');
       const m = lower.match(regex);
       if (m) rates[r] = parseFloat(m[1]) / 100;
     }
