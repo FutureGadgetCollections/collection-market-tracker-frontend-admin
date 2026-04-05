@@ -455,8 +455,24 @@
     // Check if this set has multiple commander decks
     const cmdDecks = products.filter(p => /commander-deck/.test(p.product_type));
     if (cmdDecks.length > 1) {
-      // Show deck picker — re-use pick-set area
+      // Show deck picker with "All Decks" option + individual decks
+      const allDeckCards = allDeckLists.filter(d => d.game === game && d.set_code === setCode);
+      const allTotalCards = allDeckCards.reduce((s, d) => s + (d.quantity || 1), 0);
+
       let html = `<div class="col-12"><h6 class="text-muted mb-1">${esc(setName)} — Select a deck</h6></div>`;
+      // "All Decks" option
+      html += `<div class="col-sm-4 col-md-3">
+        <div class="card border-0 shadow-sm h-100 picker-card" style="cursor:pointer;transition:transform .15s;border-left:3px solid #0d6efd!important"
+             onclick="selectDeck('${esc(game)}','${esc(setCode)}','all-decks')"
+             onmouseenter="this.style.transform='scale(1.03)'" onmouseleave="this.style.transform=''">
+          <div class="card-body text-center py-3">
+            <i class="bi bi-collection fs-3 text-primary d-block mb-1"></i>
+            <div class="fw-bold small">All ${cmdDecks.length} Decks</div>
+            <div class="text-muted small">${allTotalCards} cards total</div>
+            <div class="text-muted small">(Display Case)</div>
+          </div>
+        </div>
+      </div>`;
       html += cmdDecks.map(p => {
         const deckName = fmtPT(p.product_type.replace('commander-deck-', ''));
         const bp = priceMap.get(String(p.tcgplayer_id));
@@ -503,14 +519,28 @@
     document.getElementById('filter-product').value = productType;
     hide('pick-set');
 
-    const prod = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
-    if (prod) {
-      const bp = priceMap.get(String(prod.tcgplayer_id));
-      if (bp) document.getElementById('opt-box-cost').value = Math.round(bp.market_price);
-    }
     const pr = allPullRates.find(r => r.set_code === setCode);
-    const deckName = fmtPT(productType.replace('commander-deck-', ''));
-    showSelectedBar(game, `${pr?.set_name || setCode} — ${deckName}`, productType);
+    const setName = pr?.set_name || setCode;
+
+    if (productType === 'all-decks') {
+      // Sum cost of all individual decks
+      const cmdDecks = allSealed.filter(p => p.game === game && p.set_code === setCode && /commander-deck/.test(p.product_type));
+      let totalCost = 0;
+      for (const d of cmdDecks) {
+        const bp = priceMap.get(String(d.tcgplayer_id));
+        if (bp) totalCost += bp.market_price;
+      }
+      if (totalCost > 0) document.getElementById('opt-box-cost').value = Math.round(totalCost);
+      showSelectedBar(game, `${setName} — All ${cmdDecks.length} Decks`, productType);
+    } else {
+      const prod = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
+      if (prod) {
+        const bp = priceMap.get(String(prod.tcgplayer_id));
+        if (bp) document.getElementById('opt-box-cost').value = Math.round(bp.market_price);
+      }
+      const deckName = fmtPT(productType.replace('commander-deck-', ''));
+      showSelectedBar(game, `${setName} — ${deckName}`, productType);
+    }
     recompute();
   }
 
@@ -895,12 +925,17 @@
     const feeName = document.getElementById('opt-fees').value;
     const feeLabel = feeName !== 'none' ? ` (after ${feeName === 'custom' ? 'custom' : feeName} fees)` : '';
 
-    // If deck lists exist, filter to only cards in this specific deck
-    const deckEntries = allDeckLists.filter(d => d.game === game && d.set_code === setCode && d.product_type === productType);
+    // If deck lists exist, filter to only cards in this specific deck (or all decks)
     let filteredCards = allSetCards;
-    if (deckEntries.length > 0) {
-      const deckCardNumbers = new Set(deckEntries.map(d => d.card_number));
-      filteredCards = allSetCards.filter(c => deckCardNumbers.has(c.card_number));
+    if (productType === 'all-decks') {
+      const allDeckNumbers = new Set(allDeckLists.filter(d => d.game === game && d.set_code === setCode).map(d => d.card_number));
+      if (allDeckNumbers.size > 0) filteredCards = allSetCards.filter(c => allDeckNumbers.has(c.card_number));
+    } else {
+      const deckEntries = allDeckLists.filter(d => d.game === game && d.set_code === setCode && d.product_type === productType);
+      if (deckEntries.length > 0) {
+        const deckCardNumbers = new Set(deckEntries.map(d => d.card_number));
+        filteredCards = allSetCards.filter(c => deckCardNumbers.has(c.card_number));
+      }
     }
 
     let priceDate = null;
