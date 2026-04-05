@@ -523,20 +523,24 @@
     const setName = pr?.set_name || setCode;
 
     if (productType === 'all-decks') {
-      // Sum cost of all individual decks
+      // Sum cost of all individual decks (market price or MSRP fallback)
       const cmdDecks = allSealed.filter(p => p.game === game && p.set_code === setCode && /commander-deck/.test(p.product_type));
       let totalCost = 0;
+      let usedMsrp = false;
       for (const d of cmdDecks) {
         const bp = priceMap.get(String(d.tcgplayer_id));
-        if (bp) totalCost += bp.market_price;
+        if (bp) { totalCost += bp.market_price; }
+        else if (d.msrp) { totalCost += d.msrp; usedMsrp = true; }
       }
       if (totalCost > 0) document.getElementById('opt-box-cost').value = Math.round(totalCost);
-      showSelectedBar(game, `${setName} — All ${cmdDecks.length} Decks`, productType);
+      const costLabel = usedMsrp ? ' (MSRP)' : '';
+      showSelectedBar(game, `${setName} — All ${cmdDecks.length} Decks (Display Case${costLabel})`, productType);
     } else {
       const prod = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
       if (prod) {
         const bp = priceMap.get(String(prod.tcgplayer_id));
-        if (bp) document.getElementById('opt-box-cost').value = Math.round(bp.market_price);
+        if (bp) { document.getElementById('opt-box-cost').value = Math.round(bp.market_price); }
+        else if (prod.msrp) { document.getElementById('opt-box-cost').value = Math.round(prod.msrp); }
       }
       const deckName = fmtPT(productType.replace('commander-deck-', ''));
       showSelectedBar(game, `${setName} — ${deckName}`, productType);
@@ -953,35 +957,70 @@
 
     document.getElementById('ev-price-date').textContent = priceDate ? `Prices as of ${priceDate}` : '';
 
-    // Render as a simple card list in the EV table
-    document.getElementById('ev-title').textContent = `Fixed Contents — ${fmtPT(productType)}${feeLabel}`;
-    document.getElementById('ev-tbody').innerHTML = rows.map(r => `<tr>
-      <td class="ps-3">${esc(r.card.name)}${r.card.rarity ? ` <span class="badge bg-light text-dark border small">${esc(r.card.rarity)}</span>` : ''}</td>
-      <td>${esc(r.card.card_number)}</td>
-      <td>${r.price != null ? fmtUSD(r.price) : '<span class="text-muted">N/A</span>'}</td>
-      <td>${r.effective < (r.price || 0) ? '<span class="text-muted">sifted</span>' : ''}</td>
-      <td class="text-end pe-3 fw-medium">${fmtUSD(r.net)}</td>
-    </tr>`).join('');
+    // Group by rarity for collapsible display
+    const rarityGroups = new Map();
+    for (const r of rows) {
+      const rar = r.card.rarity || 'unknown';
+      if (!rarityGroups.has(rar)) rarityGroups.set(rar, { cards: [], grossSum: 0, netSum: 0 });
+      const g = rarityGroups.get(rar);
+      g.cards.push(r);
+      g.grossSum += r.effective;
+      g.netSum += r.net;
+    }
+    // Sort rarities by total net value descending
+    const sortedRarities = [...rarityGroups.entries()].sort((a, b) => b[1].netSum - a[1].netSum);
+
+    const title = productType === 'all-decks' ? 'All Decks (Display Case)' : fmtPT(productType);
+    document.getElementById('ev-title').textContent = `Fixed Contents — ${title}${feeLabel}`;
+
+    // Render rarity summary rows with collapsible card details
+    let tbodyHTML = '';
+    for (const [rar, group] of sortedRarities) {
+      const collapseId = `fixed-${rar.replace(/[^a-z0-9]/g, '')}`;
+      tbodyHTML += `<tr class="table-light" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+        <td class="ps-3 fw-medium"><span class="badge bg-secondary me-1">${esc(rar)}</span> ${group.cards.length} cards <i class="bi bi-chevron-down small text-muted"></i></td>
+        <td></td>
+        <td>${fmtUSD(group.grossSum)}</td>
+        <td></td>
+        <td class="text-end pe-3 fw-bold">${fmtUSD(group.netSum)}</td>
+      </tr>`;
+      // Collapsible card rows
+      const cardRowsHTML = group.cards.sort((a, b) => (b.price || 0) - (a.price || 0)).map(r => `<tr class="collapse ${collapseId} small">
+        <td class="ps-3 ps-4">${esc(r.card.name)}</td>
+        <td class="text-muted">${esc(r.card.card_number)}</td>
+        <td>${r.price != null ? fmtUSD(r.price) : '<span class="text-muted">N/A</span>'}</td>
+        <td>${r.effective < (r.price || 0) ? '<span class="text-muted">sifted</span>' : ''}</td>
+        <td class="text-end pe-3">${fmtUSD(r.net)}</td>
+      </tr>`).join('');
+      tbodyHTML += cardRowsHTML;
+    }
+    document.getElementById('ev-tbody').innerHTML = tbodyHTML;
     document.getElementById('ev-total').textContent = fmtUSD(netTotal);
 
-    // Update table headers for fixed contents
     const thead = document.querySelector('#ev-card thead tr');
-    thead.innerHTML = '<th class="ps-3">Card</th><th>#</th><th>Market Price</th><th></th><th class="text-end pe-3">Net Value</th>';
+    thead.innerHTML = '<th class="ps-3">Rarity / Card</th><th>#</th><th>Gross</th><th></th><th class="text-end pe-3">Net Value</th>';
     const tfoot = document.querySelector('#ev-card tfoot tr');
-    tfoot.innerHTML = `<td class="ps-3 fw-bold" colspan="4">Total Product Value</td><td class="text-end pe-3 fw-bold">${fmtUSD(netTotal)}</td>`;
+    tfoot.innerHTML = `<td class="ps-3 fw-bold" colspan="4">Total Product Value (${filteredCards.length} cards)</td><td class="text-end pe-3 fw-bold">${fmtUSD(netTotal)}</td>`;
     show('ev-card');
 
-    // Box summary
-    const product = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
+    // Box summary — works for individual decks and "all-decks" display case
+    const product = productType === 'all-decks' ? null : allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
     const boxCost = parseFloat(document.getElementById('opt-box-cost').value) || 0;
-    if (product) {
-      const boxMktPrice = priceMap.get(String(product.tcgplayer_id));
+    {
       let statsHTML = `
         <div class="col"><div class="text-muted small">Total Card Value</div><div class="fs-5 fw-bold text-primary">${fmtUSD(grossTotal)}</div></div>
         <div class="col"><div class="text-muted small">After Fees</div><div class="fs-5 fw-bold text-success">${fmtUSD(netTotal)}</div></div>`;
-      if (boxMktPrice) statsHTML += `<div class="col"><div class="text-muted small">Market Price</div><div class="fs-5 fw-bold">${fmtUSD(boxMktPrice.market_price)}</div></div>`;
+      if (product) {
+        const boxMktPrice = priceMap.get(String(product.tcgplayer_id));
+        if (boxMktPrice) statsHTML += `<div class="col"><div class="text-muted small">Market Price</div><div class="fs-5 fw-bold">${fmtUSD(boxMktPrice.market_price)}</div></div>`;
+        if (product.msrp) statsHTML += `<div class="col"><div class="text-muted small">MSRP</div><div class="fs-5 fw-bold text-muted">${fmtUSD(product.msrp)}</div></div>`;
+      } else if (productType === 'all-decks') {
+        // Display case: show combined MSRP
+        const cmdDecks = allSealed.filter(p => p.game === game && p.set_code === setCode && /commander-deck/.test(p.product_type));
+        const totalMsrp = cmdDecks.reduce((s, d) => s + (d.msrp || 0), 0);
+        if (totalMsrp > 0) statsHTML += `<div class="col"><div class="text-muted small">Display MSRP</div><div class="fs-5 fw-bold text-muted">${fmtUSD(totalMsrp)}</div><div class="text-muted small">${cmdDecks.length} decks</div></div>`;
+      }
       statsHTML += `<div class="col"><div class="text-muted small">Cost</div><div class="fs-5 fw-bold">${fmtUSD(boxCost)}</div></div>`;
-      if (product.msrp) statsHTML += `<div class="col"><div class="text-muted small">MSRP</div><div class="fs-5 fw-bold text-muted">${fmtUSD(product.msrp)}</div></div>`;
       document.getElementById('box-stats-row').innerHTML = statsHTML;
 
       if (boxCost > 0) {
