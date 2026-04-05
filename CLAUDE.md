@@ -148,6 +148,56 @@ Per-slot data in `catalog.pack_slots` — query via MCP `catalog_pack_slots(game
 
 ## Open TODOs
 
+### Graded card market tracking (TODO)
+
+Goal: track graded card prices and gem rates over time for PSA and CGC grading companies.
+
+**Data to track (monthly grain):**
+- PSA 10 price, PSA 9 price, PSA 10 gem rate
+- CGC 10 price, CGC 10 gem rate
+- CGC Pristine 10 price, CGC Pristine 10 rate
+
+**Gem rate tracking:** Need to track gem rate changes over time as grading populations grow. Monthly snapshots.
+
+**BQ table design (TODO):**
+- `market_data.graded_prices` — grain: `(tcgplayer_id, grade, grading_company, snapshot_date)`. Columns: `price`, `population`, `gem_rate`.
+- Or: `market_data.graded_card_history` — grain: `(game, set_code, card_number, grading_company, grade, snapshot_date)`.
+
+**Data sources:**
+- PriceCharting links already exist for Pokemon, One Piece, Riftbound sealed products — can retrieve PSA 9, PSA 10, CGC 10, CGC Pristine 10 prices from PriceCharting product pages.
+- PSA/CGC population reports for gem rates.
+
+**Steps:**
+1. Design BQ table schema
+2. Build scraper for graded prices from PriceCharting (extend existing `pricecharting_scraper.py`)
+3. Build scraper for gem rates from PSA/CGC population reports
+4. Add graded price columns to admin frontend card views
+5. Add gem rate tracking and historical charts
+
+### Sentiment / market focus analysis (TODO)
+
+Goal: track market sentiment and community focus across TCG sets to identify which sets are gaining or losing interest.
+
+**Potential signals:**
+- TCGPlayer avg_daily_sold trends (already scraped)
+- TCGPlayer seller count trends (already scraped)
+- Price velocity (rate of price change over 7d/30d/90d)
+- Social media mentions / Reddit activity
+- YouTube box opening frequency
+
+**Steps:**
+1. Define sentiment metrics from existing data (price velocity, volume trends)
+2. Build a sentiment dashboard on the admin panel
+3. (Optional) Add external data sources (Reddit API, YouTube API)
+
+### Investigate One Piece rare_leader and hit_slot EV (TODO)
+
+The slot 11 (rare_leader) and slot 12 (hit_slot) EV calculations for One Piece sets still look off. Need to investigate:
+- Are the per-slot note percentages being parsed correctly?
+- Is the `weightedSpecialAvg` function weighting leader/SR/SEC correctly for OP?
+- Compare against known box break data to validate
+- Check if leader cards are being double-counted (slot 11 leader rate + slot 12 leader rate)
+
 ### Self-hosted PostgreSQL database (TODO)
 
 Goal: host a PostgreSQL instance on Proxmox as the primary DB for frontends, with BQ as source of truth and backup.
