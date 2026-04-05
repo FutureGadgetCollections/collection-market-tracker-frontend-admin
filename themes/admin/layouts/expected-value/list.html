@@ -970,43 +970,32 @@
   // ── Playset Value (Weiss Schwarz) ───────────────────────────────────
 
   function renderPlaysetValue(game, setCode, playCards, productType) {
-    const RARITY_ORDER = ['sir', 'sp', 'pr', 'lrp', 'n'];
     const RARITY_LABELS = { sir: 'SIR (Super Special)', sp: 'SP (Special)', pr: 'PR (Promo)', lrp: 'LRP (Foil Parallel)', n: 'N (Normal)' };
 
-    // Group by rarity
-    const groups = new Map();
-    for (const c of playCards) {
-      if (!groups.has(c.rarity)) groups.set(c.rarity, []);
-      groups.get(c.rarity).push(c);
+    // Playset = 4x of every Normal card only
+    const nCards = playCards.filter(c => c.rarity === 'n');
+    let setValue = 0, pricedCount = 0;
+    const cardRows = [];
+    for (const c of [...nCards].sort((a, b) => (getPrice(b) || 0) - (getPrice(a) || 0))) {
+      const p = getPrice(c);
+      if (p != null) { setValue += p; pricedCount++; }
+      cardRows.push({ name: c.name, number: c.card_number, price: p, playset: p != null ? p * 4 : null });
     }
+    const playsetTotal = setValue * 4;
 
-    let total1x = 0, total4x = 0;
-    const rows = [];
-    for (const rarity of RARITY_ORDER) {
-      const cards = groups.get(rarity) || [];
-      if (cards.length === 0) continue;
-      let setValue = 0, pricedCount = 0;
-      for (const c of cards) {
-        const p = getPrice(c);
-        if (p != null) { setValue += p; pricedCount++; }
-      }
-      const avg = pricedCount > 0 ? setValue / pricedCount : 0;
-      const playset = setValue * 4;
-      total1x += setValue;
-      total4x += playset;
-      rows.push({ rarity, label: RARITY_LABELS[rarity] || rarity, unique: cards.length, priced: pricedCount, avg, setValue, playset });
-    }
-
-    document.getElementById('playset-tbody').innerHTML = rows.map(r => `<tr>
-      <td class="ps-3"><span class="badge ${r.rarity === 'sir' ? 'bg-warning text-dark' : r.rarity === 'sp' ? 'bg-info text-dark' : 'bg-secondary'}">${esc(r.label)}</span></td>
-      <td class="text-center">${r.unique}${r.priced < r.unique ? ` <span class="text-muted">(${r.priced} priced)</span>` : ''}</td>
-      <td class="text-end">${fmtUSD(r.avg)}</td>
-      <td class="text-end">${fmtUSD(r.setValue)}</td>
-      <td class="text-end pe-3 fw-medium">${fmtUSD(r.playset)}</td>
+    document.getElementById('playset-tbody').innerHTML = cardRows.map(r => `<tr>
+      <td class="ps-3">${esc(r.name)}</td>
+      <td class="text-center text-muted">${esc(r.number)}</td>
+      <td class="text-end">${r.price != null ? fmtUSD(r.price) : '<span class="text-muted">N/A</span>'}</td>
+      <td class="text-end">${r.price != null ? fmtUSD(r.price) : '—'}</td>
+      <td class="text-end pe-3 fw-medium">${r.playset != null ? fmtUSD(r.playset) : '—'}</td>
     </tr>`).join('');
 
-    document.getElementById('playset-1x-total').textContent = fmtUSD(total1x);
-    document.getElementById('playset-4x-total').textContent = fmtUSD(total4x);
+    // Update headers for card-level view
+    document.querySelector('#playset-card thead tr').innerHTML = '<th class="ps-3">Card</th><th class="text-center">#</th><th class="text-end">Single Price</th><th class="text-end">1x</th><th class="text-end pe-3">4x Value</th>';
+    document.querySelector('#playset-card tfoot tr').innerHTML = `<td class="ps-3 fw-bold" colspan="3">N Playset (${nCards.length} unique, 4x each = ${nCards.length * 4} cards)</td><td class="text-end fw-bold">${fmtUSD(setValue)}</td><td class="text-end pe-3 fw-bold">${fmtUSD(playsetTotal)}</td>`;
+    document.getElementById('playset-1x-total').textContent = fmtUSD(setValue);
+    document.getElementById('playset-4x-total').textContent = fmtUSD(playsetTotal);
 
     // Case analysis
     const product = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
@@ -1019,8 +1008,7 @@
     const avgCopies = uniqueN > 0 ? (totalNormals / uniqueN).toFixed(1) : '?';
     const fullPlaysets = uniqueN > 0 ? Math.floor(totalNormals / uniqueN / 4) : 0;
 
-    const nPlayset = rows.find(r => r.rarity === 'n');
-    const nPlaysetValue = nPlayset ? nPlayset.playset : 0;
+    const nPlaysetValue = playsetTotal;
     const boxCost = parseFloat(document.getElementById('opt-box-cost').value) || 0;
     const caseCost = boxCost * boxesPerCase;
 
