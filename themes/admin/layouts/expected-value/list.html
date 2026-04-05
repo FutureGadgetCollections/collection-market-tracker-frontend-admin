@@ -495,15 +495,20 @@
     const play = allCards.filter(c => c.game === game && c.set_code === setCode && !c.collector_only);
     const base = play.filter(c => !c.treatment || c.treatment === 'base');
     return {
-      base_common:     base.filter(c => c.rarity === 'common'),
+      base_common:     base.filter(c => c.rarity === 'common' || c.rarity === 'n'),
       base_uncommon:   base.filter(c => c.rarity === 'uncommon'),
-      base_rare:       base.filter(c => c.rarity === 'rare'),
+      base_rare:       base.filter(c => c.rarity === 'rare' || c.rarity === 'lrp'),
       base_mythic:     base.filter(c => c.rarity === 'mythic'),
-      // For games like Riftbound where rarity IS the category (epic, alt_art, etc.)
+      // For games where rarity IS the category (Riftbound, Weiss Schwarz, etc.)
       epic:            play.filter(c => c.rarity === 'epic'),
       alt_art:         play.filter(c => c.rarity === 'alt_art'),
       overnumber:      play.filter(c => c.rarity === 'overnumber'),
       signature_overnumber: play.filter(c => c.rarity === 'signature_overnumber'),
+      sp:              play.filter(c => c.rarity === 'sp'),
+      sir:             play.filter(c => c.rarity === 'sir'),
+      lrp:             play.filter(c => c.rarity === 'lrp'),
+      pr:              play.filter(c => c.rarity === 'pr'),
+      n:               play.filter(c => c.rarity === 'n'),
       variants:        play.filter(c => c.treatment && c.treatment !== 'base' && c.treatment !== 'token' && c.treatment !== 'source_material'),
       source_material: play.filter(c => c.treatment === 'source_material'),
       lands:           play.filter(c => c.rarity === 'land'),
@@ -525,7 +530,7 @@
     // Pokemon: chase rarities — use slot notes to determine which rarities
     if (cp === 'main_rares_chase') {
       const notes = (slot.notes || '').toLowerCase();
-      const chaseRarities = ['double_rare','ultra_rare','illustration_rare','special_illustration_rare','hyper_rare','mega_hyper_rare','super_rare','secret_rare','leader','treasure_rare','manga_rare'];
+      const chaseRarities = ['double_rare','ultra_rare','illustration_rare','special_illustration_rare','hyper_rare','mega_hyper_rare','super_rare','secret_rare','leader','treasure_rare','manga_rare','sp','sir','lrp','pr','ssr','sec'];
       const matching = chaseRarities.filter(r => notes.includes(r.replace(/_/g,' ')) || notes.includes(r));
       if (matching.length > 0) {
         return (allCards || []).filter(c => c.game === game && c.set_code === setCode && !c.collector_only && matching.includes(c.rarity));
@@ -543,12 +548,19 @@
   // Returns {rarity: pct, ...} e.g. {super_rare: 0.292, secret_rare: 0.042, leader: 0.083}
   function parseSlotNoteRates(notes) {
     const rates = {};
-    const allRarities = ['double_rare','ultra_rare','illustration_rare','special_illustration_rare','hyper_rare','mega_hyper_rare','super_rare','secret_rare','leader','treasure_rare','manga_rare','epic','alt_art','overnumber','signature_overnumber'];
+    // All known rarity codes and their display labels
+    const allRarities = [
+      'double_rare','ultra_rare','illustration_rare','special_illustration_rare',
+      'hyper_rare','mega_hyper_rare','super_rare','secret_rare','leader',
+      'treasure_rare','manga_rare','epic','alt_art','overnumber','signature_overnumber',
+      // Weiss Schwarz / short codes
+      'sp','sir','lrp','pr','n','sec','ssr',
+    ];
     const lower = (notes || '').toLowerCase();
     for (const r of allRarities) {
       const label = r.replace(/_/g, ' ');
-      // Match "Super Rare 29.2%" or "Leader 8.3%" patterns
-      const regex = new RegExp(label + '\\s+([\\d.]+)%');
+      // Match "Super Rare 29.2%" or "SP 1.67%" or "LRP 97.8%" patterns
+      const regex = new RegExp('(?:^|[,.]\\s*|\\s)' + label + '\\s+([\\d.]+)%', 'i');
       const m = lower.match(regex);
       if (m) rates[r] = parseFloat(m[1]) / 100;
     }
