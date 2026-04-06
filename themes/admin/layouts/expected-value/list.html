@@ -972,7 +972,8 @@
     const sortedRarities = [...rarityGroups.entries()].sort((a, b) => b[1].netSum - a[1].netSum);
 
     const title = productType === 'all-decks' ? 'All Decks (Display Case)' : fmtPT(productType);
-    document.getElementById('ev-title').textContent = `Fixed Contents — ${title}${feeLabel}`;
+    const titleEl = document.getElementById('ev-title');
+    if (titleEl) titleEl.textContent = `Fixed Contents — ${title}${feeLabel}`;
 
     // Render rarity summary rows with collapsible card details
     let tbodyHTML = '';
@@ -1022,16 +1023,23 @@
         if (totalMsrp > 0) statsHTML += `<div class="col"><div class="text-muted small">Display MSRP</div><div class="fs-5 fw-bold text-muted">${fmtUSD(totalMsrp)}</div><div class="text-muted small">${cmdDecks.length} decks</div></div>`;
       }
       statsHTML += `<div class="col"><div class="text-muted small">Cost</div><div class="fs-5 fw-bold">${fmtUSD(boxCost)}</div></div>`;
-      document.getElementById('box-stats-row').innerHTML = statsHTML;
+      const bsr = document.getElementById('box-stats-row');
+      if (bsr) bsr.innerHTML = statsHTML;
 
       if (boxCost > 0) {
         const ratio = netTotal / boxCost;
         const profit = netTotal - boxCost;
         const badge = document.getElementById('box-ratio-badge');
-        badge.textContent = `Value Ratio: ${ratio.toFixed(2)}x (${profit >= 0 ? '+' : ''}${fmtUSD(profit)} profit)`;
-        badge.className = `badge fs-6 px-3 py-2 ${ratio >= 1.0 ? 'bg-success' : 'bg-danger'}`;
-        document.getElementById('box-ratio-row').style.display = '';
-      } else { document.getElementById('box-ratio-row').style.display = 'none'; }
+        if (badge) {
+          badge.textContent = `Value Ratio: ${ratio.toFixed(2)}x (${profit >= 0 ? '+' : ''}${fmtUSD(profit)} profit)`;
+          badge.className = `badge fs-6 px-3 py-2 ${ratio >= 1.0 ? 'bg-success' : 'bg-danger'}`;
+        }
+        const brr = document.getElementById('box-ratio-row');
+        if (brr) brr.style.display = '';
+      } else {
+        const brr = document.getElementById('box-ratio-row');
+        if (brr) brr.style.display = 'none';
+      }
       show('box-card');
     }
 
@@ -1039,7 +1047,8 @@
     const notes = [`Fixed-contents product: you get exactly ${allSetCards.length} card(s).`];
     if (pricedCount < allSetCards.length) notes.push(`${pricedCount}/${allSetCards.length} cards have price data.`);
     if (feeName !== 'none') { const f = getFeeConfig(); notes.push(`Fees applied: ${f.pct}%.`); }
-    document.getElementById('ev-notes').innerHTML = notes.map(n => `<div>${esc(n)}</div>`).join('');
+    const notesEl = document.getElementById('ev-notes');
+    if (notesEl) notesEl.innerHTML = notes.map(n => `<div>${esc(n)}</div>`).join('');
     show('ev-notes');
 
     // No simulator or slot breakdown for fixed contents
