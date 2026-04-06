@@ -400,18 +400,22 @@
     const evSets = setsWithEVData();
     const m = GAME_META[game] || { label: game };
 
-    // Group sets by era
+    // Group sets by era, ordered newest first
     const setMap = new Map();
     for (const c of allCards.filter(c => c.game === game && evSets.has(`${c.game}|${c.set_code}`))) {
       if (!setMap.has(c.set_code)) {
         const pr = allPullRates.find(r => r.set_code === c.set_code);
         const era = pr?.era || c.era || '';
-        setMap.set(c.set_code, { name: pr?.set_name || c.set_code, era, code: c.set_code });
+        // Get release date from sealed products for chronological ordering
+        const sp = allSealed.find(p => p.game === game && p.set_code === c.set_code);
+        const release = sp?.release_date || '';
+        setMap.set(c.set_code, { name: pr?.set_name || c.set_code, era, code: c.set_code, release });
       }
     }
-    const sets = [...setMap.values()].sort((a, b) => a.code.localeCompare(b.code));
+    // Sort sets by release date descending (newest first)
+    const sets = [...setMap.values()].sort((a, b) => (b.release || '').localeCompare(a.release || ''));
 
-    // Group by era
+    // Group by era, preserving order of first appearance (newest era first since sets are sorted newest first)
     const eras = new Map();
     for (const s of sets) {
       if (!eras.has(s.era)) eras.set(s.era, []);
