@@ -21,14 +21,14 @@ async function loadFromGCS(filename) {
   return res.json();
 }
 
-// Tries GitHub first, falls back to GCS.
+// Tries GCS first, falls back to GitHub.
 async function loadJsonData(filename) {
   const { gcsBucket, githubDataRepo } = window.DATA_CONFIG || {};
-  console.debug(`[data-loader] loading ${filename} | repo=${githubDataRepo} | bucket=${gcsBucket}`);
+  console.debug(`[data-loader] loading ${filename} | bucket=${gcsBucket} | repo=${githubDataRepo}`);
   try {
-    return await loadFromGitHub(filename);
+    return await loadFromGCS(filename);
   } catch (e) {
-    console.warn(`[data-loader] GitHub failed for ${filename}:`, e.message, '— falling back to GCS');
+    console.warn(`[data-loader] GCS failed for ${filename}:`, e.message, '— falling back to GitHub');
   }
-  return loadFromGCS(filename);
+  return loadFromGitHub(filename);
 }
