@@ -955,7 +955,8 @@
       return { card: c, price: p, effective, net };
     });
 
-    document.getElementById('ev-price-date').textContent = priceDate ? `Prices as of ${priceDate}` : '';
+    const priceEl = document.getElementById('ev-price-date');
+    if (priceEl) priceEl.textContent = priceDate ? `Prices as of ${priceDate}` : '';
 
     // Group by rarity for collapsible display
     const rarityGroups = new Map();
@@ -994,13 +995,13 @@
       </tr>`).join('');
       tbodyHTML += cardRowsHTML;
     }
-    document.getElementById('ev-tbody').innerHTML = tbodyHTML;
-    document.getElementById('ev-total').textContent = fmtUSD(netTotal);
-
+    const evTbody = document.getElementById('ev-tbody');
+    if (evTbody) evTbody.innerHTML = tbodyHTML;
+    // Set thead/tfoot first (they contain the ev-total element)
     const thead = document.querySelector('#ev-card thead tr');
-    thead.innerHTML = '<th class="ps-3">Rarity / Card</th><th>#</th><th>Gross</th><th></th><th class="text-end pe-3">Net Value</th>';
+    if (thead) thead.innerHTML = '<th class="ps-3">Rarity / Card</th><th>#</th><th>Gross</th><th></th><th class="text-end pe-3">Net Value</th>';
     const tfoot = document.querySelector('#ev-card tfoot tr');
-    tfoot.innerHTML = `<td class="ps-3 fw-bold" colspan="4">Total Product Value (${filteredCards.length} cards)</td><td class="text-end pe-3 fw-bold">${fmtUSD(netTotal)}</td>`;
+    if (tfoot) tfoot.innerHTML = `<td class="ps-3 fw-bold" colspan="4">Total Product Value (${filteredCards.length} cards)</td><td class="text-end pe-3 fw-bold">${fmtUSD(netTotal)}</td>`;
     show('ev-card');
 
     // Box summary — works for individual decks and "all-decks" display case
