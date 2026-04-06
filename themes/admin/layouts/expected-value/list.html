@@ -1063,15 +1063,36 @@
 
   // ── Card list rendering ─────────────────────────────────────────────
   function renderCardLists(pools) {
-    const categories = [
-      { key: 'base_mythic',  label: 'Mythic (base)',   badge: 'bg-warning text-dark' },
-      { key: 'base_rare',    label: 'Rare (base)',     badge: 'bg-info text-dark' },
-      { key: 'base_uncommon',label: 'Uncommon (base)', badge: 'bg-secondary' },
-      { key: 'base_common',  label: 'Common (base)',   badge: 'bg-light text-dark border' },
-      { key: 'variants',     label: 'Variants',        badge: 'bg-purple text-white' },
-      { key: 'lands',        label: 'Lands',           badge: 'bg-success' },
-      { key: 'tokens',       label: 'Tokens',          badge: 'bg-dark' },
-    ];
+    // Build categories dynamically from all pools that have cards
+    const BADGE_MAP = {
+      base_mythic: 'bg-warning text-dark', base_rare: 'bg-info text-dark',
+      base_uncommon: 'bg-secondary', base_common: 'bg-light text-dark border',
+      variants: 'bg-purple text-white', lands: 'bg-success', tokens: 'bg-dark',
+      epic: 'bg-warning text-dark', alt_art: 'bg-info text-dark',
+      overnumber: 'bg-danger', signature_overnumber: 'bg-danger',
+      sp: 'bg-warning text-dark', sir: 'bg-danger', lrp: 'bg-info text-dark',
+      n: 'bg-light text-dark border', pr: 'bg-secondary',
+      double_rare: 'bg-warning text-dark', ultra_rare: 'bg-danger',
+      illustration_rare: 'bg-info text-dark', special_illustration_rare: 'bg-danger',
+      hyper_rare: 'bg-warning text-dark', mega_hyper_rare: 'bg-danger',
+      super_rare: 'bg-warning text-dark', secret_rare: 'bg-danger',
+      leader: 'bg-info text-dark', treasure_rare: 'bg-danger', manga_rare: 'bg-danger',
+    };
+
+    // Collect all non-empty pools, sorted by avg price descending
+    const categories = [];
+    for (const [key, cards] of Object.entries(pools)) {
+      if (!Array.isArray(cards) || cards.length === 0) continue;
+      if (key === 'all_play' || key === 'source_material') continue;
+      const label = key.replace(/^base_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      categories.push({ key, label, badge: BADGE_MAP[key] || 'bg-dark' });
+    }
+    // Sort: highest avg price first
+    categories.sort((a, b) => {
+      const avgA = effectivePoolStats(pools[a.key]).avg;
+      const avgB = effectivePoolStats(pools[b.key]).avg;
+      return avgB - avgA;
+    });
     const container = document.getElementById('card-lists-container');
     container.innerHTML = '';
     const sift = getSiftFloor();
