@@ -319,6 +319,52 @@ Products missing `pricecharting_url` in `catalog.sealed_products`. Look up each 
 **Riftbound (2 products, 1 set):**
 - [ ] rb03 — Unleashed (booster-pack, booster-display) — may not be on PriceCharting yet
 
+### MTG EV expansion (TODO)
+
+**Draft/Set booster sets (2022-2023) — need cards, prices, pack_slots:**
+- [ ] woe — Wilds of Eldraine (2023-09, draft+set booster)
+- [ ] lci — Lost Caverns of Ixalan (2023-11, draft+set booster)
+- [ ] mom — March of the Machine (2023-04, draft+set booster)
+- [ ] one — Phyrexia All Will Be One (2023-02, draft+set booster)
+- [ ] bro — Brothers War (2022-11, draft+set booster)
+- [ ] dmu — Dominaria United (2022-09, draft+set booster)
+- [ ] neo — Kamigawa Neon Dynasty (2022-02, draft+set booster)
+- [ ] snc — Streets of New Capenna (2022-04, draft+set booster)
+
+Note: Draft boosters have different pack construction than play boosters (15 cards: 10C+3UC+1R/M+1 token/ad). Set boosters are 12 cards with different slot structure. Need separate pack_slots definitions.
+
+**Deferred:**
+- [ ] Collector boosters (different premium pack construction per set)
+- [ ] Jumpstart products (different format — 20-card themed packs)
+- [ ] Pre-2022 MTG sets
+
+### Weiss Schwarz EV expansion (TODO)
+
+**2025 sets — English only, need cards + prices + pack_slots:**
+- [ ] fujimi-v2 — Re:ZERO (2025-03, standard booster)
+- [ ] nazarick-v3 — Overlord Premium (2025-02, premium booster)
+- [ ] eminence-shadow — Eminence in Shadow (2025-02, standard booster)
+- [ ] frieren-v2 — Frieren v2 (2025-01, standard booster)
+- [ ] p3r-premium-v2 — Persona 3 Reload Premium v2 (2025-01, premium booster)
+- [ ] oshinoko-v2 — Oshi no Ko v2 (2025-01, standard booster)
+
+**2024 sets:**
+- [ ] fairytail-100yq — Fairy Tail 100 Years Quest (2024-12, standard)
+- [ ] makeine — Too Many Losing Heroines (2024-11, standard)
+- [ ] konosuba-re — KonoSuba Re (2024-11, standard)
+- [ ] dandadan — Dandadan (2024-11, standard)
+- [ ] mygo-avemujica — MyGO!!!!! (2024-10, standard)
+- [ ] girls-band-cry — Girls Band Cry Premium (2024-09, premium)
+- [ ] hatsune-miku-cs — Hatsune Miku (2024-06, standard)
+- [ ] frieren-v1 — Frieren v1 (2024-05, standard)
+- [ ] p3r-premium-v1 — Persona 3 Reload Premium v1 (2024-04, premium)
+- [ ] nikke — NIKKE (2024-03, standard)
+- [ ] jojo-stone-ocean — JoJo Stone Ocean Premium (2024-03, premium)
+- [ ] blue-archive — Blue Archive (2024-02, standard)
+
+WS standard booster: 8 cards/pack, 20 packs/box. Premium booster: 4 cards/pack, 6 packs/box.
+Case rates from tcgcaserates.com for SP/SIR guarantees per set.
+
 ### EV simulator (collection-market-tracker-ev-simulator)
 - CLAUDE.md created; precon-deck-lists.json data format documented there
 
