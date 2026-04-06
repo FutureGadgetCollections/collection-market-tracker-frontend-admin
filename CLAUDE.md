@@ -160,20 +160,34 @@ Goal: track graded card prices and gem rates over time for PSA and CGC grading c
 
 **Gem rate tracking:** Need to track gem rate changes over time as grading populations grow. Monthly snapshots.
 
-**BQ table design (TODO):**
-- `market_data.graded_prices` — grain: `(tcgplayer_id, grade, grading_company, snapshot_date)`. Columns: `price`, `population`, `gem_rate`.
-- Or: `market_data.graded_card_history` — grain: `(game, set_code, card_number, grading_company, grade, snapshot_date)`.
+**BQ tables:**
+- `market_data.graded_price_history` ✅ — grain: `(pricecharting_url, date)`. Monthly prices from PriceCharting for ungraded through PSA 10. Scraper: `scripts/pricecharting_scraper/graded_price_scraper.py`.
+- `market_data.psa_population_history` ✅ — grain: `(psa_spec_id, snapshot_date)`. Daily PSA pop reports from free API (100 calls/day). Columns: total_graded, grade_10/9/8/7, gem_rate, delta_total, delta_grade_10, delta_gem_rate. Scraper: `scripts/psa_population/fetch_psa_pop.py`.
+- `catalog.single_cards.psa_spec_id` column ✅ — PSA internal spec ID for API lookups. Needs manual population for target cards.
 
 **Data sources:**
 - PriceCharting links already exist for Pokemon, One Piece, Riftbound sealed products — can retrieve PSA 9, PSA 10, CGC 10, CGC Pristine 10 prices from PriceCharting product pages.
 - PSA/CGC population reports for gem rates.
 
-**Steps:**
-1. Design BQ table schema
-2. Build scraper for graded prices from PriceCharting (extend existing `pricecharting_scraper.py`)
-3. Build scraper for gem rates from PSA/CGC population reports
-4. Add graded price columns to admin frontend card views
-5. Add gem rate tracking and historical charts
+**Graded price scraping (IN PROGRESS):**
+- `graded_price_scraper.py` — scrapes all 6 price tiers from PriceCharting chart_data (ungraded → PSA 10)
+- Checkpoint/resume support, 15s delay between requests
+- Status: 2,473/5,045 cards done, running in background
+- 101k rows in `graded_price_history` covering 2020-12 → 2026-04
+
+**PSA Population tracking (BUILT, needs spec IDs):**
+- `fetch_psa_pop.py` — fetches from PSA free API (100 calls/day, no auth)
+- Prioritizes by card value, checks least-recently-updated first
+- Computes delta_total (new submissions), delta_gem_rate (gem rate of new submissions)
+- **TODO: Populate `psa_spec_id`** on target cards (SIRs/IRs) — need to look up spec IDs from PSA's pop report pages
+
+**Remaining steps:**
+- [ ] Populate `psa_spec_id` for top Pokemon SIR/IR cards (~200 cards)
+- [ ] Schedule daily `fetch_psa_pop.py` run (cron or Cloud Run job)
+- [ ] Build graded premium view (PSA 10 price / raw price ratio)
+- [ ] Add graded price + gem rate columns to admin frontend card views
+- [ ] Add gem rate tracking and historical charts
+- [ ] CGC population data (separate API/source — deferred)
 
 ### Sentiment / market focus analysis (TODO)
 
