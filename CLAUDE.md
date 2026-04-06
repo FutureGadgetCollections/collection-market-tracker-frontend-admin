@@ -182,12 +182,36 @@ Goal: track graded card prices and gem rates over time for PSA and CGC grading c
 - **TODO: Populate `psa_spec_id`** on target cards (SIRs/IRs) — need to look up spec IDs from PSA's pop report pages
 
 **Remaining steps:**
-- [ ] Populate `psa_spec_id` for top Pokemon SIR/IR cards (~200 cards)
 - [ ] Schedule daily `fetch_psa_pop.py` run (cron or Cloud Run job)
 - [ ] Build graded premium view (PSA 10 price / raw price ratio)
 - [ ] Add graded price + gem rate columns to admin frontend card views
 - [ ] Add gem rate tracking and historical charts
 - [ ] CGC population data (separate API/source — deferred)
+
+**PSA spec ID population checklist (set by set, find cert #s → lookup spec IDs):**
+Method: Search eBay for "PSA 10 [card name]", grab cert number from listing, run `lookup_spec_ids.py`.
+Budget: 100 API calls/day shared between cert lookups and pop fetches.
+Target: SIR cards + IR cards worth $50+.
+
+- [ ] **sv8.5 Prismatic Evolutions** — 32 SIRs, 5 HRs (top: Umbreon ex $1,472)
+- [ ] **me02 Phantasmal Flames** — 5 SIRs (top: Mega Charizard X ex $759)
+- [ ] **sv4.5 Paldean Fates** — 8 SIRs, 6 HRs (top: Mew ex $751)
+- [ ] **sv10 Destined Rivals** — 11 SIRs, 6 HRs (top: Team Rocket's Mewtwo ex $517)
+- [ ] **sv3.5 151** — 7 SIRs, 9 high IRs, 3 HRs (top: Charizard ex $412)
+- [ ] **sv02 Paldea Evolved** — 15 SIRs, 4 high IRs (top: Magikarp IR $330)
+- [ ] **sv06 Twilight Masquerade** — 11 SIRs (top: Greninja ex $326)
+- [ ] **sv08 Surging Sparks** — 11 SIRs, 6 HRs (top: Pikachu ex $288)
+- [ ] **svbb Black Bolt** — 7 SIRs, 2 high IRs (top: Zekrom ex $203)
+- [ ] **me01 Mega Evolution Base** — 10 SIRs (top: Mega Gardevoir ex $186)
+- [ ] **svwf White Flare** — 7 SIRs (top: Reshiram ex $160)
+- [ ] **me2.5 Ascended Heroes** — 6 SIRs (top: Meowth ex $160)
+- [ ] **sv09 Journey Together** — 6 SIRs (top: Lillie's Clefairy ex $124)
+- [ ] **sv03 Obsidian Flames** — 6 SIRs (top: Charizard ex $113)
+- [ ] **sv07 Stellar Crown** — 6 SIRs, 2 high IRs (top: Squirtle IR $111)
+- [ ] **sv04 Paradox Rift** — 15 SIRs (top: Groudon IR $101)
+- [ ] **sv05 Temporal Forces** — 10 SIRs (top: Gastly IR $92)
+- [ ] **sv01 Scarlet & Violet Base** — 10 SIRs (top: Gardevoir ex $83)
+- [ ] **sv6.5 Shrouded Fable** — 5 SIRs (top: $53)
 
 ### Sentiment / market focus analysis (TODO)
 
