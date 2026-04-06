@@ -611,27 +611,28 @@
   function buildCardPools(game, setCode) {
     const play = allCards.filter(c => c.game === game && c.set_code === setCode && !c.collector_only);
     const base = play.filter(c => !c.treatment || c.treatment === 'base');
-    return {
+
+    const pools = {
       base_common:     base.filter(c => c.rarity === 'common' || c.rarity === 'n'),
       base_uncommon:   base.filter(c => c.rarity === 'uncommon'),
       base_rare:       base.filter(c => c.rarity === 'rare' || c.rarity === 'lrp'),
       base_mythic:     base.filter(c => c.rarity === 'mythic'),
-      // For games where rarity IS the category (Riftbound, Weiss Schwarz, etc.)
-      epic:            play.filter(c => c.rarity === 'epic'),
-      alt_art:         play.filter(c => c.rarity === 'alt_art'),
-      overnumber:      play.filter(c => c.rarity === 'overnumber'),
-      signature_overnumber: play.filter(c => c.rarity === 'signature_overnumber'),
-      sp:              play.filter(c => c.rarity === 'sp'),
-      sir:             play.filter(c => c.rarity === 'sir'),
-      lrp:             play.filter(c => c.rarity === 'lrp'),
-      pr:              play.filter(c => c.rarity === 'pr'),
-      n:               play.filter(c => c.rarity === 'n'),
       variants:        play.filter(c => c.treatment && c.treatment !== 'base' && c.treatment !== 'token' && c.treatment !== 'source_material'),
       source_material: play.filter(c => c.treatment === 'source_material'),
       lands:           play.filter(c => c.rarity === 'land'),
       tokens:          play.filter(c => c.rarity === 'token'),
       all_play:        play.filter(c => c.rarity !== 'token' && c.rarity !== 'land'),
     };
+
+    // Dynamically add a pool for every rarity found in the set
+    const allRarities = new Set(play.map(c => c.rarity).filter(Boolean));
+    for (const r of allRarities) {
+      if (!pools[r]) {
+        pools[r] = play.filter(c => c.rarity === r);
+      }
+    }
+
+    return pools;
   }
 
   // ── Slot EV (with sift + fees) ──────────────────────────────────────
