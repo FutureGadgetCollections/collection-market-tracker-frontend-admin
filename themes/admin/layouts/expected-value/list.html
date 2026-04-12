@@ -50,6 +50,13 @@
       <div class="col-auto">
         <span class="fw-semibold" id="selected-label"></span>
       </div>
+      <div class="col-auto d-none" id="ev-approval-group">
+        <div class="form-check form-switch d-inline-block me-1" title="When checked, this product is visible on the public EV simulator.">
+          <input class="form-check-input" type="checkbox" id="ev-approval-toggle" onchange="toggleEVApproval()">
+          <label class="form-check-label small" for="ev-approval-toggle">Public EV</label>
+        </div>
+        <span class="text-muted small" id="ev-approval-meta"></span>
+      </div>
       <div class="col-auto ms-auto">
         <div class="input-group input-group-sm">
           <span class="input-group-text">Sift $</span>
@@ -661,8 +668,54 @@
       `<span class="badge me-1" style="background:${m.color};color:${m.textColor}">${esc(m.label)}</span> ` +
       `${esc(setName)}` +
       (productType ? ` <span class="text-muted">/ ${esc(fmtPT(productType))}</span>` : '');
+    updateEVApprovalUI(game, document.getElementById('filter-set').value, productType);
     hide('picker');
     show('options-bar');
+  }
+
+  // Reflect the selected product's approval state on the toggle.
+  function updateEVApprovalUI(game, setCode, productType) {
+    const group = document.getElementById('ev-approval-group');
+    const cb = document.getElementById('ev-approval-toggle');
+    const meta = document.getElementById('ev-approval-meta');
+    // Aggregates (all-decks) aren't a single product — hide the toggle.
+    if (!productType || productType === 'all-decks') { group.classList.add('d-none'); return; }
+    const prod = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
+    if (!prod) { group.classList.add('d-none'); return; }
+    cb.checked = prod.ev_approved === true;
+    cb.disabled = false;
+    if (prod.ev_approved && prod.ev_approved_at) {
+      meta.textContent = `approved ${String(prod.ev_approved_at).slice(0, 10)}`;
+    } else {
+      meta.textContent = '';
+    }
+    group.classList.remove('d-none');
+  }
+
+  async function toggleEVApproval() {
+    const game = document.getElementById('filter-game').value;
+    const setCode = document.getElementById('filter-set').value;
+    const productType = document.getElementById('filter-product').value;
+    const cb = document.getElementById('ev-approval-toggle');
+    const meta = document.getElementById('ev-approval-meta');
+    const desired = cb.checked;
+    cb.disabled = true;
+    try {
+      await api('PUT', `/sealed-products/${encodeURIComponent(game)}/${encodeURIComponent(setCode)}/${encodeURIComponent(productType)}/ev-approval`, { approved: desired });
+      // Update in-memory so subsequent selections reflect the new state.
+      const prod = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
+      if (prod) {
+        prod.ev_approved = desired ? true : null;
+        prod.ev_approved_at = desired ? new Date().toISOString() : null;
+      }
+      meta.textContent = desired ? `approved ${new Date().toISOString().slice(0, 10)}` : '';
+      if (typeof showToast === 'function') showToast(desired ? 'Approved for public EV' : 'Un-approved', 'success');
+    } catch (err) {
+      cb.checked = !desired;
+      if (typeof showToast === 'function') showToast(`Approval failed: ${err.message}`, 'danger');
+    } finally {
+      cb.disabled = false;
+    }
   }
 
   function backToGames() {
@@ -1392,8 +1445,16 @@
     'weiss-schwarz': new Set(['c', 'u', 'r', 'rr', 'cr', 'cc', 'sr', 'rrr']),
     // Add other game overrides as needed
   };
-  function getBulkRarities(game) {
-    return BULK_RARITIES_BY_GAME[game] || BULK_RARITIES_DEFAULT;
+  function getBulkRarities(game, setCode) {
+    const base = BULK_RARITIES_BY_GAME[game] || BULK_RARITIES_DEFAULT;
+    // Union with per-set playset-tier codes so set-specific bulks (e.g. lycoris-premium: N, LRP)
+    // also get the playset/set UI instead of the grading UI.
+    const tierDef = setCode ? getPlaysetTiers(game, setCode) : null;
+    if (!tierDef) return base;
+    const combined = new Set(base);
+    for (const c of (tierDef.normal || [])) combined.add(c);
+    for (const c of (tierDef.foil   || [])) combined.add(c);
+    return combined;
   }
 
   // Resolve playset tiers for a given game+set. Returns { normal:[codes], foil:[codes] } or null.
@@ -1441,7 +1502,7 @@
       const stats = effectivePoolStats(pool);
       const pullsPerCase = pr.pull_rate_per_pack * packsPerCase;
       const avgCopies = pullsPerCase / uniqueCount;
-      const isBulk = getBulkRarities(game).has(pr.rarity);
+      const isBulk = getBulkRarities(game, setCode).has(pr.rarity);
 
       _strategyRarities.push({
         rarity: pr.rarity, isBulk, uniqueCount, pullsPerCase, avgCopies,
@@ -1520,11 +1581,21 @@
               </div>`;
       } else {
         // ── Column 2: Grade & Sell (chase rarities) ───────────────
+        const rawTotal = applyFees(r.avgPrice) * r.pullsPerCase;
         cardHTML += `
               <div class="col-md-6">
                 <div class="border rounded p-2 h-100">
                   <div class="fw-semibold small mb-1"><i class="bi bi-gem me-1"></i>Grade &amp; Sell</div>
-                  <div class="text-muted small">${r.pullsPerCase.toFixed(2)} expected pulls</div>
+                  <div class="row g-2 small">
+                    <div class="col-6">
+                      <div class="text-muted">Avg single</div>
+                      <div class="fw-semibold">${fmtUSD(r.avgPrice)}</div>
+                    </div>
+                    <div class="col-6">
+                      <div class="text-muted">Raw total / case</div>
+                      <div class="fw-semibold">${fmtUSD(rawTotal)} <span class="text-muted">(${r.pullsPerCase.toFixed(2)} pulls)</span></div>
+                    </div>
+                  </div>
                   <div class="row g-1 mt-1">
                     <div class="col-auto">
                       <div class="input-group input-group-sm" style="max-width:150px">
@@ -1534,7 +1605,7 @@
                     </div>
                     <div class="col-auto">
                       <div class="input-group input-group-sm" style="max-width:140px">
-                        <span class="input-group-text">PSA 10 %</span>
+                        <span class="input-group-text">Gem rate %</span>
                         <input type="number" class="form-control" id="strat-gem-rate-${safeR}" placeholder="—" min="0" max="100" step="1" oninput="recomputeStrategyTotals()">
                       </div>
                     </div>
@@ -1553,6 +1624,7 @@
                       </div>
                     </div>
                   </div>
+                  <div class="small mt-1">Gem multiplier: <span id="strat-gem-mult-${safeR}" class="fw-semibold">—</span></div>
                   <div class="fs-5 fw-bold mt-1" id="strat-grade-rev-${safeR}">—</div>
                 </div>
               </div>`;
@@ -1599,10 +1671,11 @@
       const uniqueTotal = matched.reduce((s, r) => s + r.uniqueCount, 0);
       const valueSum    = matched.reduce((s, r) => s + r.totalValue, 0);
       const pricedSum   = matched.reduce((s, r) => s + r.priced, 0);
-      const perCardAvg  = uniqueTotal > 0 ? valueSum / uniqueTotal : 0;
+      const perCardAvg  = pricedSum > 0 ? valueSum / pricedSum : 0;
       const fullPlayset = valueSum * playsetCount;
       const minAvgCopies = Math.min(...matched.map(r => r.avgCopies));
-      const completePlaysets = Math.floor(minAvgCopies / playsetCount);
+      const fractionalPlaysets = minAvgCopies / playsetCount;
+      const completePlaysets = Math.floor(fractionalPlaysets);
       const limitingRarity = matched.reduce((a, b) => a.avgCopies < b.avgCopies ? a : b).rarity;
       const pullsPerCase = matched.reduce((s, r) => s + r.pullsPerCase, 0);
 
@@ -1611,7 +1684,8 @@
 
       _strategyTiers.push({
         key: t.key, label: t.label, rarities: matched, codes,
-        uniqueTotal, valueSum, fullPlayset, perCardAvg, minAvgCopies, completePlaysets,
+        uniqueTotal, valueSum, fullPlayset, perCardAvg, minAvgCopies,
+        fractionalPlaysets, completePlaysets,
         limitingRarity, pullsPerCase,
       });
 
@@ -1627,19 +1701,24 @@
           <div class="card-body py-2">
             <div class="row g-3">
               <div class="col-md">
-                <div class="text-muted small">Per-card playset value</div>
-                <div class="fs-6 fw-bold">${fmtUSD(perCardAvg * playsetCount)}</div>
-                <div class="text-muted small">${fmtUSD(perCardAvg)} avg × ${playsetCount}</div>
-              </div>
-              <div class="col-md">
-                <div class="text-muted small">Full-playset sum</div>
-                <div class="fs-6 fw-bold text-primary">${fmtUSD(fullPlayset)}</div>
+                <div class="text-muted small">Avg card value</div>
+                <div class="fs-6 fw-bold">${fmtUSD(perCardAvg)}</div>
                 <div class="text-muted small">${pricedSum}/${uniqueTotal} priced</div>
               </div>
               <div class="col-md">
+                <div class="text-muted small">Full playset value</div>
+                <div class="fs-6 fw-bold text-primary">${fmtUSD(fullPlayset)}</div>
+                <div class="text-muted small">${uniqueTotal} cards × ${playsetCount}</div>
+              </div>
+              <div class="col-md">
                 <div class="text-muted small">Playsets / case</div>
-                <div class="fs-6 fw-bold">${completePlaysets}</div>
+                <div class="fs-6 fw-bold">${fractionalPlaysets.toFixed(2)}</div>
                 <div class="text-muted small">limited by <span class="badge ${badgeClass(limitingRarity)}">${esc(limitingRarity)}</span> at ${minAvgCopies.toFixed(1)}×</div>
+              </div>
+              <div class="col-md">
+                <div class="text-muted small">Total value / case</div>
+                <div class="fs-6 fw-bold text-success">${fmtUSD(fullPlayset * fractionalPlaysets)}</div>
+                <div class="text-muted small">full × playsets</div>
               </div>
               <div class="col-md">
                 <div class="input-group input-group-sm">
@@ -1707,6 +1786,22 @@
         const psa10Val = parseFloat((document.getElementById(`strat-psa10-val-${safeR}`) || {}).value);
         const psa9Val = parseFloat((document.getElementById(`strat-psa9-val-${safeR}`) || {}).value);
         const gradeRevEl = document.getElementById(`strat-grade-rev-${safeR}`);
+        const gemMultEl  = document.getElementById(`strat-gem-mult-${safeR}`);
+
+        // Gem multiplier: psa10_price / (raw_single + grade_fee). Breakeven = 1/gem_rate.
+        if (gemMultEl) {
+          if (!isNaN(psa10Val) && psa10Val > 0 && (r.avgPrice + gradeFee) > 0) {
+            const mult = psa10Val / (r.avgPrice + gradeFee);
+            const breakeven = gemRate > 0 ? 1 / gemRate : null;
+            const worthIt = breakeven !== null && mult >= breakeven;
+            const tail = breakeven !== null
+              ? (worthIt ? '<span class="text-success ms-1">✓ grade</span>' : `<span class="text-muted ms-1">need ≥ ${breakeven.toFixed(1)}× at ${(gemRate*100).toFixed(0)}%</span>`)
+              : '';
+            gemMultEl.innerHTML = `${mult.toFixed(2)}×${tail}`;
+          } else {
+            gemMultEl.textContent = '—';
+          }
+        }
 
         if (!isNaN(gemRate) && !isNaN(psa10Val) && !isNaN(psa9Val) && gemRate > 0) {
           const evPerCard = (gemRate * applyFees(psa10Val)) + ((1 - gemRate) * applyFees(psa9Val)) - gradeFee;

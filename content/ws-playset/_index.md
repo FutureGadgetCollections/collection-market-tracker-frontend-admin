@@ -1,3 +1,0 @@
----
-title: "WS Playset Calculator"
----

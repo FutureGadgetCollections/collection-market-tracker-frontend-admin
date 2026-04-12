@@ -275,11 +275,13 @@ Next steps:
 5. Eventually move to standalone frontend (see `collection-market-tracker-ev-simulator`)
 
 #### EV tab features shipped (2026-04-12)
-- **Standalone `/ws-playset/`** page: per-rarity playset sell odds + EV from N-box case sim (Weiss Schwarz-specific; commit 329732e)
 - **Jumpstart half-deck EV breakdown**: for MTG TLA jumpstart-booster-box, each of the 66 half-decks shows total value; avg deck = EV per pack; box EV = avg × 24. Card matching is name-based against `single_cards`. Half-deck list lives in `data/jumpstart-decks.json` (Hugo data dir, hand-editable, sourced from the WotC announcement page; commit 54fab1b)
 - **Product picker for multi-booster sets**: when a set has play+collector+jumpstart booster boxes (or similar), shows a picker instead of silently auto-selecting play-booster. Fixes prior issue where jumpstart was unreachable from the UI (commit 644a4e7)
 - **Case Strategies pricing helpers**: per bulk rarity, shows per-card playset value, full-playset sum, and 1× set sum; price-per-playset and price-per-set inputs are pre-filled with the sum as a baseline (commit 0609e4f)
 - **Grouped Playset Tiers card**: "Normal Playset" and "Foil Playset" combining multiple rarities into bundled playsets (config in `data/playset-tiers.json`). Defaults: WS normal = C+U, foil = R+RR. Overrides: lycoris-premium normal = N, foil = LRP. Limiting factor shown per tier (rarest card). Playsets-per-case = floor(min(avgCopies) / playsetCount) across tier (commit def5ab8)
+- **"Public EV" approval toggle**: per-product toggle on the EV tab that flips `sealed_products.ev_approved` (and stamps `ev_approved_at`) via `PUT /sealed-products/{game}/{set}/{type}/ev-approval`. Gates visibility on the public EV simulator. Hidden for aggregate views (e.g. jumpstart `all-decks`).
+- **Expanded Grade & Sell column**: per chase rarity shows avg single, raw total/case, and a "Gem rate %" input (renamed from "PSA 10 %") with a gem-multiplier readout. Per-set playset-tier codes are unioned into bulk rarities so set-specific bulks (e.g. lycoris-premium N/LRP) get the playset UI instead of the grading UI.
+- **Removed standalone `/ws-playset/` page**: the Weiss playset sell-odds view was folded into the main EV tab via grouped Playset Tiers; navbar link and route removed.
 
 #### EV tab — still open
 - **SP+ tier grading UI for Weiss**: currently per-rarity "Grade & Sell" column exists for non-bulk rarities. User confirmed: only SP/SIR/SEC are gradable (SR is in the bulk set). UI already correct — no further work unless we want PSA 10 population-based gem-rate autofill.

@@ -4,6 +4,9 @@
 # Claude Code local settings (machine-specific permission grants)
 .claude/settings.local.json
 
+# MCP server config (machine-specific absolute paths)
+.mcp.json
+
 # Hugo build output
 public/
 resources/_gen/
