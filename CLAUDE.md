@@ -25,7 +25,7 @@ Run `./setup.sh` after cloning this repo to clone all sibling repos to the corre
 |----------|---------|
 | GCP Project | `future-gadget-labs-483502` |
 | Cloud Run service (API) | `collection-market-tracker` — `us-central1` |
-| Cloud Run job (price scraper) | `tcgplayer-price-scraper` — `us-central1` — daily at 08:00 UTC via Cloud Scheduler |
+| Cloud Run job (price scraper) | `tcgplayer-price-scraper` — `us-central1` — Monday 08:00 UTC via Cloud Scheduler `tcgplayer-price-fetch` |
 | Cloud Run job (set metrics) | `set-market-metrics` — `us-central1` — Monday 12:00 UTC via Cloud Scheduler; `scripts/set_market_metrics/` |
 | Cloud Run job (data sync) | `collection-showcase-data-sync` — `us-central1` (planned, not yet configured) |
 | GCS bucket | `collection-tracker-data` |
@@ -47,7 +47,7 @@ Run `./setup.sh` after cloning this repo to clone all sibling repos to the corre
 The backend has three distinct concerns:
 
 1. **API microservice** — Cloud Run service (`collection-market-tracker`): handles REST endpoints for CRUD operations on BigQuery `catalog` dataset, triggers GCS and GitHub data file updates after mutations.
-2. **TCGPlayer price scraper** — Cloud Run job (`tcgplayer-price-scraper`): Python + Playwright job in `scripts/tcgplayer_prices/`. Scrapes market price, avg daily sold, listed median, and sellers from TCGPlayer. Writes to `market_data.tcgplayer_price_history` via MERGE on `(tcgplayer_id, date)`. Runs daily at 08:00 UTC via Cloud Scheduler. Two modes: `--daily` (snapshot for all products) and `--backfill` (full annual history for new products — run manually after adding `tcgplayer_id`s to catalog).
+2. **TCGPlayer price scraper** — Cloud Run job (`tcgplayer-price-scraper`): Python + Playwright job in `scripts/tcgplayer_prices/`. Scrapes market price, avg daily sold, listed median, and sellers from TCGPlayer. Writes to `market_data.tcgplayer_price_history` via MERGE on `(tcgplayer_id, date)`. Runs Monday 08:00 UTC via Cloud Scheduler (`tcgplayer-price-fetch`). Two modes: `--daily` (snapshot for all products) and `--backfill` (full annual history for new products — run manually after adding `tcgplayer_id`s to catalog).
 3. **Set market metrics job** — Cloud Run job (`set-market-metrics`): Python job in `scripts/set_market_metrics/`. Reads single card prices from `tcgplayer_price_history` and pull rates from `set_pull_rates`, computes `set_market_value` (sum of all singles prices) and `pack_ev` (expected pack value from pull rates × avg rarity prices). Writes to `market_data.set_market_metrics` via MERGE on `(game, set_code, snapshot_date)`. Two modes: `MODE=weekly` (default, latest date only) and `MODE=backfill` (all dates not yet in the table — run manually to populate history). Runs Monday 12:00 UTC. Deploy: `scripts/deploy-set-metrics-job.sh`.
 4. **Data sync job** — Cloud Run job (`collection-showcase-data-sync`): planned but not yet configured.
 
@@ -57,7 +57,7 @@ The backend has three distinct concerns:
 
 | Table | Grain | Purpose |
 |-------|-------|---------|
-| `tcgplayer_price_history` | `(tcgplayer_id, date)` | Raw daily TCGPlayer scrape — market price, avg daily sold, listed median, sellers |
+| `tcgplayer_price_history` | `(tcgplayer_id, date)` | Weekly TCGPlayer scrape (Monday 08:00 UTC) — market price, avg daily sold, listed median, sellers |
 | `set_market_metrics` | `(game, set_code, snapshot_date)` | Weekly set-level metrics computed from single card prices + pull rates. `set_market_value` = sum of all singles prices; `pack_ev` = expected value of a single pack. Updated Monday 12:00 UTC by `set-market-metrics` job. Feeds `set_market_value`/`pack_expected_value` columns in `ml_price_features_sealed`. |
 | `pricecharting_price_history` | `(game, set_code, product_type, date)` | Historical prices from PriceCharting. Partitioned by `date`, clustered by `(game, set_code)`. Columns: `market_price`. Planned: `sell_through_rate`. Raw source — consumed by `ml_price_features_sealed`. |
 | `ml_price_features_sealed` | `(game, set_code, product_type, snapshot_date)` | ML feature table for sealed price prediction. Partitioned by `snapshot_date`, clustered by `(game, set_code)`. See ML section below. |
@@ -111,12 +111,12 @@ Target variables: `log_return_1yr` = `log(price_1yr / market_price)`, same for 2
 \* NULL for data predating the project
 
 **Jobs feeding this table:**
-1. Daily scraper — appends core signals
+1. Weekly scraper (Monday 08:00 UTC) — appends core signals
 2. Feature computation job — fills lag columns, `release_age_days`, `month`; joins `set_market_metrics` to populate `set_market_value` and `pack_expected_value`
 3. Label backfill job — daily, fills `price_1yr`/`log_return_1yr` for rows exactly 365d old; same for 730d
 4. Pull rate sync — updates `pull_rarity_*` columns on demand
 
-**TODO:** `ml_price_features_singles` — separate ML table for individual cards; adds `card_number`, `rarity`, `card_pct_of_set_value`. Singles price scraper should run **weekly** (not daily).
+**TODO:** `ml_price_features_singles` — separate ML table for individual cards; adds `card_number`, `rarity`, `card_pct_of_set_value`. Singles price scraper already runs weekly (`tcgplayer-price-scraper-cards-weekly`, Monday 10:00 UTC).
 
 ## MTG TLA Set Details (Avatar: The Last Airbender)
 
@@ -148,13 +148,6 @@ Target variables: `log_return_1yr` = `log(price_1yr / market_price)`, same for 2
 Per-slot data in `catalog.pack_slots` — query via MCP `catalog_pack_slots(game='mtg', set_code='tla')`.
 
 ## Open TODOs
-
-### 🚨 Data freshness — investigate scraper gap (2026-04-12)
-Partitioned `market_data` tables (`tcgplayer_price_history`, `graded_price_history`, `pricecharting_price_history`, `ev_set_history`) last modified **2026-04-07** — 5 days stale vs 2026-04-12. Daily TCGPlayer scraper should be writing every day. Needs investigation next session:
-- Check Cloud Run job `tcgplayer-price-scraper` recent executions (success/fail)
-- Check scheduler `tcgplayer-price-scraper-daily` state + `last_attempt_time`
-- Check if jobs migrated to Docker Hub images failed to pull (recent AR deletion)
-- Query via `INFORMATION_SCHEMA.PARTITIONS` (metadata-only, fast) rather than `MAX(date)` on full table
 
 ### MCP server idle watchdog (2026-04-12)
 Added to `../collection-market-tracker-mcp/server.py` (not under git — change is local-only, applies on next server restart):
@@ -490,7 +483,7 @@ Case rates from tcgcaserates.com for SP/SIR guarantees per set.
   - If heartbeat found → log "homeserver already ran" and exit 0 immediately (minimal cost — just job startup)
   - If no heartbeat → run the full job in Cloud Run as fallback
 - Homeserver jobs write the heartbeat on success (e.g. insert a row into a `market_data.job_heartbeats` table with `(job_name, run_date, status)`)
-- Applies to: `tcgplayer-price-scraper` (daily), `set-market-metrics` (weekly), `pricecharting-scraper` (monthly)
+- Applies to: `tcgplayer-price-scraper` (weekly Mon 08:00 UTC), `set-market-metrics` (weekly Mon 12:00 UTC), `pricecharting-scraper` (monthly)
 - Steps:
   1. Define `market_data.job_heartbeats` BQ table: `(job_name STRING, run_date DATE, ran_at TIMESTAMP, source STRING)`
   2. Add heartbeat write to each homeserver job script on success
