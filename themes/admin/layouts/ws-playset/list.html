@@ -1,0 +1,602 @@
+{{ define "main" }}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h2 class="h5 mb-0 fw-semibold"><i class="bi bi-stack me-2 text-primary"></i>WS Playset Calculator</h2>
+  <div class="d-flex gap-2">
+    <div id="btn-refresh-group" class="btn-group btn-group-sm d-none" role="group">
+      <button class="btn btn-outline-primary"   onclick="refreshData('github')"><i class="bi bi-github me-1"></i>GitHub</button>
+      <button class="btn btn-outline-secondary" onclick="refreshData('gcs')"><i class="bi bi-cloud me-1"></i>GCS</button>
+    </div>
+  </div>
+</div>
+
+<div id="auth-guard"  class="alert alert-warning  d-none"><i class="bi bi-lock me-1"></i>You must be <a href="{{ "" | relURL }}">signed in</a> to view this page.</div>
+<div id="admin-guard" class="alert alert-secondary d-none"><i class="bi bi-shield-lock me-1"></i>Admin access required.</div>
+<div id="loading" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+
+<!-- ── Set Picker ──────────────────────────────────────────────────── -->
+<div id="picker" class="d-none mb-4">
+  <p class="text-muted small mb-2">Select a Weiss Schwarz set</p>
+  <div class="row g-3" id="set-cards"></div>
+</div>
+
+<!-- ── Calculator ──────────────────────────────────────────────────── -->
+<div id="calculator" class="d-none">
+
+  <!-- Inputs bar -->
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-body py-2">
+      <div class="row g-2 align-items-center">
+        <div class="col-auto">
+          <button class="btn btn-sm btn-outline-primary" onclick="backToPicker()"><i class="bi bi-arrow-left me-1"></i>Change Set</button>
+        </div>
+        <div class="col-auto"><span class="fw-semibold" id="selected-label"></span></div>
+      </div>
+      <div class="row g-2 align-items-center mt-1">
+        <div class="col-auto">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Boxes to open</span>
+            <input type="number" class="form-control" id="opt-boxes" value="30" min="1" step="1" style="width:70px" oninput="recompute()">
+          </div>
+        </div>
+        <div class="col-auto">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Box cost $</span>
+            <input type="number" class="form-control" id="opt-box-cost" value="37.48" min="0" step="0.01" style="width:80px" oninput="recompute()">
+          </div>
+        </div>
+        <div class="col-auto">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Base playset sell $</span>
+            <input type="number" class="form-control" id="opt-base-playset-price" value="200" min="0" step="1" style="width:80px" oninput="recompute()">
+          </div>
+        </div>
+        <div class="col-auto">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Foil playset sell $</span>
+            <input type="number" class="form-control" id="opt-foil-playset-price" value="500" min="0" step="1" style="width:80px" oninput="recompute()">
+          </div>
+        </div>
+        <div class="col-auto">
+          <select class="form-select form-select-sm" id="opt-box-type" onchange="recompute()">
+            <option value="live">Live Boxes</option>
+            <option value="dead">Dead Boxes (mapped case leftovers)</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <select class="form-select form-select-sm" id="opt-fees" onchange="recompute()">
+            <option value="none">No Fees</option>
+            <option value="tcgplayer" selected>TCGPlayer (13.25%)</option>
+            <option value="manapool">Mana Pool (7.9%)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Set overview -->
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-header bg-white border-0 py-2"><span class="fw-semibold small">Set Overview (booster cards only, excludes TD/PR)</span></div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr><th class="ps-3">Rarity</th><th>Unique</th><th>Priced</th><th>Avg Price</th><th>Pool</th></tr>
+          </thead>
+          <tbody id="overview-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Playset singles value reference -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body py-2">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small">Base Playset — TCGPlayer singles value</div>
+              <div class="small text-muted" id="base-ps-detail"></div>
+            </div>
+            <div class="text-end">
+              <div class="fs-5 fw-bold" id="base-ps-singles-value">—</div>
+              <div class="small" id="base-ps-premium"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body py-2">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small">Foil Playset — TCGPlayer singles value</div>
+              <div class="small text-muted" id="foil-ps-detail"></div>
+            </div>
+            <div class="text-end">
+              <div class="fs-5 fw-bold" id="foil-ps-singles-value">—</div>
+              <div class="small" id="foil-ps-premium"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body text-center">
+          <div class="fw-semibold small mb-1">Cost to Open</div>
+          <div class="fs-3 fw-bold" id="sum-cost">—</div>
+          <div class="text-muted small" id="sum-cost-detail"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body text-center">
+          <div class="fw-semibold small mb-1">Opened Value (playset strategy)</div>
+          <div class="fs-3 fw-bold" id="sum-opened">—</div>
+          <div class="small" id="sum-opened-detail"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body text-center">
+          <div class="fw-semibold small mb-1">Open vs Keep Sealed</div>
+          <div class="fs-3 fw-bold" id="sum-verdict">—</div>
+          <div class="small" id="sum-verdict-detail"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breakdown table -->
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-header bg-white border-0 py-2"><span class="fw-semibold small">Liquidation Breakdown</span></div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3">Revenue Source</th>
+              <th>Quantity</th>
+              <th>Detail</th>
+              <th class="text-end">Listed Value</th>
+              <th class="text-end pe-3">After Fees</th>
+            </tr>
+          </thead>
+          <tbody id="breakdown-tbody"></tbody>
+          <tfoot class="table-light fw-bold">
+            <tr>
+              <td class="ps-3" colspan="3">Total Liquidation Value</td>
+              <td class="text-end" id="breakdown-listed-total">—</td>
+              <td class="text-end pe-3" id="breakdown-net-total">—</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- All singles value comparison -->
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-header bg-white border-0 py-2"><span class="fw-semibold small">Alternative: Sell Everything as Singles</span></div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3">Rarity</th>
+              <th>Cards Pulled</th>
+              <th>Avg Price</th>
+              <th class="text-end">Listed Value</th>
+              <th class="text-end pe-3">After Fees</th>
+            </tr>
+          </thead>
+          <tbody id="singles-tbody"></tbody>
+          <tfoot class="table-light fw-bold">
+            <tr>
+              <td class="ps-3" colspan="3">Total Singles Value</td>
+              <td class="text-end" id="singles-listed-total">—</td>
+              <td class="text-end pe-3" id="singles-net-total">—</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card list -->
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-header bg-white border-0 py-2 d-flex align-items-center">
+      <span class="fw-semibold small">Card List</span>
+      <select class="form-select form-select-sm ms-3" id="card-list-rarity" onchange="renderCardList()" style="width:auto"></select>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive" style="max-height:400px;overflow-y:auto">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light sticky-top">
+            <tr><th class="ps-3">#</th><th>Name</th><th>Rarity</th><th class="text-end pe-3">Price</th></tr>
+          </thead>
+          <tbody id="card-list-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{{ end }}
+
+{{ define "page-scripts" }}
+<script>
+  const show = id => { const e = document.getElementById(id); if (e) e.classList.remove('d-none'); };
+  const hide = id => { const e = document.getElementById(id); if (e) e.classList.add('d-none'); };
+  const fmt = n => n == null ? '—' : '$' + n.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  let allCards = [], allSealed = [], allPackSlots = [], priceMap = new Map();
+  let selectedSet = null;
+
+  // ── Auth ──────────────────────────────────────────────────────────
+  firebase.auth().onAuthStateChanged(async user => {
+    if (!user) { hide('loading'); show('auth-guard'); return; }
+    if (!isEmailAllowed(user.email)) { hide('loading'); show('admin-guard'); return; }
+    show('btn-refresh-group');
+    await loadAllData();
+  });
+
+  async function refreshData(source) {
+    const btns = document.querySelectorAll('#btn-refresh-group button');
+    btns.forEach(b => b.disabled = true);
+    await loadAllData(source);
+    btns.forEach(b => b.disabled = false);
+  }
+
+  function fetchDataFile(source, file) {
+    if (source === 'gcs') return loadFromGCS(file);
+    return loadJsonData(file);
+  }
+
+  async function loadAllData(source = 'github') {
+    try {
+      const [cards, prices, sealed, packSlots] = await Promise.all([
+        fetchDataFile(source, 'data/single-cards.json'),
+        fetchDataFile(source, 'data/tcgplayer-latest-prices.json'),
+        fetchDataFile(source, 'data/sealed-products.json'),
+        fetchDataFile(source, 'data/pack-slots.json').catch(() => []),
+      ]);
+      allCards = (cards || []).filter(c => c.game === 'weiss-schwarz');
+      allSealed = (sealed || []).filter(s => s.game === 'weiss-schwarz');
+      allPackSlots = (packSlots || []).filter(s => s.game === 'weiss-schwarz');
+      priceMap = new Map();
+      for (const p of (prices || [])) {
+        if (p.tcgplayer_id && p.market_price != null)
+          priceMap.set(String(p.tcgplayer_id), { market_price: p.market_price, date: p.date });
+      }
+      hide('loading');
+      buildPicker();
+    } catch (e) { hide('loading'); showToast('Failed to load data: ' + e.message, 'danger'); }
+  }
+
+  // ── Picker ────────────────────────────────────────────────────────
+  function buildPicker() {
+    const setCodes = [...new Set(allCards.map(c => c.set_code))].sort();
+    const container = document.getElementById('set-cards');
+    container.innerHTML = setCodes.map(sc => {
+      const cards = allCards.filter(c => c.set_code === sc);
+      const boosterCards = cards.filter(c => !NON_BOOSTER.has(c.rarity));
+      const sealed = allSealed.filter(s => s.set_code === sc);
+      const products = sealed.map(s => s.product_type).join(', ') || 'no products';
+      const name = sc.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      return `<div class="col-6 col-md-4 col-lg-3">
+        <div class="card h-100 border shadow-sm" role="button" onclick="selectSet('${sc}')" style="cursor:pointer">
+          <div class="card-body py-2 px-3">
+            <div class="fw-semibold small">${name}</div>
+            <div class="text-muted" style="font-size:.7rem">${boosterCards.length} booster cards | ${products}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    show('picker');
+    if (selectedSet) selectSet(selectedSet.set_code);
+  }
+
+  function selectSet(setCode) {
+    const cards = allCards.filter(c => c.set_code === setCode);
+    const sealed = allSealed.filter(s => s.set_code === setCode);
+    const packSlots = allPackSlots.filter(s => s.set_code === setCode);
+    cards.forEach(c => {
+      const p = priceMap.get(String(c.tcgplayer_id));
+      c._price = p ? p.market_price : null;
+    });
+    selectedSet = { set_code: setCode, cards, sealed, packSlots };
+    document.getElementById('selected-label').textContent =
+      setCode.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    hide('picker');
+    show('calculator');
+    recompute();
+  }
+
+  function backToPicker() { hide('calculator'); show('picker'); }
+
+  // ── Rarity classification ─────────────────────────────────────────
+  const NON_BOOSTER = new Set(['td', 'pr', 'pr+']);
+  const CHASE_RARITIES = new Set(['sp', 'sec', 'sec+', 'ssp', 'ssp+', 'sir', 'rrr']);
+
+  function classifyRarities(cards) {
+    // Exclude non-booster cards
+    const boosterCards = cards.filter(c => !NON_BOOSTER.has(c.rarity));
+    const rarities = [...new Set(boosterCards.map(c => c.rarity))];
+    const byRarity = {};
+    for (const r of rarities) byRarity[r] = boosterCards.filter(c => c.rarity === r);
+
+    const isPremium = !!byRarity['n'];
+    let base, foil, chase;
+    if (isPremium) {
+      base = rarities.filter(r => r === 'n');
+      foil = rarities.filter(r => !CHASE_RARITIES.has(r) && r !== 'n');
+      chase = rarities.filter(r => CHASE_RARITIES.has(r));
+    } else {
+      base = rarities.filter(r => ['c', 'u', 'cc'].includes(r));
+      foil = rarities.filter(r => ['r', 'rr', 'cr'].includes(r));
+      chase = rarities.filter(r => !['c','u','cc','r','rr','cr'].includes(r));
+    }
+    return { isPremium, base, foil, chase, byRarity, boosterCards };
+  }
+
+  function getPackInfo(sealed, isPremium) {
+    if (isPremium) return { packsPerBox: 6, basePerPack: 3, foilPerPack: 1 };
+    return { packsPerBox: 20, basePerPack: 7, foilPerPack: 1 };
+  }
+
+  function avgPrice(cards) {
+    const priced = cards.filter(c => c._price > 0);
+    return priced.length ? priced.reduce((s, c) => s + c._price, 0) / priced.length : 0;
+  }
+
+  // ── Recompute ─────────────────────────────────────────────────────
+  function recompute() {
+    if (!selectedSet) return;
+    const { cards, sealed, packSlots } = selectedSet;
+    const cls = classifyRarities(cards);
+    const pack = getPackInfo(sealed, cls.isPremium);
+
+    const numBoxes     = parseInt(document.getElementById('opt-boxes').value) || 0;
+    const boxCost      = parseFloat(document.getElementById('opt-box-cost').value) || 0;
+    const basePSPrice  = parseFloat(document.getElementById('opt-base-playset-price').value) || 0;
+    const foilPSPrice  = parseFloat(document.getElementById('opt-foil-playset-price').value) || 0;
+    const isDead       = document.getElementById('opt-box-type').value === 'dead';
+    const feeSel       = document.getElementById('opt-fees').value;
+    const feePct       = feeSel === 'tcgplayer' ? 13.25 : feeSel === 'manapool' ? 7.9 : 0;
+    const feeMul       = 1 - feePct / 100;
+
+    const totalCost = numBoxes * boxCost;
+
+    // Cards per box
+    const basePerBox = pack.basePerPack * pack.packsPerBox;
+    const hotStampsPerBox = pack.foilPerPack * pack.packsPerBox;
+
+    // Chase rates in hot stamp slot
+    const chaseRate = isDead ? 0 : 0.10; // RRR ~8%, SP ~1.5%, SEC+ ~0.5%
+    const foilRate = 1 - chaseRate;
+
+    // Total cards from opening
+    const totalBase = numBoxes * basePerBox;
+    const totalHotStamps = numBoxes * hotStampsPerBox;
+    const totalFoilPulls = Math.floor(totalHotStamps * foilRate);
+    const totalChasePulls = totalHotStamps - totalFoilPulls;
+
+    // Cards needed for one playset (4x each unique)
+    const baseCards = cls.base.flatMap(r => cls.byRarity[r] || []);
+    const foilCards = cls.foil.flatMap(r => cls.byRarity[r] || []);
+    const chaseCards = cls.chase.flatMap(r => cls.byRarity[r] || []);
+
+    const baseForOnePS = baseCards.length * 4;
+    const foilForOnePS = foilCards.length * 4;
+
+    // Fractional playsets we can make
+    const basePSCount = baseForOnePS > 0 ? totalBase / baseForOnePS : 0;
+    const foilPSCount = foilForOnePS > 0 ? totalFoilPulls / foilForOnePS : 0;
+
+    // Values
+    const basePSValue = basePSCount * basePSPrice;
+    const foilPSValue = foilPSCount * foilPSPrice;
+
+    // Chase singles value (sold individually)
+    const chaseAvg = avgPrice(chaseCards);
+    const chaseSinglesValue = totalChasePulls * chaseAvg;
+
+    // Leftover base/foil beyond full playsets (sold as singles)
+    const fullBaseSets = Math.floor(basePSCount);
+    const leftoverBase = totalBase - (fullBaseSets * baseForOnePS);
+    const baseAvg = avgPrice(baseCards);
+    const leftoverBaseValue = leftoverBase * baseAvg;
+
+    const fullFoilSets = Math.floor(foilPSCount);
+    const leftoverFoil = totalFoilPulls - (fullFoilSets * foilForOnePS);
+    const foilAvg = avgPrice(foilCards);
+    const leftoverFoilValue = leftoverFoil * foilAvg;
+
+    // Total liquidation: playsets + chase singles + leftover singles
+    const totalLiquidationListed = basePSValue + foilPSValue + chaseSinglesValue;
+    // For "after fees": playsets sold as bundles (assume no marketplace fee or reduced),
+    // chase singles through TCGPlayer
+    const totalLiquidationNet = basePSValue + foilPSValue + chaseSinglesValue * feeMul;
+
+    // Alternative: sell ALL as singles
+    const allSinglesListed = totalBase * baseAvg + totalFoilPulls * foilAvg + totalChasePulls * chaseAvg;
+    const allSinglesNet = allSinglesListed * feeMul;
+
+    // ── Render playset singles value reference ─────────────────────
+    const basePSSinglesValue = baseCards.reduce((s, c) => s + (c._price || 0), 0) * 4;
+    const foilPSSinglesValue = foilCards.reduce((s, c) => s + (c._price || 0), 0) * 4;
+    const basePSSinglesNet = basePSSinglesValue * feeMul;
+    const foilPSSinglesNet = foilPSSinglesValue * feeMul;
+
+    document.getElementById('base-ps-singles-value').textContent = fmt(basePSSinglesNet);
+    document.getElementById('base-ps-detail').textContent =
+      `4x of ${baseCards.length} unique cards (${baseCards.filter(c=>c._price>0).length} priced) | listed ${fmt(basePSSinglesValue)}`;
+    const basePremium = basePSPrice - basePSSinglesNet;
+    const basePremiumPct = basePSSinglesNet > 0 ? (basePremium / basePSSinglesNet * 100) : 0;
+    document.getElementById('base-ps-premium').innerHTML = basePSPrice > 0
+      ? `Your sell price ${fmt(basePSPrice)} = <span class="${basePremium >= 0 ? 'text-success' : 'text-danger'}">${basePremium >= 0 ? '+' : ''}${fmt(basePremium)} (${basePremiumPct >= 0 ? '+' : ''}${basePremiumPct.toFixed(0)}%) playset premium</span>`
+      : '';
+
+    document.getElementById('foil-ps-singles-value').textContent = fmt(foilPSSinglesNet);
+    document.getElementById('foil-ps-detail').textContent =
+      `4x of ${foilCards.length} unique cards (${foilCards.filter(c=>c._price>0).length} priced) | listed ${fmt(foilPSSinglesValue)}`;
+    const foilPremium = foilPSPrice - foilPSSinglesNet;
+    const foilPremiumPct = foilPSSinglesNet > 0 ? (foilPremium / foilPSSinglesNet * 100) : 0;
+    document.getElementById('foil-ps-premium').innerHTML = foilPSPrice > 0
+      ? `Your sell price ${fmt(foilPSPrice)} = <span class="${foilPremium >= 0 ? 'text-success' : 'text-danger'}">${foilPremium >= 0 ? '+' : ''}${fmt(foilPremium)} (${foilPremiumPct >= 0 ? '+' : ''}${foilPremiumPct.toFixed(0)}%) playset premium</span>`
+      : '';
+
+    // ── Render overview ─────────────────────────────────────────────
+    renderOverview(cls);
+
+    // ── Render summary cards ────────────────────────────────────────
+    document.getElementById('sum-cost').textContent = fmt(totalCost);
+    document.getElementById('sum-cost-detail').textContent = `${numBoxes} boxes × ${fmt(boxCost)}`;
+
+    document.getElementById('sum-opened').textContent = fmt(totalLiquidationNet);
+    document.getElementById('sum-opened-detail').innerHTML =
+      `${basePSCount.toFixed(2)} base PS + ${foilPSCount.toFixed(2)} foil PS + chase singles`;
+
+    const margin = totalLiquidationNet - totalCost;
+    const marginPct = totalCost > 0 ? (margin / totalCost * 100) : 0;
+    const verdictEl = document.getElementById('sum-verdict');
+    const verdictDetailEl = document.getElementById('sum-verdict-detail');
+    if (margin > 0) {
+      verdictEl.textContent = fmt(margin);
+      verdictEl.className = 'fs-3 fw-bold text-success';
+      verdictDetailEl.innerHTML = `<span class="text-success">+${marginPct.toFixed(0)}% — open the boxes</span>`;
+    } else {
+      verdictEl.textContent = fmt(margin);
+      verdictEl.className = 'fs-3 fw-bold text-danger';
+      verdictDetailEl.innerHTML = `<span class="text-danger">${marginPct.toFixed(0)}% — keep sealed</span>`;
+    }
+
+    // ── Render breakdown table ──────────────────────────────────────
+    const tbody = document.getElementById('breakdown-tbody');
+    const rows = [];
+
+    rows.push(bRow('Base Playsets',
+      `${basePSCount.toFixed(2)} sets`,
+      `${baseCards.length} unique × 4 = ${baseForOnePS} cards/set | ${totalBase} pulled`,
+      basePSValue, basePSValue)); // no marketplace fee on playset bundles
+
+    rows.push(bRow('Foil Playsets',
+      `${foilPSCount.toFixed(2)} sets`,
+      `${foilCards.length} unique × 4 = ${foilForOnePS} cards/set | ${totalFoilPulls} pulled`,
+      foilPSValue, foilPSValue));
+
+    if (!isDead) {
+      // Break down chase by rarity
+      for (const r of cls.chase) {
+        const rCards = cls.byRarity[r] || [];
+        const rAvg = avgPrice(rCards);
+        const rPulls = r === 'rrr' ? Math.round(totalHotStamps * 0.08)
+                     : r === 'sp' ? Math.round(totalHotStamps * 0.015)
+                     : Math.round(totalHotStamps * 0.005);
+        if (rPulls > 0) {
+          rows.push(bRow(`${r.toUpperCase()} singles`,
+            `~${rPulls} cards`,
+            `avg ${fmt(rAvg)}`,
+            rPulls * rAvg, rPulls * rAvg * feeMul));
+        }
+      }
+    }
+
+    tbody.innerHTML = rows.join('');
+    document.getElementById('breakdown-listed-total').textContent = fmt(totalLiquidationListed);
+    document.getElementById('breakdown-net-total').textContent = fmt(totalLiquidationNet);
+
+    // ── Render all-singles alternative ───────────────────────────────
+    const sTbody = document.getElementById('singles-tbody');
+    const sRows = [];
+    for (const r of [...cls.base, ...cls.foil]) {
+      const rCards = cls.byRarity[r] || [];
+      const rAvg = avgPrice(rCards);
+      let rPulls;
+      if (cls.base.includes(r)) {
+        // Base cards: distributed across base slots
+        const totalBaseSlots = totalBase;
+        rPulls = Math.round(totalBaseSlots * (rCards.length / baseCards.length));
+      } else {
+        rPulls = Math.round(totalFoilPulls * (rCards.length / Math.max(foilCards.length, 1)));
+      }
+      sRows.push(`<tr><td class="ps-3">${r.toUpperCase()}</td><td>${rPulls}</td><td>${fmt(rAvg)}</td>
+        <td class="text-end">${fmt(rPulls * rAvg)}</td><td class="text-end pe-3">${fmt(rPulls * rAvg * feeMul)}</td></tr>`);
+    }
+    if (!isDead) {
+      for (const r of cls.chase) {
+        const rCards = cls.byRarity[r] || [];
+        const rAvg = avgPrice(rCards);
+        const rPulls = r === 'rrr' ? Math.round(totalHotStamps * 0.08)
+                     : r === 'sp' ? Math.round(totalHotStamps * 0.015)
+                     : Math.round(totalHotStamps * 0.005);
+        sRows.push(`<tr><td class="ps-3">${r.toUpperCase()}</td><td>${rPulls}</td><td>${fmt(rAvg)}</td>
+          <td class="text-end">${fmt(rPulls * rAvg)}</td><td class="text-end pe-3">${fmt(rPulls * rAvg * feeMul)}</td></tr>`);
+      }
+    }
+    sTbody.innerHTML = sRows.join('');
+    document.getElementById('singles-listed-total').textContent = fmt(allSinglesListed);
+    document.getElementById('singles-net-total').textContent = fmt(allSinglesNet);
+
+    // Card list
+    renderCardListFilter(cls);
+    renderCardList();
+  }
+
+  function bRow(label, qty, detail, listed, net) {
+    return `<tr><td class="ps-3">${label}</td><td>${qty}</td><td class="text-muted small">${detail}</td>
+      <td class="text-end">${fmt(listed)}</td><td class="text-end pe-3">${fmt(net)}</td></tr>`;
+  }
+
+  // ── Overview table ────────────────────────────────────────────────
+  function renderOverview(cls) {
+    const tbody = document.getElementById('overview-tbody');
+    const rows = [];
+    for (const r of [...cls.base, ...cls.foil, ...cls.chase]) {
+      const cards = cls.byRarity[r] || [];
+      const priced = cards.filter(c => c._price > 0);
+      const avg = priced.length ? priced.reduce((s, c) => s + c._price, 0) / priced.length : null;
+      let pool = 'Base', color = 'success';
+      if (cls.foil.includes(r)) { pool = 'Foil'; color = 'primary'; }
+      else if (cls.chase.includes(r)) { pool = 'Chase'; color = 'danger'; }
+      rows.push(`<tr><td class="ps-3 fw-medium">${r.toUpperCase()}</td><td>${cards.length}</td>
+        <td>${priced.length}/${cards.length}</td><td>${fmt(avg)}</td>
+        <td><span class="badge bg-${color} bg-opacity-75">${pool}</span></td></tr>`);
+    }
+    tbody.innerHTML = rows.join('');
+  }
+
+  // ── Card list ─────────────────────────────────────────────────────
+  function renderCardListFilter(cls) {
+    const sel = document.getElementById('card-list-rarity');
+    const prev = sel.value;
+    const rarities = [...cls.base, ...cls.foil, ...cls.chase];
+    sel.innerHTML = '<option value="all">All Booster</option>' + rarities.map(r =>
+      `<option value="${r}">${r.toUpperCase()} (${(cls.byRarity[r] || []).length})</option>`
+    ).join('');
+    if (prev && rarities.includes(prev)) sel.value = prev;
+  }
+
+  function renderCardList() {
+    if (!selectedSet) return;
+    const filter = document.getElementById('card-list-rarity').value;
+    let cards = selectedSet.cards.filter(c => !NON_BOOSTER.has(c.rarity));
+    if (filter !== 'all') cards = cards.filter(c => c.rarity === filter);
+    cards = [...cards].sort((a, b) => (b._price || 0) - (a._price || 0));
+    document.getElementById('card-list-tbody').innerHTML = cards.map(c =>
+      `<tr><td class="ps-3 text-muted">${c.card_number || ''}</td><td>${c.name}</td>
+        <td>${c.rarity.toUpperCase()}</td>
+        <td class="text-end pe-3">${c._price ? fmt(c._price) : '<span class="text-muted">—</span>'}</td></tr>`
+    ).join('');
+  }
+</script>
+{{ end }}

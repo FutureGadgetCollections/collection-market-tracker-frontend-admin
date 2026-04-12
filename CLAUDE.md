@@ -87,7 +87,7 @@ The backend has three distinct concerns:
 | Pokemon | swsh01–swsh12 + sub-sets (SWSH era) | 10 cards: 5C + 3UC + 1 reverse holo + 1 holo | same |
 | MTG | tla (Avatar: The Last Airbender) | 14 cards: 6C + 3UC + 1 wildcard + 1 R/M + 1 foil + 1 land + 1 token | same (aggregated) + `create_pack_slots_table.py` (per-slot) |
 | One Piece | eb01–eb03, prb01–prb02 | different structure — not yet researched | — |
-| Pokemon | older eras (XY, SM, DP, Base, etc.) | vary significantly per era — not yet added | — |
+| Pokemon | older eras (XY, SM, DP, Base, etc.) | C/UC base rates added for all eras; pack_slots not yet created | `bulk_insert_pack_construction.py` |
 
 Hard-rarity pull rates (double_rare and above for Pokemon; epic/alt_art/etc for Riftbound) are handled by `bulk_insert_pokemon_pull_rates.py` and manual Riftbound imports. `bulk_insert_pack_construction.py` handles C/UC/base-slot rates only.
 
@@ -277,7 +277,7 @@ EV simulator JS + HTML tab structure complete. Remaining:
     "cards":[{"card_number":"001","quantity":4}, ...]}
    ```
 
-### PriceCharting historical data pipeline (IN PROGRESS — next session pick up at Step 5)
+### PriceCharting historical data pipeline (DONE)
 
 Goal: populate `market_data.pricecharting_price_history` with monthly sealed product price history so `set_market_metrics` can be backfilled beyond TCGPlayer's 1-year window.
 
@@ -304,11 +304,17 @@ Target table: `market_data.pricecharting_price_history` — grain `(game, set_co
 - Fixed 3 bugs in `compute_set_metrics.py`: graceful handling of missing `set_market_metrics`, `precon_deck_lists` tables; `create_table(exists_ok=True)` before MERGE
 - Fixed deploy script SA: now uses `evupdate-runner@future-gadget-labs-483502.iam.gserviceaccount.com`
 
-**Step 5 — One Piece eb/prb pack structure**
-- Extra boosters (eb01–eb03) and premium boosters (prb01–prb02) have different pack construction; needs research before adding pull rates.
+**Step 5 — One Piece eb/prb pack structure ✅ DONE**
+- `setup_op_eb_prb.py` already ran — pack_slots, pull rates, sealed products, and single cards all populated in BQ
+- eb01 (11 slots, 80 cards), eb02 (12 slots, 102 cards), eb03 (11 slots, 105 cards)
+- prb01 (10 slots, 325 cards), prb02 (10 slots, 376 cards)
+- All have TCGPlayer IDs and PriceCharting URLs
 
-**Step 6 — Pokemon older eras pull rates**
-- XY, Sun & Moon, Diamond & Pearl, Base Set era all have different pack structures; add separately once needed.
+**Step 6 — Pokemon older eras pull rates ✅ DONE**
+- Added C/UC base rates for all 12 Pokemon eras (103 sets, 206 rows)
+- Era-based matching from `sealed_products.era` instead of prefix matching
+- Base Set/Neo: 7C+3UC (11-card), EX: 5C+2UC (9-card), DP–SM/SWSH: 5C+3UC (10-card), SV/ME: 4C+3UC (10-card)
+- Synced to GCS; `bulk_insert_pack_construction.py` updated to handle all eras
 
 ### EV history backfill (TODO)
 

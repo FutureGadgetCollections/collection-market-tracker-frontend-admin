@@ -73,7 +73,19 @@
       <div class="col-auto">
         <div class="input-group input-group-sm">
           <span class="input-group-text">Cost $</span>
-          <input type="number" class="form-control" id="opt-box-cost" value="120" min="0" step="1" style="width:70px">
+          <input type="number" class="form-control" id="opt-box-cost" value="120" min="0" step="1" oninput="recompute()" style="width:70px">
+        </div>
+      </div>
+      <div class="col-auto">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text">Boxes / Case</span>
+          <input type="number" class="form-control" id="opt-boxes-per-case" value="6" min="1" step="1" onchange="recompute()" style="width:55px">
+        </div>
+      </div>
+      <div class="col-auto">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text">Playset &times;</span>
+          <input type="number" class="form-control" id="opt-playset-count" value="4" min="1" step="1" onchange="recompute()" style="width:50px">
         </div>
       </div>
       <div class="col-auto">
@@ -155,6 +167,29 @@
   </div>
 </div>
 
+<!-- ── Case Selling Strategies ──────────────────────────────────────── -->
+<div class="d-none mb-3" id="strategies-section">
+  <h5 class="fw-semibold mb-3"><i class="bi bi-cash-stack me-2 text-primary"></i>Case Selling Strategies</h5>
+
+  <!-- Case overview bar -->
+  <div class="card shadow-sm border-0 mb-3" id="case-overview-card">
+    <div class="card-body py-2">
+      <div class="row g-3 text-center" id="case-overview-stats"></div>
+    </div>
+  </div>
+
+  <!-- Per-rarity strategy cards (dynamically generated) -->
+  <div id="rarity-strategies-container"></div>
+
+  <!-- Strategy totals comparison -->
+  <div class="card shadow-sm border-0 mb-3" id="strategy-totals-card">
+    <div class="card-header bg-white border-0 py-2">
+      <span class="fw-semibold small"><i class="bi bi-bar-chart me-1"></i>Strategy Totals</span>
+    </div>
+    <div class="card-body" id="strategy-totals-body"></div>
+  </div>
+</div>
+
 <!-- ── Monte Carlo Simulator ────────────────────────────────────────── -->
 <div class="card shadow-sm border-0 d-none mb-3" id="sim-card">
   <div class="card-header bg-white border-0 py-2 d-flex align-items-center justify-content-between">
@@ -182,37 +217,6 @@
   <div class="card-body d-none text-center py-3" id="sim-loading">
     <div class="spinner-border spinner-border-sm text-primary me-2"></div>Running simulation...
   </div>
-</div>
-
-<!-- ── Playset Value (Weiss Schwarz) ────────────────────────────────── -->
-<div class="card shadow-sm border-0 d-none mb-3" id="playset-card">
-  <div class="card-header bg-white border-0 py-2">
-    <span class="fw-semibold small"><i class="bi bi-collection me-1"></i>Playset Value (4x of every card)</span>
-  </div>
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0 small">
-        <thead class="table-light">
-          <tr>
-            <th class="ps-3">Rarity</th>
-            <th class="text-center">Unique Cards</th>
-            <th class="text-end">Avg Single</th>
-            <th class="text-end">1x Set Value</th>
-            <th class="text-end pe-3">4x Playset Value</th>
-          </tr>
-        </thead>
-        <tbody id="playset-tbody"></tbody>
-        <tfoot class="table-light">
-          <tr class="fw-bold">
-            <td class="ps-3" colspan="3">Total Playset Value (4x all cards)</td>
-            <td class="text-end" id="playset-1x-total">—</td>
-            <td class="text-end pe-3" id="playset-4x-total">—</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  </div>
-  <div class="card-body pt-0" id="playset-case-analysis"></div>
 </div>
 
 <!-- ── Card Lists by Rarity ─────────────────────────────────────────── -->
@@ -392,10 +396,24 @@
     show('picker');
   }
 
+  // Game-specific defaults for case size and playset count
+  const GAME_DEFAULTS = {
+    pokemon:        { boxesPerCase: 6,  playsetCount: 4 },
+    'one-piece':    { boxesPerCase: 12, playsetCount: 4 },
+    mtg:            { boxesPerCase: 6,  playsetCount: 4 },
+    'weiss-schwarz':{ boxesPerCase: 16, playsetCount: 4 },
+    riftbound:      { boxesPerCase: 6,  playsetCount: 4 },
+  };
+
   function selectGame(game) {
     document.getElementById('filter-game').value = game;
     hideResults();
     hide('pick-game');
+
+    // Apply game-specific defaults
+    const gd = GAME_DEFAULTS[game] || { boxesPerCase: 6, playsetCount: 4 };
+    document.getElementById('opt-boxes-per-case').value = gd.boxesPerCase;
+    document.getElementById('opt-playset-count').value = gd.playsetCount;
 
     const evSets = setsWithEVData();
     const m = GAME_META[game] || { label: game };
@@ -576,7 +594,7 @@
   }
 
   function hideResults() {
-    for (const id of ['ev-card','box-card','slot-card','sim-card','playset-card','card-lists','excluded-card','ev-notes']) hide(id);
+    for (const id of ['ev-card','box-card','slot-card','sim-card','strategies-section','card-lists','excluded-card','ev-notes']) hide(id);
     const simRes = document.getElementById('sim-results');
     if (simRes) simRes.classList.add('d-none');
   }
@@ -901,8 +919,8 @@
     // Show simulator
     if (slots.length > 0) show('sim-card');
 
-    // ── Playset value (Weiss Schwarz) ─────────────────────────────────
-    if (game === 'weiss-schwarz') renderPlaysetValue(game, setCode, playCards, productType);
+    // ── Case selling strategies (all games) ──────────────────────────
+    renderCaseStrategies(game, setCode, playCards, productType, setPR, pools, packEV, slots);
 
     // ── Card lists ────────────────────────────────────────────────────
     renderCardLists(pools);
@@ -1133,73 +1151,263 @@
     show('card-lists');
   }
 
-  // ── Playset Value (Weiss Schwarz) ───────────────────────────────────
+  // ── Case Selling Strategies (all games) ──────────────────────────────
 
-  function renderPlaysetValue(game, setCode, playCards, productType) {
-    const RARITY_LABELS = { sir: 'SIR (Super Special)', sp: 'SP (Special)', pr: 'PR (Promo)', lrp: 'LRP (Foil Parallel)', n: 'N (Normal)' };
+  // Bulk rarities get playset/set strategies; chase rarities get raw/grade strategies
+  // Game-specific: WS has base playset + foil playset rarities, all get playset columns
+  const BULK_RARITIES_DEFAULT = new Set(['common', 'uncommon', 'n', 'rare', 'lrp']);
+  const BULK_RARITIES_BY_GAME = {
+    'weiss-schwarz': new Set(['c', 'u', 'r', 'rr', 'cr', 'cc', 'sr', 'rrr']),
+    // Add other game overrides as needed
+  };
+  function getBulkRarities(game) {
+    return BULK_RARITIES_BY_GAME[game] || BULK_RARITIES_DEFAULT;
+  }
 
-    // Playset = 4x of every Normal card only
-    const nCards = playCards.filter(c => c.rarity === 'n');
-    let setValue = 0, pricedCount = 0;
-    const cardRows = [];
-    for (const c of [...nCards].sort((a, b) => (getPrice(b) || 0) - (getPrice(a) || 0))) {
-      const p = getPrice(c);
-      if (p != null) { setValue += p; pricedCount++; }
-      cardRows.push({ name: c.name, number: c.card_number, price: p, playset: p != null ? p * 4 : null });
-    }
-    const playsetTotal = setValue * 4;
+  // Stored rarity data for recompute on input change
+  let _strategyRarities = [];
+  let _strategyMeta = {};
 
-    document.getElementById('playset-tbody').innerHTML = cardRows.map(r => `<tr>
-      <td class="ps-3">${esc(r.name)}</td>
-      <td class="text-center text-muted">${esc(r.number)}</td>
-      <td class="text-end">${r.price != null ? fmtUSD(r.price) : '<span class="text-muted">N/A</span>'}</td>
-      <td class="text-end">${r.price != null ? fmtUSD(r.price) : '—'}</td>
-      <td class="text-end pe-3 fw-medium">${r.playset != null ? fmtUSD(r.playset) : '—'}</td>
-    </tr>`).join('');
-
-    // Update headers for card-level view
-    document.querySelector('#playset-card thead tr').innerHTML = '<th class="ps-3">Card</th><th class="text-center">#</th><th class="text-end">Single Price</th><th class="text-end">1x</th><th class="text-end pe-3">4x Value</th>';
-    document.querySelector('#playset-card tfoot tr').innerHTML = `<td class="ps-3 fw-bold" colspan="3">N Playset (${nCards.length} unique, 4x each = ${nCards.length * 4} cards)</td><td class="text-end fw-bold">${fmtUSD(setValue)}</td><td class="text-end pe-3 fw-bold">${fmtUSD(playsetTotal)}</td>`;
-    document.getElementById('playset-1x-total').textContent = fmtUSD(setValue);
-    document.getElementById('playset-4x-total').textContent = fmtUSD(playsetTotal);
-
-    // Case analysis
-    const product = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
-    const packsPerBox = product ? product.packs_per_product : 6;
-    const boxesPerCase = 30;
-    const packsPerCase = packsPerBox * boxesPerCase;
-    const normalPerPack = 3;  // 3 N cards per WS premium pack
-    const totalNormals = packsPerCase * normalPerPack;
-    const uniqueN = (groups.get('n') || []).length;
-    const avgCopies = uniqueN > 0 ? (totalNormals / uniqueN).toFixed(1) : '?';
-    const fullPlaysets = uniqueN > 0 ? Math.floor(totalNormals / uniqueN / 4) : 0;
-
-    const nPlaysetValue = playsetTotal;
+  function renderCaseStrategies(game, setCode, playCards, productType, setPR, pools, packEV, slots) {
+    const boxesPerCase = parseInt(document.getElementById('opt-boxes-per-case').value) || 6;
+    const playsetCount = parseInt(document.getElementById('opt-playset-count').value) || 4;
     const boxCost = parseFloat(document.getElementById('opt-box-cost').value) || 0;
+    const product = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
+    const packsPerBox = product ? product.packs_per_product : 0;
+    if (!packsPerBox) return;
+
+    const packsPerCase = packsPerBox * boxesPerCase;
     const caseCost = boxCost * boxesPerCase;
+    const caseEV = packEV * packsPerCase;
 
-    const feeCfg = getFeeConfig();
-    const feeLabel = feeCfg.pct > 0 ? ` (after ${feeCfg.pct}% fees)` : '';
+    // ── Case overview bar ─────────────────────────────────────────────
+    document.getElementById('case-overview-stats').innerHTML = `
+      <div class="col"><div class="text-muted small">Boxes</div><div class="fs-6 fw-bold">${boxesPerCase}</div></div>
+      <div class="col"><div class="text-muted small">Packs</div><div class="fs-6 fw-bold">${packsPerCase}</div></div>
+      <div class="col"><div class="text-muted small">Case Cost</div><div class="fs-6 fw-bold">${fmtUSD(caseCost)}</div></div>
+      <div class="col"><div class="text-muted small">All-Singles EV</div><div class="fs-6 fw-bold text-primary">${fmtUSD(caseEV)}</div></div>
+      <div class="col"><div class="text-muted small">All-Singles Profit</div><div class="fs-6 fw-bold ${caseEV - caseCost >= 0 ? 'text-success' : 'text-danger'}">${(caseEV - caseCost >= 0 ? '+' : '')}${fmtUSD(caseEV - caseCost)}</div></div>`;
 
-    let html = '<div class="small">';
-    html += `<div class="fw-semibold mb-2">Case Analysis (${boxesPerCase} boxes, ${packsPerCase} packs)</div>`;
-    html += '<div class="row g-2 text-center mb-2">';
-    html += `<div class="col"><div class="text-muted small">N Cards Pulled</div><div class="fw-bold">${totalNormals}</div></div>`;
-    html += `<div class="col"><div class="text-muted small">Avg Copies Each</div><div class="fw-bold">${avgCopies}x</div></div>`;
-    html += `<div class="col"><div class="text-muted small">Full Playsets</div><div class="fw-bold">${fullPlaysets}</div></div>`;
-    html += `<div class="col"><div class="text-muted small">N Playset Value</div><div class="fw-bold">${fmtUSD(nPlaysetValue)}</div></div>`;
-    html += '</div>';
+    // ── Build per-rarity data ─────────────────────────────────────────
+    const sortedPR = [...setPR].sort((a, b) => a.pull_rate_per_pack - b.pull_rate_per_pack);
+    _strategyRarities = [];
+    _strategyMeta = { caseCost, caseEV, packsPerCase, playsetCount, game };
 
-    if (caseCost > 0 && fullPlaysets > 0) {
-      const playsetRevenue = nPlaysetValue * fullPlaysets;
-      const netRevenue = playsetRevenue * (1 - feeCfg.pct / 100);
-      html += `<div class="text-muted">Selling ${fullPlaysets} N playsets at ${fmtUSD(nPlaysetValue)} each${feeLabel}: <span class="fw-medium">${fmtUSD(netRevenue)}</span></div>`;
-      html += `<div class="text-muted">Remaining to recoup from case (${fmtUSD(caseCost)}): <span class="fw-medium ${caseCost - netRevenue > 0 ? 'text-danger' : 'text-success'}">${fmtUSD(caseCost - netRevenue)}</span> from LRP/SP/SIR pulls</div>`;
+    for (const pr of sortedPR) {
+      let pool = pools[`base_${pr.rarity}`] || pools[pr.rarity] || playCards.filter(c => c.rarity === pr.rarity);
+      const uniqueCount = pr.unique_card_count || pool.length;
+      if (uniqueCount === 0) continue;
+
+      const stats = effectivePoolStats(pool);
+      const pullsPerCase = pr.pull_rate_per_pack * packsPerCase;
+      const avgCopies = pullsPerCase / uniqueCount;
+      const isBulk = getBulkRarities(game).has(pr.rarity);
+
+      _strategyRarities.push({
+        rarity: pr.rarity, isBulk, uniqueCount, pullsPerCase, avgCopies,
+        avgPrice: stats.avg, totalValue: stats.total, priced: stats.priced, poolSize: pool.length,
+      });
     }
 
-    html += '</div>';
-    document.getElementById('playset-case-analysis').innerHTML = html;
-    show('playset-card');
+    // ── Render per-rarity cards ───────────────────────────────────────
+    const container = document.getElementById('rarity-strategies-container');
+    container.innerHTML = '';
+
+    for (const r of _strategyRarities) {
+      const safeR = r.rarity.replace(/[^a-z0-9]/g, '_');
+      const singlesEV = applyFees(r.avgPrice) * r.pullsPerCase;
+      const completeSets = r.uniqueCount > 0 ? Math.floor(r.avgCopies) : 0;
+      const completePlaysets = r.uniqueCount > 0 ? Math.floor(r.avgCopies / playsetCount) : 0;
+
+      let cardHTML = `
+        <div class="card shadow-sm border-0 mb-2">
+          <div class="card-header bg-white border-0 py-2 d-flex align-items-center justify-content-between">
+            <div>
+              <span class="badge ${badgeClass(r.rarity)} me-2">${esc(r.rarity)}</span>
+              <span class="text-muted small">${r.uniqueCount} unique &middot; ${r.pullsPerCase.toFixed(1)} pulls/case &middot; ${r.avgCopies.toFixed(1)}× avg copies</span>
+            </div>
+            <span class="fw-semibold small text-primary" id="strat-best-${safeR}"></span>
+          </div>
+          <div class="card-body py-2">
+            <div class="row g-3">`;
+
+      // ── Column 1: Sell as Singles (always shown) ─────────────────
+      cardHTML += `
+              <div class="col-md${r.isBulk ? '' : '-6'}">
+                <div class="border rounded p-2 h-100">
+                  <div class="fw-semibold small mb-1"><i class="bi bi-tag me-1"></i>Sell as Singles</div>
+                  <div class="text-muted small">${r.pullsPerCase.toFixed(1)} cards × ${fmtUSD(r.avgPrice)} avg</div>
+                  <div class="fs-5 fw-bold text-primary" id="strat-singles-${safeR}">${fmtUSD(singlesEV)}</div>
+                </div>
+              </div>`;
+
+      if (r.isBulk) {
+        // ── Column 2: Sell as Playsets ─────────────────────────────
+        cardHTML += `
+              <div class="col-md">
+                <div class="border rounded p-2 h-100">
+                  <div class="fw-semibold small mb-1"><i class="bi bi-collection me-1"></i>Sell as Playsets</div>
+                  <div class="text-muted small">${completePlaysets > 0 ? `${completePlaysets} complete ${playsetCount}× playset${completePlaysets > 1 ? 's' : ''}` : `Not enough for a full ${playsetCount}× playset (${r.avgCopies.toFixed(1)}× avg)`}</div>
+                  <div class="input-group input-group-sm mt-1" style="max-width:200px">
+                    <span class="input-group-text">Price per playset $</span>
+                    <input type="number" class="form-control" id="strat-ps-price-${safeR}" placeholder="—" min="0" step="1" oninput="recomputeStrategyTotals()">
+                  </div>
+                  <div class="fs-5 fw-bold mt-1" id="strat-ps-rev-${safeR}">—</div>
+                </div>
+              </div>`;
+
+        // ── Column 3: Sell as 1× Set ──────────────────────────────
+        cardHTML += `
+              <div class="col-md">
+                <div class="border rounded p-2 h-100">
+                  <div class="fw-semibold small mb-1"><i class="bi bi-layers me-1"></i>Sell as 1× Set</div>
+                  <div class="text-muted small">${completeSets > 0 ? `${completeSets} complete 1× set${completeSets > 1 ? 's' : ''}` : `Not enough for a full set (${r.avgCopies.toFixed(1)}× avg)`}</div>
+                  <div class="input-group input-group-sm mt-1" style="max-width:200px">
+                    <span class="input-group-text">Price per set $</span>
+                    <input type="number" class="form-control" id="strat-set-price-${safeR}" placeholder="—" min="0" step="1" oninput="recomputeStrategyTotals()">
+                  </div>
+                  <div class="fs-5 fw-bold mt-1" id="strat-set-rev-${safeR}">—</div>
+                </div>
+              </div>`;
+      } else {
+        // ── Column 2: Grade & Sell (chase rarities) ───────────────
+        cardHTML += `
+              <div class="col-md-6">
+                <div class="border rounded p-2 h-100">
+                  <div class="fw-semibold small mb-1"><i class="bi bi-gem me-1"></i>Grade &amp; Sell</div>
+                  <div class="text-muted small">${r.pullsPerCase.toFixed(2)} expected pulls</div>
+                  <div class="row g-1 mt-1">
+                    <div class="col-auto">
+                      <div class="input-group input-group-sm" style="max-width:150px">
+                        <span class="input-group-text">Grade fee $</span>
+                        <input type="number" class="form-control" id="strat-grade-fee-${safeR}" placeholder="25" min="0" step="1" oninput="recomputeStrategyTotals()">
+                      </div>
+                    </div>
+                    <div class="col-auto">
+                      <div class="input-group input-group-sm" style="max-width:140px">
+                        <span class="input-group-text">PSA 10 %</span>
+                        <input type="number" class="form-control" id="strat-gem-rate-${safeR}" placeholder="—" min="0" max="100" step="1" oninput="recomputeStrategyTotals()">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row g-1 mt-1">
+                    <div class="col-auto">
+                      <div class="input-group input-group-sm" style="max-width:150px">
+                        <span class="input-group-text">PSA 10 val $</span>
+                        <input type="number" class="form-control" id="strat-psa10-val-${safeR}" placeholder="—" min="0" step="1" oninput="recomputeStrategyTotals()">
+                      </div>
+                    </div>
+                    <div class="col-auto">
+                      <div class="input-group input-group-sm" style="max-width:150px">
+                        <span class="input-group-text">PSA 9 val $</span>
+                        <input type="number" class="form-control" id="strat-psa9-val-${safeR}" placeholder="—" min="0" step="1" oninput="recomputeStrategyTotals()">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="fs-5 fw-bold mt-1" id="strat-grade-rev-${safeR}">—</div>
+                </div>
+              </div>`;
+      }
+
+      cardHTML += `
+            </div>
+          </div>
+        </div>`;
+      container.innerHTML += cardHTML;
+    }
+
+    recomputeStrategyTotals();
+    show('strategies-section');
+  }
+
+  // Recompute strategy revenues when user changes input values
+  function recomputeStrategyTotals() {
+    const playsetCount = parseInt(document.getElementById('opt-playset-count').value) || 4;
+    const { caseCost, caseEV } = _strategyMeta;
+    let totalSingles = 0, totalBestStrategy = 0;
+
+    for (const r of _strategyRarities) {
+      const safeR = r.rarity.replace(/[^a-z0-9]/g, '_');
+      const singlesEV = applyFees(r.avgPrice) * r.pullsPerCase;
+      totalSingles += singlesEV;
+
+      let bestLabel = 'Singles', bestVal = singlesEV;
+
+      if (r.isBulk) {
+        // Playset revenue
+        const psPriceEl = document.getElementById(`strat-ps-price-${safeR}`);
+        const psPrice = psPriceEl ? parseFloat(psPriceEl.value) : NaN;
+        const completePlaysets = r.uniqueCount > 0 ? Math.floor(r.avgCopies / playsetCount) : 0;
+        const psRevEl = document.getElementById(`strat-ps-rev-${safeR}`);
+
+        if (!isNaN(psPrice) && psPrice > 0 && completePlaysets > 0) {
+          const leftoverCards = r.pullsPerCase - (completePlaysets * playsetCount * r.uniqueCount);
+          const leftoverVal = applyFees(r.avgPrice) * Math.max(0, leftoverCards);
+          const psRev = applyFees(psPrice) * completePlaysets + leftoverVal;
+          if (psRevEl) psRevEl.textContent = fmtUSD(psRev);
+          if (psRev > bestVal) { bestVal = psRev; bestLabel = 'Playsets'; }
+        } else {
+          if (psRevEl) psRevEl.textContent = '—';
+        }
+
+        // Set revenue
+        const setPriceEl = document.getElementById(`strat-set-price-${safeR}`);
+        const setPrice = setPriceEl ? parseFloat(setPriceEl.value) : NaN;
+        const completeSets = r.uniqueCount > 0 ? Math.floor(r.avgCopies) : 0;
+        const setRevEl = document.getElementById(`strat-set-rev-${safeR}`);
+
+        if (!isNaN(setPrice) && setPrice > 0 && completeSets > 0) {
+          const leftoverCards = r.pullsPerCase - (completeSets * r.uniqueCount);
+          const leftoverVal = applyFees(r.avgPrice) * Math.max(0, leftoverCards);
+          const setRev = applyFees(setPrice) * completeSets + leftoverVal;
+          if (setRevEl) setRevEl.textContent = fmtUSD(setRev);
+          if (setRev > bestVal) { bestVal = setRev; bestLabel = '1× Sets'; }
+        } else {
+          if (setRevEl) setRevEl.textContent = '—';
+        }
+      } else {
+        // Grade revenue
+        const gradeFee = parseFloat((document.getElementById(`strat-grade-fee-${safeR}`) || {}).value) || 0;
+        const gemRate = parseFloat((document.getElementById(`strat-gem-rate-${safeR}`) || {}).value) / 100;
+        const psa10Val = parseFloat((document.getElementById(`strat-psa10-val-${safeR}`) || {}).value);
+        const psa9Val = parseFloat((document.getElementById(`strat-psa9-val-${safeR}`) || {}).value);
+        const gradeRevEl = document.getElementById(`strat-grade-rev-${safeR}`);
+
+        if (!isNaN(gemRate) && !isNaN(psa10Val) && !isNaN(psa9Val) && gemRate > 0) {
+          const evPerCard = (gemRate * applyFees(psa10Val)) + ((1 - gemRate) * applyFees(psa9Val)) - gradeFee;
+          const gradeRev = evPerCard * r.pullsPerCase;
+          if (gradeRevEl) gradeRevEl.textContent = `${fmtUSD(gradeRev)} (${fmtUSD(evPerCard)}/card)`;
+          if (gradeRev > bestVal) { bestVal = gradeRev; bestLabel = 'Grade'; }
+        } else {
+          if (gradeRevEl) gradeRevEl.textContent = '—';
+        }
+      }
+
+      totalBestStrategy += bestVal;
+      const bestEl = document.getElementById(`strat-best-${safeR}`);
+      if (bestEl) bestEl.textContent = bestLabel !== 'Singles' ? `Best: ${bestLabel}` : '';
+    }
+
+    // ── Strategy totals ───────────────────────────────────────────────
+    const singlesProfit = totalSingles - caseCost;
+    const bestProfit = totalBestStrategy - caseCost;
+    document.getElementById('strategy-totals-body').innerHTML = `
+      <div class="row g-3 text-center">
+        <div class="col">
+          <div class="text-muted small">All Singles</div>
+          <div class="fs-5 fw-bold">${fmtUSD(totalSingles)}</div>
+          <div class="small ${singlesProfit >= 0 ? 'text-success' : 'text-danger'}">${singlesProfit >= 0 ? '+' : ''}${fmtUSD(singlesProfit)}</div>
+        </div>
+        <div class="col">
+          <div class="text-muted small">Best per Rarity</div>
+          <div class="fs-5 fw-bold text-primary">${fmtUSD(totalBestStrategy)}</div>
+          <div class="small ${bestProfit >= 0 ? 'text-success' : 'text-danger'}">${bestProfit >= 0 ? '+' : ''}${fmtUSD(bestProfit)}</div>
+        </div>
+        <div class="col">
+          <div class="text-muted small">Case Cost</div>
+          <div class="fs-5 fw-bold">${fmtUSD(caseCost)}</div>
+        </div>
+      </div>`;
   }
 
   // ── Monte Carlo Simulator ───────────────────────────────────────────
@@ -1417,7 +1625,17 @@
   }
 
   function badgeClass(rarity) {
-    switch(rarity){case 'mythic':return 'bg-warning text-dark';case 'rare':return 'bg-info text-dark';case 'uncommon':return 'bg-secondary';case 'common':return 'bg-light text-dark border';default:return 'bg-dark';}
+    const map = {
+      mythic:'bg-warning text-dark', rare:'bg-info text-dark', uncommon:'bg-secondary', common:'bg-light text-dark border',
+      n:'bg-light text-dark border', lrp:'bg-info text-dark',
+      double_rare:'bg-warning text-dark', ultra_rare:'bg-danger', illustration_rare:'bg-info text-dark',
+      special_illustration_rare:'bg-danger', hyper_rare:'bg-warning text-dark', mega_hyper_rare:'bg-danger',
+      super_rare:'bg-warning text-dark', secret_rare:'bg-danger', leader:'bg-info text-dark',
+      treasure_rare:'bg-danger', manga_rare:'bg-danger',
+      sp:'bg-warning text-dark', sir:'bg-danger', pr:'bg-secondary', sec:'bg-danger', ssr:'bg-danger',
+      epic:'bg-warning text-dark', alt_art:'bg-info text-dark', overnumber:'bg-danger', signature_overnumber:'bg-danger',
+    };
+    return map[rarity] || 'bg-dark';
   }
 </script>
 <style>

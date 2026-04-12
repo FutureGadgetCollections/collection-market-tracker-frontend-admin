@@ -42,6 +42,12 @@
           </a>
         </li>
         <li class="nav-item">
+          <a class="nav-link nav-admin-only{{ if eq .RelPermalink "/ws-playset/" }} active{{ end }}"
+             href="{{ "ws-playset/" | relURL }}" title="Admin access required">
+            <i class="bi bi-stack me-1"></i>WS Playset
+          </a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link nav-admin-only{{ if eq .RelPermalink "/debug/" }} active{{ end }}"
              href="{{ "debug/" | relURL }}" title="Admin access required">
             <i class="bi bi-bug me-1"></i>Debug
