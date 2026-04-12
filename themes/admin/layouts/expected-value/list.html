@@ -181,6 +181,9 @@
   <!-- Per-rarity strategy cards (dynamically generated) -->
   <div id="rarity-strategies-container"></div>
 
+  <!-- Grouped playset tiers (e.g. normal = C+U, foil = R+RR) -->
+  <div id="playset-tiers-container"></div>
+
   <!-- Strategy totals comparison -->
   <div class="card shadow-sm border-0 mb-3" id="strategy-totals-card">
     <div class="card-header bg-white border-0 py-2">
@@ -274,6 +277,8 @@
 <script>
   // ── Embedded jumpstart half-deck data (Hugo data/jumpstart-decks.json) ──
   window.JUMPSTART_DECKS = {{ (index .Site.Data "jumpstart-decks") | jsonify | safeJS }};
+  // ── Embedded playset tier definitions (Hugo data/playset-tiers.json) ──
+  window.PLAYSET_TIERS = {{ (index .Site.Data "playset-tiers") | jsonify | safeJS }};
 
   // ── Globals ─────────────────────────────────────────────────────────
   let allCards = [], allPullRates = [], allSealed = [], allPackSlots = [], allDeckLists = [];
@@ -1391,8 +1396,16 @@
     return BULK_RARITIES_BY_GAME[game] || BULK_RARITIES_DEFAULT;
   }
 
+  // Resolve playset tiers for a given game+set. Returns { normal:[codes], foil:[codes] } or null.
+  function getPlaysetTiers(game, setCode) {
+    const byGame = window.PLAYSET_TIERS?.tiers?.[game];
+    if (!byGame) return null;
+    return byGame[setCode] || byGame._default || null;
+  }
+
   // Stored rarity data for recompute on input change
   let _strategyRarities = [];
+  let _strategyTiers = [];
   let _strategyMeta = {};
 
   function renderCaseStrategies(game, setCode, playCards, productType, setPR, pools, packEV, slots) {
@@ -1552,8 +1565,94 @@
       container.innerHTML += cardHTML;
     }
 
+    // ── Grouped Playset Tiers (e.g. normal = C+U, foil = R+RR) ───────
+    renderPlaysetTiers(game, setCode);
+
     recomputeStrategyTotals();
     show('strategies-section');
+  }
+
+  // Render combined "Normal Playset" + "Foil Playset" tier cards (config in playset-tiers.json)
+  function renderPlaysetTiers(game, setCode) {
+    const container = document.getElementById('playset-tiers-container');
+    container.innerHTML = '';
+    _strategyTiers = [];
+
+    const def = getPlaysetTiers(game, setCode);
+    if (!def) return;
+
+    const { playsetCount } = _strategyMeta;
+    const byRarity = new Map(_strategyRarities.map(r => [r.rarity, r]));
+
+    const tiers = [
+      { key: 'normal', label: 'Normal Playset', icon: 'bi-collection',      color: '#0d6efd' },
+      { key: 'foil',   label: 'Foil Playset',   icon: 'bi-gem',             color: '#f59e0b' },
+    ];
+
+    let anyRendered = false;
+    for (const t of tiers) {
+      const codes = def[t.key] || [];
+      const matched = codes.map(c => byRarity.get(c)).filter(Boolean);
+      if (matched.length === 0) continue;
+      anyRendered = true;
+
+      const uniqueTotal = matched.reduce((s, r) => s + r.uniqueCount, 0);
+      const valueSum    = matched.reduce((s, r) => s + r.totalValue, 0);
+      const pricedSum   = matched.reduce((s, r) => s + r.priced, 0);
+      const perCardAvg  = uniqueTotal > 0 ? valueSum / uniqueTotal : 0;
+      const fullPlayset = valueSum * playsetCount;
+      const minAvgCopies = Math.min(...matched.map(r => r.avgCopies));
+      const completePlaysets = Math.floor(minAvgCopies / playsetCount);
+      const limitingRarity = matched.reduce((a, b) => a.avgCopies < b.avgCopies ? a : b).rarity;
+      const pullsPerCase = matched.reduce((s, r) => s + r.pullsPerCase, 0);
+
+      const psSugg = Math.max(0, Math.round(fullPlayset));
+      const rarityLabels = codes.map(c => byRarity.get(c)?.rarity).filter(Boolean).join(' + ');
+
+      _strategyTiers.push({
+        key: t.key, label: t.label, rarities: matched, codes,
+        uniqueTotal, valueSum, fullPlayset, perCardAvg, minAvgCopies, completePlaysets,
+        limitingRarity, pullsPerCase,
+      });
+
+      const tierHTML = `
+        <div class="card shadow-sm border-0 mb-2" style="border-left:3px solid ${t.color}!important">
+          <div class="card-header bg-white border-0 py-2 d-flex align-items-center justify-content-between">
+            <div>
+              <i class="bi ${t.icon} me-1" style="color:${t.color}"></i>
+              <span class="fw-semibold">${esc(t.label)}</span>
+              <span class="text-muted small ms-2">${esc(rarityLabels)} &middot; ${uniqueTotal} unique cards</span>
+            </div>
+          </div>
+          <div class="card-body py-2">
+            <div class="row g-3">
+              <div class="col-md">
+                <div class="text-muted small">Per-card playset value</div>
+                <div class="fs-6 fw-bold">${fmtUSD(perCardAvg * playsetCount)}</div>
+                <div class="text-muted small">${fmtUSD(perCardAvg)} avg × ${playsetCount}</div>
+              </div>
+              <div class="col-md">
+                <div class="text-muted small">Full-playset sum</div>
+                <div class="fs-6 fw-bold text-primary">${fmtUSD(fullPlayset)}</div>
+                <div class="text-muted small">${pricedSum}/${uniqueTotal} priced</div>
+              </div>
+              <div class="col-md">
+                <div class="text-muted small">Playsets / case</div>
+                <div class="fs-6 fw-bold">${completePlaysets}</div>
+                <div class="text-muted small">limited by <span class="badge ${badgeClass(limitingRarity)}">${esc(limitingRarity)}</span> at ${minAvgCopies.toFixed(1)}×</div>
+              </div>
+              <div class="col-md">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text">Price per playset $</span>
+                  <input type="number" class="form-control" id="strat-tier-price-${t.key}" value="${psSugg}" min="0" step="1" oninput="recomputeStrategyTotals()">
+                </div>
+                <div class="fs-6 fw-bold mt-1" id="strat-tier-rev-${t.key}">—</div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      container.innerHTML += tierHTML;
+    }
   }
 
   // Recompute strategy revenues when user changes input values
@@ -1622,6 +1721,21 @@
       totalBestStrategy += bestVal;
       const bestEl = document.getElementById(`strat-best-${safeR}`);
       if (bestEl) bestEl.textContent = bestLabel !== 'Singles' ? `Best: ${bestLabel}` : '';
+    }
+
+    // ── Tier playset revenues (informational; not rolled into best) ──
+    for (const t of _strategyTiers) {
+      const priceEl = document.getElementById(`strat-tier-price-${t.key}`);
+      const revEl = document.getElementById(`strat-tier-rev-${t.key}`);
+      if (!priceEl || !revEl) continue;
+      const price = parseFloat(priceEl.value);
+      if (isNaN(price) || price <= 0 || t.completePlaysets <= 0) { revEl.textContent = '—'; continue; }
+      // Revenue = playsets × price (after fees). Leftover cards assumed sold as singles at avg price.
+      const playsetRev = applyFees(price) * t.completePlaysets;
+      const cardsUsed = t.completePlaysets * playsetCount * t.uniqueTotal;
+      const leftoverCards = Math.max(0, t.pullsPerCase - cardsUsed);
+      const leftoverRev = applyFees(t.perCardAvg) * leftoverCards;
+      revEl.textContent = `${fmtUSD(playsetRev + leftoverRev)} (${t.completePlaysets}× @ ${fmtUSD(price)} + ${leftoverCards.toFixed(0)} leftover)`;
     }
 
     // ── Strategy totals ───────────────────────────────────────────────

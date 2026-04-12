@@ -1,0 +1,9 @@
+{
+  "_comment": "Grouped playset tiers per game. Keyed by set_code first, then falls back to _default. Each tier is a list of rarity codes. Edit freely.",
+  "tiers": {
+    "weiss-schwarz": {
+      "_default":        { "normal": ["c", "u"], "foil": ["r", "rr"] },
+      "lycoris-premium": { "normal": ["n"],      "foil": ["lrp"] }
+    }
+  }
+}
