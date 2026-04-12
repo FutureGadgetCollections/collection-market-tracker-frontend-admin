@@ -548,7 +548,42 @@
       return;
     }
 
-    // Auto-select the best product: prefer play-booster-box > booster-box/display > first
+    // If a set has multiple booster-type products (play / collector / jumpstart), show a picker
+    const boxLike = products.filter(p => /booster-box|booster-display|box|display/.test(p.product_type));
+    if (boxLike.length > 1) {
+      const PRODUCT_ICONS = {
+        'play-booster-box':       { icon: 'bi-box-seam',    border: '#0d6efd' },
+        'collector-booster-box':  { icon: 'bi-gem',         border: '#9b59b6' },
+        'jumpstart-booster-box':  { icon: 'bi-stack',       border: '#20c997' },
+        'booster-box':            { icon: 'bi-box',         border: '#6c757d' },
+        'booster-display':        { icon: 'bi-grid-3x3',    border: '#6c757d' },
+      };
+      let html = `<div class="col-12"><h6 class="text-muted mb-1">${esc(setName)} — Select a product</h6></div>`;
+      html += boxLike.map(p => {
+        const meta = PRODUCT_ICONS[p.product_type] || { icon: 'bi-box', border: '#6c757d' };
+        const bp = priceMap.get(String(p.tcgplayer_id));
+        const label = fmtPT(p.product_type);
+        const subtitle = p.packs_per_product ? `${p.packs_per_product} packs` : '';
+        return `<div class="col-sm-4 col-md-3">
+          <div class="card border-0 shadow-sm h-100 picker-card" style="cursor:pointer;transition:transform .15s;border-left:3px solid ${meta.border}!important"
+               onclick="selectProduct('${esc(game)}','${esc(setCode)}','${esc(p.product_type)}')"
+               onmouseenter="this.style.transform='scale(1.03)'" onmouseleave="this.style.transform=''">
+            <div class="card-body text-center py-3">
+              <i class="bi ${meta.icon} fs-3 d-block mb-1" style="color:${meta.border}"></i>
+              <div class="fw-medium small">${esc(label)}</div>
+              ${subtitle ? `<div class="text-muted small">${subtitle}</div>` : ''}
+              ${bp ? `<div class="text-success small fw-medium mt-1">${fmtUSD(bp.market_price)}</div>` : ''}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+      document.getElementById('set-cards').innerHTML = html;
+      document.getElementById('pick-set-label').textContent = setName;
+      show('pick-set');
+      return;
+    }
+
+    // Auto-select the single product: prefer play-booster-box > booster-box/display > first
     const box = products.find(p => /play-booster-box/.test(p.product_type))
              || products.find(p => /booster-box|booster-display/.test(p.product_type))
              || products.find(p => /box|display/.test(p.product_type))
@@ -560,6 +595,23 @@
       if (bp) document.getElementById('opt-box-cost').value = Math.round(bp.market_price);
     }
     showSelectedBar(game, setName, pt);
+    recompute();
+  }
+
+  function selectProduct(game, setCode, productType) {
+    document.getElementById('filter-game').value = game;
+    document.getElementById('filter-set').value = setCode;
+    document.getElementById('filter-product').value = productType;
+    hide('pick-set');
+    const pr = allPullRates.find(r => r.set_code === setCode);
+    const setName = pr?.set_name || setCode;
+    const prod = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
+    if (prod) {
+      const bp = priceMap.get(String(prod.tcgplayer_id));
+      if (bp) document.getElementById('opt-box-cost').value = Math.round(bp.market_price);
+      else if (prod.msrp) document.getElementById('opt-box-cost').value = Math.round(prod.msrp);
+    }
+    showSelectedBar(game, setName, productType);
     recompute();
   }
 
