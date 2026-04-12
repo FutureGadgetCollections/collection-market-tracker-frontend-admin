@@ -149,6 +149,19 @@ Per-slot data in `catalog.pack_slots` — query via MCP `catalog_pack_slots(game
 
 ## Open TODOs
 
+### 🚨 Data freshness — investigate scraper gap (2026-04-12)
+Partitioned `market_data` tables (`tcgplayer_price_history`, `graded_price_history`, `pricecharting_price_history`, `ev_set_history`) last modified **2026-04-07** — 5 days stale vs 2026-04-12. Daily TCGPlayer scraper should be writing every day. Needs investigation next session:
+- Check Cloud Run job `tcgplayer-price-scraper` recent executions (success/fail)
+- Check scheduler `tcgplayer-price-scraper-daily` state + `last_attempt_time`
+- Check if jobs migrated to Docker Hub images failed to pull (recent AR deletion)
+- Query via `INFORMATION_SCHEMA.PARTITIONS` (metadata-only, fast) rather than `MAX(date)` on full table
+
+### MCP server idle watchdog (2026-04-12)
+Added to `../collection-market-tracker-mcp/server.py` (not under git — change is local-only, applies on next server restart):
+- Background thread exits the process after 15 min of no tool calls (`os._exit(0)`)
+- Prevents orphaned MCP servers lingering for hours on Windows when Claude Code exits without cleanly closing the stdio pipe
+- Override: `MCP_IDLE_TIMEOUT=0` disables, or set seconds to any positive integer
+
 ### Graded card market tracking (TODO)
 
 Goal: track graded card prices and gem rates over time for PSA and CGC grading companies.
@@ -264,9 +277,21 @@ Prerequisites completed:
 Next steps:
 1. ~~Fetch TLA single cards into `catalog.single_cards`~~ ✅ DONE
 2. ~~Run TCGPlayer price scraper backfill for TLA cards~~ ✅ 449/475 DONE (26 pending retry)
-3. Add "Expected Value" tab to admin panel — shows EV breakdown per set/product type
+3. ~~Add "Expected Value" tab to admin panel~~ ✅ DONE
 4. EV formula: `pack_ev = Σ(pull_rate_per_pack[rarity] / unique_card_count[rarity]) × avg_price[rarity]` across all rarities
 5. Eventually move to standalone frontend (see `collection-market-tracker-ev-simulator`)
+
+#### EV tab features shipped (2026-04-12)
+- **Standalone `/ws-playset/`** page: per-rarity playset sell odds + EV from N-box case sim (Weiss Schwarz-specific; commit 329732e)
+- **Jumpstart half-deck EV breakdown**: for MTG TLA jumpstart-booster-box, each of the 66 half-decks shows total value; avg deck = EV per pack; box EV = avg × 24. Card matching is name-based against `single_cards`. Half-deck list lives in `data/jumpstart-decks.json` (Hugo data dir, hand-editable, sourced from the WotC announcement page; commit 54fab1b)
+- **Product picker for multi-booster sets**: when a set has play+collector+jumpstart booster boxes (or similar), shows a picker instead of silently auto-selecting play-booster. Fixes prior issue where jumpstart was unreachable from the UI (commit 644a4e7)
+- **Case Strategies pricing helpers**: per bulk rarity, shows per-card playset value, full-playset sum, and 1× set sum; price-per-playset and price-per-set inputs are pre-filled with the sum as a baseline (commit 0609e4f)
+- **Grouped Playset Tiers card**: "Normal Playset" and "Foil Playset" combining multiple rarities into bundled playsets (config in `data/playset-tiers.json`). Defaults: WS normal = C+U, foil = R+RR. Overrides: lycoris-premium normal = N, foil = LRP. Limiting factor shown per tier (rarest card). Playsets-per-case = floor(min(avgCopies) / playsetCount) across tier (commit def5ab8)
+
+#### EV tab — still open
+- **SP+ tier grading UI for Weiss**: currently per-rarity "Grade & Sell" column exists for non-bulk rarities. User confirmed: only SP/SIR/SEC are gradable (SR is in the bulk set). UI already correct — no further work unless we want PSA 10 population-based gem-rate autofill.
+- **"Sell as 1× collection set" (combined multi-rarity bundle)**: deferred by user ("we'll worry about a standard set later"). Would be a third tier card next to Normal/Foil Playset.
+- **Lycoris Recoil Premium in BQ**: the `data/playset-tiers.json` entry is ready, but the actual set_code `lycoris-premium` may not yet have pull rates/single cards populated — verify before use.
 
 ### Precon deck support (deferred)
 EV simulator JS + HTML tab structure complete. Remaining:
