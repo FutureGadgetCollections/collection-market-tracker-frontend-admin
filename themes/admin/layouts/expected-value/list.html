@@ -1469,15 +1469,23 @@
               </div>`;
 
       if (r.isBulk) {
+        // Suggested bundle prices from card values
+        const setSumValue     = r.totalValue;                          // 1× of every unique card
+        const playsetSumValue = r.totalValue * playsetCount;           // playsetCount × of every unique card
+        const perCardPlayset  = r.avgPrice * playsetCount;             // avg card × playsetCount
+        const setSugg         = Math.max(0, Math.round(setSumValue));
+        const psSugg          = Math.max(0, Math.round(playsetSumValue));
+
         // ── Column 2: Sell as Playsets ─────────────────────────────
         cardHTML += `
               <div class="col-md">
                 <div class="border rounded p-2 h-100">
                   <div class="fw-semibold small mb-1"><i class="bi bi-collection me-1"></i>Sell as Playsets</div>
-                  <div class="text-muted small">${completePlaysets > 0 ? `${completePlaysets} complete ${playsetCount}× playset${completePlaysets > 1 ? 's' : ''}` : `Not enough for a full ${playsetCount}× playset (${r.avgCopies.toFixed(1)}× avg)`}</div>
-                  <div class="input-group input-group-sm mt-1" style="max-width:200px">
+                  <div class="text-muted small">${completePlaysets > 0 ? `${completePlaysets} complete ${playsetCount}× playset${completePlaysets > 1 ? 's' : ''} per case` : `Not enough for a full ${playsetCount}× playset (${r.avgCopies.toFixed(1)}× avg)`}</div>
+                  <div class="text-muted small">Per-card playset: ${fmtUSD(perCardPlayset)} &middot; Full-playset sum: <span class="fw-semibold">${fmtUSD(playsetSumValue)}</span> <span class="text-muted">(${r.uniqueCount} cards × ${playsetCount})</span></div>
+                  <div class="input-group input-group-sm mt-1" style="max-width:220px">
                     <span class="input-group-text">Price per playset $</span>
-                    <input type="number" class="form-control" id="strat-ps-price-${safeR}" placeholder="—" min="0" step="1" oninput="recomputeStrategyTotals()">
+                    <input type="number" class="form-control" id="strat-ps-price-${safeR}" value="${psSugg}" min="0" step="1" oninput="recomputeStrategyTotals()">
                   </div>
                   <div class="fs-5 fw-bold mt-1" id="strat-ps-rev-${safeR}">—</div>
                 </div>
@@ -1488,10 +1496,11 @@
               <div class="col-md">
                 <div class="border rounded p-2 h-100">
                   <div class="fw-semibold small mb-1"><i class="bi bi-layers me-1"></i>Sell as 1× Set</div>
-                  <div class="text-muted small">${completeSets > 0 ? `${completeSets} complete 1× set${completeSets > 1 ? 's' : ''}` : `Not enough for a full set (${r.avgCopies.toFixed(1)}× avg)`}</div>
-                  <div class="input-group input-group-sm mt-1" style="max-width:200px">
+                  <div class="text-muted small">${completeSets > 0 ? `${completeSets} complete 1× set${completeSets > 1 ? 's' : ''} per case` : `Not enough for a full set (${r.avgCopies.toFixed(1)}× avg)`}</div>
+                  <div class="text-muted small">1× set sum: <span class="fw-semibold">${fmtUSD(setSumValue)}</span> <span class="text-muted">(${r.uniqueCount} cards)</span></div>
+                  <div class="input-group input-group-sm mt-1" style="max-width:220px">
                     <span class="input-group-text">Price per set $</span>
-                    <input type="number" class="form-control" id="strat-set-price-${safeR}" placeholder="—" min="0" step="1" oninput="recomputeStrategyTotals()">
+                    <input type="number" class="form-control" id="strat-set-price-${safeR}" value="${setSugg}" min="0" step="1" oninput="recomputeStrategyTotals()">
                   </div>
                   <div class="fs-5 fw-bold mt-1" id="strat-set-rev-${safeR}">—</div>
                 </div>
