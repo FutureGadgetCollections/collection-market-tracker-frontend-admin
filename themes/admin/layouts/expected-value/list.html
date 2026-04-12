@@ -219,6 +219,31 @@
   </div>
 </div>
 
+<!-- ── Jumpstart Deck Breakdown ─────────────────────────────────────── -->
+<div class="card shadow-sm border-0 d-none mb-3" id="jumpstart-card">
+  <div class="card-header bg-white border-0 py-2">
+    <span class="fw-semibold small"><i class="bi bi-stack me-1"></i><span id="jumpstart-title">Jumpstart Deck Breakdown</span></span>
+    <span class="text-muted small ms-2" id="jumpstart-price-date"></span>
+  </div>
+  <div class="card-body" id="jumpstart-summary-body"></div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 small">
+      <thead class="table-light">
+        <tr><th class="ps-3">Deck</th><th>Color</th><th>Matched / Total</th><th class="text-end">Total Value</th><th class="text-end pe-3">After Fees</th></tr>
+      </thead>
+      <tbody id="jumpstart-tbody"></tbody>
+      <tfoot class="table-light">
+        <tr class="fw-bold">
+          <td class="ps-3" colspan="3">Average per Deck (EV per Pack)</td>
+          <td class="text-end" id="jumpstart-avg-gross">—</td>
+          <td class="text-end pe-3" id="jumpstart-avg-net">—</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  <div class="card-body pt-2 small text-muted" id="jumpstart-notes"></div>
+</div>
+
 <!-- ── Card Lists by Rarity ─────────────────────────────────────────── -->
 <div class="d-none" id="card-lists">
   <h5 class="fw-semibold mb-3"><i class="bi bi-list-ul me-2 text-primary"></i>Card Prices by Category</h5>
@@ -247,6 +272,9 @@
 
 {{ define "page-scripts" }}
 <script>
+  // ── Embedded jumpstart half-deck data (Hugo data/jumpstart-decks.json) ──
+  window.JUMPSTART_DECKS = {{ (index .Site.Data "jumpstart-decks") | jsonify | safeJS }};
+
   // ── Globals ─────────────────────────────────────────────────────────
   let allCards = [], allPullRates = [], allSealed = [], allPackSlots = [], allDeckLists = [];
   let priceMap = new Map();
@@ -594,7 +622,7 @@
   }
 
   function hideResults() {
-    for (const id of ['ev-card','box-card','slot-card','sim-card','strategies-section','card-lists','excluded-card','ev-notes']) hide(id);
+    for (const id of ['ev-card','box-card','slot-card','sim-card','strategies-section','card-lists','excluded-card','ev-notes','jumpstart-card']) hide(id);
     const simRes = document.getElementById('sim-results');
     if (simRes) simRes.classList.add('d-none');
   }
@@ -766,6 +794,12 @@
     if (!game || !setCode) { hideResults(); return; }
 
     const allSetCards = allCards.filter(c => c.game === game && c.set_code === setCode);
+
+    // ── Jumpstart (random half-deck) products ─────────────────────────
+    if (/jumpstart/.test(productType) && hasJumpstartDecks(game, setCode, productType)) {
+      computeJumpstartEV(game, setCode, productType, allSetCards);
+      return;
+    }
 
     // ── Fixed-contents products (precons, box sets) ───────────────────
     if (isFixedContents(game, setCode, productType)) {
@@ -1078,6 +1112,147 @@
     cachedSlots = [];
     cachedPools = null;
     cachedProduct = null;
+  }
+
+  // ── Jumpstart (random half-deck) EV ─────────────────────────────────
+  function hasJumpstartDecks(game, setCode, productType) {
+    const decks = (window.JUMPSTART_DECKS?.decks) || [];
+    return decks.some(d => d.game === game && d.set_code === setCode && d.product_type === productType);
+  }
+
+  function computeJumpstartEV(game, setCode, productType, allSetCards) {
+    const sift = getSiftFloor();
+    const feeName = document.getElementById('opt-fees').value;
+    const feeLabel = feeName !== 'none' ? ` (after ${feeName === 'custom' ? 'custom' : feeName} fees)` : '';
+    const siftLabel = sift > 0 ? ` | sift $${sift.toFixed(2)}` : '';
+
+    // Normalize name → candidate cards map (same name may have multiple treatments)
+    const norm = n => String(n || '').trim().toLowerCase().replace(/\u2019/g, "'");
+    const byName = new Map();
+    for (const c of allSetCards) {
+      const k = norm(c.name);
+      if (!byName.has(k)) byName.set(k, []);
+      byName.get(k).push(c);
+    }
+
+    const decks = (window.JUMPSTART_DECKS?.decks || []).filter(d =>
+      d.game === game && d.set_code === setCode && d.product_type === productType);
+
+    let priceDate = null;
+    const deckRows = decks.map(d => {
+      let gross = 0, net = 0, matched = 0, total = 0;
+      const missing = [];
+      const details = [];
+      for (const entry of d.cards) {
+        const qty = entry.qty || 1;
+        total += qty;
+        const key = norm(entry.name);
+        const candidates = byName.get(key) || [];
+        // Pick candidate with the lowest known price (base printing typically)
+        let best = null, bestPrice = null;
+        for (const c of candidates) {
+          const p = getPrice(c);
+          if (best === null) { best = c; bestPrice = p; continue; }
+          if (p != null && (bestPrice == null || p < bestPrice)) { best = c; bestPrice = p; }
+        }
+        if (best && bestPrice != null) {
+          matched += qty;
+          const effective = bestPrice >= sift ? bestPrice : 0;
+          const perCardNet = applyFees(effective);
+          gross += effective * qty;
+          net += perCardNet * qty;
+          if (!priceDate) { const pd = priceMap.get(String(best.tcgplayer_id)); if (pd) priceDate = pd.date; }
+          details.push({ name: entry.name, qty, price: bestPrice, effective, net: perCardNet, missing: false });
+        } else {
+          missing.push(entry.name);
+          details.push({ name: entry.name, qty, price: null, effective: 0, net: 0, missing: true });
+        }
+      }
+      return { deck: d, gross, net, matched, total, missing, details };
+    });
+
+    deckRows.sort((a, b) => b.net - a.net);
+
+    const totalGross = deckRows.reduce((s, r) => s + r.gross, 0);
+    const totalNet   = deckRows.reduce((s, r) => s + r.net,   0);
+    const avgGross   = deckRows.length ? totalGross / deckRows.length : 0;
+    const avgNet     = deckRows.length ? totalNet   / deckRows.length : 0;
+
+    const product = allSealed.find(p => p.game === game && p.set_code === setCode && p.product_type === productType);
+    const packsPerBox = product?.packs_per_product || 0;
+    const boxEvNet = avgNet * packsPerBox;
+    const boxCost  = parseFloat(document.getElementById('opt-box-cost').value) || 0;
+    const boxMkt   = product ? priceMap.get(String(product.tcgplayer_id)) : null;
+
+    document.getElementById('jumpstart-title').textContent =
+      `Jumpstart Deck Breakdown — ${fmtPT(productType)}${feeLabel}${siftLabel}`;
+    document.getElementById('jumpstart-price-date').textContent = priceDate ? `Prices as of ${priceDate}` : '';
+
+    let stats = `<div class="row g-3 text-center">
+      <div class="col"><div class="text-muted small">Decks</div><div class="fs-5 fw-bold">${deckRows.length}</div></div>
+      <div class="col"><div class="text-muted small">Avg Deck Value</div><div class="fs-5 fw-bold text-primary">${fmtUSD(avgGross)}</div></div>
+      <div class="col"><div class="text-muted small">Avg After Fees</div><div class="fs-5 fw-bold text-success">${fmtUSD(avgNet)}</div></div>`;
+    if (packsPerBox) stats += `<div class="col"><div class="text-muted small">Packs / Box</div><div class="fs-5 fw-bold">${packsPerBox}</div></div>
+      <div class="col"><div class="text-muted small">Box EV (net)</div><div class="fs-5 fw-bold text-success">${fmtUSD(boxEvNet)}</div></div>`;
+    if (boxMkt) stats += `<div class="col"><div class="text-muted small">Box Market</div><div class="fs-5 fw-bold">${fmtUSD(boxMkt.market_price)}</div></div>`;
+    stats += `<div class="col"><div class="text-muted small">Box Cost</div><div class="fs-5 fw-bold">${fmtUSD(boxCost)}</div></div>
+    </div>`;
+    if (boxCost > 0 && packsPerBox) {
+      const ratio = boxEvNet / boxCost;
+      const profit = boxEvNet - boxCost;
+      stats += `<div class="text-center mt-2"><span class="badge fs-6 px-3 py-2 ${ratio >= 1 ? 'bg-success' : 'bg-danger'}">Value Ratio: ${ratio.toFixed(2)}x (${profit >= 0 ? '+' : ''}${fmtUSD(profit)} per box)</span></div>`;
+    }
+    document.getElementById('jumpstart-summary-body').innerHTML = stats;
+
+    const COLOR_BADGE = {
+      W: { cls: 'bg-light text-dark border', label: 'White' },
+      U: { cls: 'bg-primary',                 label: 'Blue'  },
+      B: { cls: 'bg-dark',                    label: 'Black' },
+      R: { cls: 'bg-danger',                  label: 'Red'   },
+      G: { cls: 'bg-success',                 label: 'Green' },
+      M: { cls: 'bg-warning text-dark',       label: 'Multicolor' },
+    };
+
+    const tbodyHTML = deckRows.map((r, idx) => {
+      const collapseId = `jump-deck-${idx}`;
+      const c = COLOR_BADGE[r.deck.color] || { cls: 'bg-secondary', label: r.deck.color || '—' };
+      const unmatchedBadge = r.missing.length
+        ? ` <span class="text-warning small" title="${esc(r.missing.join(', '))}">(${r.missing.length} unmatched)</span>`
+        : '';
+      const header = `<tr style="cursor:pointer" data-bs-toggle="collapse" data-bs-target=".${collapseId}">
+        <td class="ps-3 fw-medium">${esc(r.deck.deck_name)} <i class="bi bi-chevron-down small text-muted"></i></td>
+        <td><span class="badge ${c.cls}">${esc(c.label)}</span></td>
+        <td>${r.matched} / ${r.total}${unmatchedBadge}</td>
+        <td class="text-end">${fmtUSD(r.gross)}</td>
+        <td class="text-end pe-3 fw-medium">${fmtUSD(r.net)}</td></tr>`;
+      const detailHTML = r.details
+        .slice()
+        .sort((a, b) => (b.price || 0) - (a.price || 0))
+        .map(cd => `<tr class="collapse ${collapseId}">
+          <td class="ps-4 small">${esc(cd.name)}${cd.qty > 1 ? ` <span class="text-muted">×${cd.qty}</span>` : ''}</td>
+          <td></td>
+          <td class="small ${cd.missing ? 'text-danger' : 'text-muted'}">${cd.missing ? 'not in catalog' : (cd.price != null ? fmtUSD(cd.price) : '—')}</td>
+          <td class="text-end small">${fmtUSD(cd.effective * cd.qty)}</td>
+          <td class="text-end pe-3 small">${fmtUSD(cd.net * cd.qty)}</td></tr>`).join('');
+      return header + detailHTML;
+    }).join('');
+    document.getElementById('jumpstart-tbody').innerHTML = tbodyHTML;
+    document.getElementById('jumpstart-avg-gross').textContent = fmtUSD(avgGross);
+    document.getElementById('jumpstart-avg-net').textContent   = fmtUSD(avgNet);
+
+    // Notes
+    const notes = [];
+    notes.push(`Each pack is one random half-deck; EV per pack = average across ${deckRows.length} decks.`);
+    const totalUnmatched = deckRows.reduce((s, r) => s + r.missing.length, 0);
+    if (totalUnmatched > 0) notes.push(`${totalUnmatched} card reference(s) didn't match the catalog — basic lands and typed tokens commonly have no TCGPlayer price. Edit <code>data/jumpstart-decks.json</code> to correct names.`);
+    if (sift > 0) notes.push(`Cards under $${sift.toFixed(2)} treated as $0 (sift threshold).`);
+    if (feeName !== 'none') { const f = getFeeConfig(); notes.push(`Fees applied: ${f.pct}%${f.flat ? ` + $${f.flat.toFixed(2)}` : ''} per card.`); }
+    document.getElementById('jumpstart-notes').innerHTML = notes.map(n => `<div>${n}</div>`).join('');
+
+    show('jumpstart-card');
+    cachedSlots = [];
+    cachedPools = null;
+    cachedProduct = product || null;
   }
 
   // ── Card list rendering ─────────────────────────────────────────────
