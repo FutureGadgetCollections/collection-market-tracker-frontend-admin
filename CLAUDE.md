@@ -243,16 +243,50 @@ The slot 11 (rare_leader) and slot 12 (hit_slot) EV calculations for One Piece s
 - Compare against known box break data to validate
 - Check if leader cards are being double-counted (slot 11 leader rate + slot 12 leader rate)
 
-### Self-hosted PostgreSQL database (TODO)
+### PG-primary migration (TODO — MAJOR, scoped 2026-04-13)
 
-Goal: host a PostgreSQL instance on Proxmox as the primary DB for frontends, with BQ as source of truth and backup.
+**Goal:** flip the data layer so Postgres on the homelab is the source of truth; BQ becomes an eventually-consistent analytics/backup replica fed from a PG outbox. ML tables stay BQ-only.
 
-- BQ is source of truth; PG is synced on every BQ write (dual-write from Go API)
-- Tables to mirror: `catalog.sealed_products`, `catalog.single_cards`, `catalog.set_pull_rates`, `catalog.pack_slots`, `market_data.tcgplayer_price_history`, `market_data.pricecharting_price_history`, `market_data.set_market_metrics`
-- ML tables (`ml_price_features_sealed`) stay in BQ only
-- Go API queries PG primarily; Cloud Run fallback still hits BQ
-- PG schema should match BQ grain/column names exactly for easy sync
-- Steps: design PG schema DDL → add PG dual-write to Go API → initial backfill from BQ → update frontend data source priority
+**Why:** cost reduction (aligns with homeserver-primary/Cloud Run-fallback direction already underway), faster read path for the admin + public frontends, removes BQ from the hot path for CRUD.
+
+**Tables to mirror in PG** (catalog + market_data, skip ML):
+- `catalog.sealed_products`, `catalog.single_cards`, `catalog.set_pull_rates`, `catalog.pack_slots`, `catalog.precon_deck_lists`
+- `market_data.tcgplayer_price_history`, `market_data.pricecharting_price_history`, `market_data.set_market_metrics`, `market_data.graded_price_history`, `market_data.ev_set_history`, `market_data.psa_population_history`
+- **Stay BQ-only:** `ml_price_features_sealed`, all views (recreate as needed in PG)
+
+**Phased plan:**
+
+1. **Stand up PG on Proxmox** — Postgres 16 LXC/VM, roles `app_rw` / `app_ro` / `sync_worker`, nightly `pg_dump` → `gs://collection-tracker-data/pg-backups/`, Cloudflare Tunnel for Cloud Run reachability, `postgres_exporter` + Grafana.
+2. **Schema mirror** — single migration committed to backend repo. Types: `NUMERIC(12,4)` for prices, `DATE`/`TIMESTAMPTZ`, native range partitioning on big history tables by date. Composite PKs match BQ grain exactly.
+3. **Initial backfill (BQ → PG, one-shot)** — per table: `bq extract` → GCS Parquet → `COPY` to staging → `INSERT ON CONFLICT DO NOTHING`. Row-count + PK-hash parity check per table.
+4. **Forward sync (BQ primary, PG read replica)** — hourly `sync_worker` reads BQ since watermark, upserts to PG. Tables needing an `ingested_ts` column get one added. Validate PG and BQ return identical results before moving on.
+5. **Flip writers in this order** (low → high risk):
+   1. Go API CRUD endpoints (sealed-products, single-cards, set-pull-rates, EV approval) — write PG + outbox in one tx; keep GCS/data-repo publish unchanged.
+   2. `set-market-metrics` job (canary — smallest)
+   3. `ev-history` job
+   4. `pricecharting-scraper` job (monthly)
+   5. `tcgplayer-price-scraper` job (highest volume, last)
+6. **Reverse sync (PG → BQ, outbox-driven)** — `outbox(id, table_name, pk JSONB, row JSONB, op, created_at, synced_at)`. Go worker batches `WHERE synced_at IS NULL` → GCS staging file → BQ `LOAD` → mark synced. 7-day retention. Lag target <5 min.
+7. **Cut reads** — Go API swaps BQ client for `pgx`. Frontends unchanged (still read published static JSON). Recreate views (`ev_card_prices`, `ev_set_summary`, `latest_tcgplayer_prices`) in PG.
+8. **BQ as backup + analytics only** — no direct job writes; only the outbox worker writes BQ. `pg_dump` is the restore path; BQ is the analytics/ML path.
+
+**Files to create/touch (backend repo):**
+- `scripts/pg_migration/01_schema.sql` — DDL
+- `scripts/pg_migration/02_backfill.py` — BQ extract → PG COPY
+- `scripts/pg_sync/forward_sync.py` — Phase 4 BQ→PG watermark sync
+- `internal/db/pg.go` — pgx pool, query helpers
+- `internal/store/{sealed,cards,pullrates,...}.go` — swap BQ for PG, add outbox writes
+- `scripts/tcgplayer_prices/*.py`, `scripts/set_market_metrics/*.py`, `scripts/ev_history/*.py`, `scripts/pricecharting_scraper/*.py` — PG MERGE + outbox
+- `cmd/bq_sync_worker/main.go` — Phase 6 outbox → BQ
+
+**Risks to watch:**
+- Outbox + tx boundaries: PG write and outbox append must share a transaction, or BQ will drift. Alternative is logical replication (more setup, zero drift).
+- Schema evolution now requires 3 changes (PG DDL, BQ DDL, sync worker) — document the rule.
+- View parity: `latest_tcgplayer_prices` in PG needs a materialized view refreshed post-scrape, or a regular view with an index on `(tcgplayer_id, date DESC)`.
+- Publish race (PG write succeeds, GCS/data-repo publish fails) already exists with BQ today — consider a retry queue alongside the outbox.
+- Proxmox node down = writes blocked. Pairs with the nginx API fallback + Cloud Run job heartbeat patterns already in the cost-reduction TODO; ensure Cloud Run jobs can still write to BQ directly when PG is unreachable (emergency path).
+
+**Rough scope:** 2–3 weekends for eventual-consistency BQ sync; ~1 week+ for near-real-time or dual-write-with-failover.
 
 ### Expected Value (EV) tab — admin panel (IN PROGRESS)
 

@@ -236,6 +236,7 @@
     <span class="text-muted small ms-2" id="jumpstart-price-date"></span>
   </div>
   <div class="card-body" id="jumpstart-summary-body"></div>
+  <div class="card-body pt-0 pb-2 d-none" id="jumpstart-themes"></div>
   <div class="table-responsive">
     <table class="table table-hover align-middle mb-0 small">
       <thead class="table-light">
@@ -356,9 +357,18 @@
   }
 
   // ── Data loading ────────────────────────────────────────────────────
+  // Backend only exposes GET endpoints for admin-editable catalog tables — derived
+  // JSON (latest prices, pack slots, precon deck lists) only lives in GCS/GitHub.
+  const API_BACKED_FILES = new Set([
+    'data/single-cards.json',
+    'data/sealed-products.json',
+    'data/set-pull-rates.json',
+  ]);
   function fetchDataFile(source, file) {
-    if (source === 'api') return api('GET', '/' + file.replace('data/', '').replace('.json', ''));
-    if (source === 'gcs') return loadFromGCS(file);
+    if (source === 'api' && API_BACKED_FILES.has(file)) {
+      return api('GET', '/' + file.replace('data/', '').replace('.json', ''));
+    }
+    if (source === 'gcs' || source === 'api') return loadFromGCS(file);
     return loadJsonData(file);
   }
 
@@ -907,7 +917,12 @@
 
     // ── Jumpstart (random half-deck) products ─────────────────────────
     if (/jumpstart/.test(productType) && hasJumpstartDecks(game, setCode, productType)) {
-      computeJumpstartEV(game, setCode, productType, allSetCards);
+      // Jumpstart half-decks often pull from sibling sets (e.g. MTG tla + tle Eternal).
+      // card_sources config (optional) in jumpstart-decks.json expands the card pool.
+      const key = `${game}/${setCode}/${productType}`;
+      const sources = (window.JUMPSTART_DECKS?.card_sources?.[key]) || [setCode];
+      const pool = allCards.filter(c => c.game === game && sources.includes(c.set_code));
+      computeJumpstartEV(game, setCode, productType, pool);
       return;
     }
 
@@ -1230,7 +1245,42 @@
     return decks.some(d => d.game === game && d.set_code === setCode && d.product_type === productType);
   }
 
+  // Basic lands are filler in every jumpstart half-deck — skip from matching and totals.
+  // Includes MTG TLA's themed "X Appa" basic-land variants.
+  const JUMPSTART_BASIC_LANDS = new Set([
+    'plains','island','swamp','mountain','forest','wastes',
+    'plains appa','island appa','swamp appa','mountain appa','forest appa',
+  ]);
+
+  // Per-card printing pin (localStorage) — lets the user pick which treatment to price.
+  function jumpstartPinKey(game, setCode, productType, normName) {
+    return `jumpstart-pin:${game}/${setCode}/${productType}/${normName}`;
+  }
+  function getJumpstartPin(game, setCode, productType, normName) {
+    try { return localStorage.getItem(jumpstartPinKey(game, setCode, productType, normName)); }
+    catch { return null; }
+  }
+  function setJumpstartPin(game, setCode, productType, normName, tcgId) {
+    try {
+      const k = jumpstartPinKey(game, setCode, productType, normName);
+      if (tcgId) localStorage.setItem(k, String(tcgId)); else localStorage.removeItem(k);
+    } catch {}
+  }
+  // Called inline from the picker dropdown (reads dataset attrs from the <select>).
+  window.jumpstartPickPrint = function(selectEl) {
+    const { game, set, pt, norm } = selectEl.dataset;
+    setJumpstartPin(game, set, pt, norm, selectEl.value || null);
+    const cards = window._jumpstartSetCards;
+    if (cards) computeJumpstartEV(game, set, pt, cards);
+  };
+
+  // Derive theme from deck_name by stripping " (Version N)" — same theme = multiple deck listings.
+  function jumpstartTheme(deckName) {
+    return String(deckName || '').replace(/\s*\(Version\s*\d+\)\s*$/i, '').trim();
+  }
+
   function computeJumpstartEV(game, setCode, productType, allSetCards) {
+    window._jumpstartSetCards = allSetCards; // cache for picker callbacks
     const sift = getSiftFloor();
     const feeName = document.getElementById('opt-fees').value;
     const feeLabel = feeName !== 'none' ? ` (after ${feeName === 'custom' ? 'custom' : feeName} fees)` : '';
@@ -1254,16 +1304,24 @@
       const missing = [];
       const details = [];
       for (const entry of d.cards) {
+        const key = norm(entry.name);
+        if (JUMPSTART_BASIC_LANDS.has(key)) continue; // basic lands don't contribute to EV
         const qty = entry.qty || 1;
         total += qty;
-        const key = norm(entry.name);
         const candidates = byName.get(key) || [];
-        // Pick candidate with the lowest known price (base printing typically)
+        // If the user pinned a specific printing, prefer it; else pick the cheapest priced candidate.
+        const pinnedId = getJumpstartPin(game, setCode, productType, key);
         let best = null, bestPrice = null;
-        for (const c of candidates) {
-          const p = getPrice(c);
-          if (best === null) { best = c; bestPrice = p; continue; }
-          if (p != null && (bestPrice == null || p < bestPrice)) { best = c; bestPrice = p; }
+        if (pinnedId) {
+          const pick = candidates.find(c => String(c.tcgplayer_id) === pinnedId);
+          if (pick) { best = pick; bestPrice = getPrice(pick); }
+        }
+        if (!best) {
+          for (const c of candidates) {
+            const p = getPrice(c);
+            if (best === null) { best = c; bestPrice = p; continue; }
+            if (p != null && (bestPrice == null || p < bestPrice)) { best = c; bestPrice = p; }
+          }
         }
         if (best && bestPrice != null) {
           matched += qty;
@@ -1272,10 +1330,10 @@
           gross += effective * qty;
           net += perCardNet * qty;
           if (!priceDate) { const pd = priceMap.get(String(best.tcgplayer_id)); if (pd) priceDate = pd.date; }
-          details.push({ name: entry.name, qty, price: bestPrice, effective, net: perCardNet, missing: false });
+          details.push({ name: entry.name, normName: key, qty, price: bestPrice, effective, net: perCardNet, missing: false, best, candidates });
         } else {
           missing.push(entry.name);
-          details.push({ name: entry.name, qty, price: null, effective: 0, net: 0, missing: true });
+          details.push({ name: entry.name, normName: key, qty, price: null, effective: 0, net: 0, missing: true, best: null, candidates });
         }
       }
       return { deck: d, gross, net, matched, total, missing, details };
@@ -1338,23 +1396,111 @@
       const detailHTML = r.details
         .slice()
         .sort((a, b) => (b.price || 0) - (a.price || 0))
-        .map(cd => `<tr class="collapse ${collapseId}">
-          <td class="ps-4 small">${esc(cd.name)}${cd.qty > 1 ? ` <span class="text-muted">×${cd.qty}</span>` : ''}</td>
-          <td></td>
-          <td class="small ${cd.missing ? 'text-danger' : 'text-muted'}">${cd.missing ? 'not in catalog' : (cd.price != null ? fmtUSD(cd.price) : '—')}</td>
-          <td class="text-end small">${fmtUSD(cd.effective * cd.qty)}</td>
-          <td class="text-end pe-3 small">${fmtUSD(cd.net * cd.qty)}</td></tr>`).join('');
+        .map(cd => {
+          // Name cell: link to TCGPlayer when matched; "Add to catalog" link when missing.
+          let nameCell;
+          if (cd.best && cd.best.tcgplayer_id) {
+            const tcgUrl = `https://www.tcgplayer.com/product/${encodeURIComponent(cd.best.tcgplayer_id)}`;
+            nameCell = `<a href="${tcgUrl}" target="_blank" rel="noopener" title="Open on TCGPlayer">${esc(cd.name)}<i class="bi bi-box-arrow-up-right ms-1 small"></i></a>`;
+          } else if (cd.missing) {
+            const addUrl = `${window.location.origin}/single-cards/?add=1&game=${encodeURIComponent(game)}&set_code=${encodeURIComponent(setCode)}&name=${encodeURIComponent(cd.name)}`;
+            nameCell = `${esc(cd.name)} <a href="${addUrl}" target="_blank" rel="noopener" class="small ms-1" title="Add to single_cards catalog"><i class="bi bi-plus-circle"></i> add</a>`;
+          } else {
+            nameCell = esc(cd.name);
+          }
+          const qtyBadge = cd.qty > 1 ? ` <span class="text-muted">×${cd.qty}</span>` : '';
+
+          // Printing picker when multiple candidate treatments exist for this name.
+          let picker = '';
+          if (!cd.missing && cd.candidates && cd.candidates.length > 1) {
+            const pinned = getJumpstartPin(game, setCode, productType, cd.normName) || '';
+            const opts = cd.candidates.map(c => {
+              const p = getPrice(c);
+              const label = `#${c.card_number}${c.treatment && c.treatment !== 'base' ? ' · ' + c.treatment : ''} — ${p != null ? fmtUSD(p) : 'no price'}`;
+              const sel = String(c.tcgplayer_id) === String(pinned) ? ' selected' : '';
+              return `<option value="${c.tcgplayer_id}"${sel}>${esc(label)}</option>`;
+            }).join('');
+            const autoSel = pinned ? '' : ' selected';
+            const escA = s => esc(s).replace(/"/g, '&quot;');
+            picker = `<select class="form-select form-select-sm d-inline-block ms-2" style="width:auto;max-width:260px;font-size:0.75rem"
+                        data-game="${escA(game)}" data-set="${escA(setCode)}" data-pt="${escA(productType)}" data-norm="${escA(cd.normName)}"
+                        onchange="jumpstartPickPrint(this)"
+                        onclick="event.stopPropagation()"
+                        title="Pick which printing to price">
+                        <option value=""${autoSel}>auto (cheapest)</option>${opts}
+                      </select>`;
+          }
+
+          const priceCell = cd.missing
+            ? `<span class="text-danger">not in catalog</span>`
+            : (cd.price != null ? fmtUSD(cd.price) : '—');
+
+          return `<tr class="collapse ${collapseId}">
+            <td class="ps-4 small">${nameCell}${qtyBadge}${picker}</td>
+            <td></td>
+            <td class="small ${cd.missing ? 'text-danger' : 'text-muted'}">${priceCell}</td>
+            <td class="text-end small">${fmtUSD(cd.effective * cd.qty)}</td>
+            <td class="text-end pe-3 small">${fmtUSD(cd.net * cd.qty)}</td></tr>`;
+        }).join('');
       return header + detailHTML;
     }).join('');
     document.getElementById('jumpstart-tbody').innerHTML = tbodyHTML;
     document.getElementById('jumpstart-avg-gross').textContent = fmtUSD(avgGross);
     document.getElementById('jumpstart-avg-net').textContent   = fmtUSD(avgNet);
 
+    // Theme breakdown: each pack draws one deck listing uniformly, so themes with multiple
+    // versions are proportionally more likely. Show probability + avg value per theme.
+    const themesEl = document.getElementById('jumpstart-themes');
+    const themeMap = new Map();
+    for (const r of deckRows) {
+      const t = jumpstartTheme(r.deck.deck_name);
+      if (!themeMap.has(t)) themeMap.set(t, { theme: t, versions: 0, sumNet: 0, color: r.deck.color });
+      const e = themeMap.get(t);
+      e.versions += 1;
+      e.sumNet += r.net;
+    }
+    const themes = [...themeMap.values()]
+      .map(e => ({ ...e, avgNet: e.versions ? e.sumNet / e.versions : 0, prob: deckRows.length ? e.versions / deckRows.length : 0 }))
+      .sort((a, b) => b.prob - a.prob || b.avgNet - a.avgNet);
+    const multiCount = themes.filter(t => t.versions > 1).length;
+    if (themes.length) {
+      const themeRows = themes.map(t => {
+        const c = COLOR_BADGE[t.color] || { cls: 'bg-secondary', label: t.color || '—' };
+        const multi = t.versions > 1 ? ` <span class="badge bg-info-subtle text-info-emphasis">${t.versions}×</span>` : '';
+        return `<tr>
+          <td class="ps-3">${esc(t.theme)}${multi}</td>
+          <td><span class="badge ${c.cls}">${esc(c.label)}</span></td>
+          <td class="text-muted">${t.versions} version${t.versions > 1 ? 's' : ''}</td>
+          <td class="text-muted">${(t.prob * 100).toFixed(2)}%</td>
+          <td class="text-end pe-3">${fmtUSD(t.avgNet)}</td>
+        </tr>`;
+      }).join('');
+      themesEl.innerHTML = `
+        <details>
+          <summary class="small text-muted" style="cursor:pointer">
+            <i class="bi bi-diagram-3 me-1"></i>Theme breakdown — ${themes.length} themes${multiCount ? `, ${multiCount} with multiple versions` : ''}
+            <span class="text-muted">(expand)</span>
+          </summary>
+          <div class="table-responsive mt-2">
+            <table class="table table-sm align-middle mb-0 small">
+              <thead class="table-light">
+                <tr><th class="ps-3">Theme</th><th>Color</th><th>Versions</th><th>Pack Probability</th><th class="text-end pe-3">Avg Deck Value (net)</th></tr>
+              </thead>
+              <tbody>${themeRows}</tbody>
+            </table>
+          </div>
+          <div class="small text-muted mt-1 ps-3">Each pack contains one random deck listing. Themes with multiple versions are proportionally more likely to appear.</div>
+        </details>`;
+      themesEl.classList.remove('d-none');
+    } else {
+      themesEl.classList.add('d-none');
+    }
+
     // Notes
     const notes = [];
-    notes.push(`Each pack is one random half-deck; EV per pack = average across ${deckRows.length} decks.`);
+    notes.push(`Each pack is one random deck listing; EV per pack = average across ${deckRows.length} listings. Basic lands (Plains, Island, Swamp, Mountain, Forest) are excluded.`);
     const totalUnmatched = deckRows.reduce((s, r) => s + r.missing.length, 0);
-    if (totalUnmatched > 0) notes.push(`${totalUnmatched} card reference(s) didn't match the catalog — basic lands and typed tokens commonly have no TCGPlayer price. Edit <code>data/jumpstart-decks.json</code> to correct names.`);
+    if (totalUnmatched > 0) notes.push(`${totalUnmatched} non-land card reference(s) didn't match the catalog — use the "add" link on each row to add the card, or edit <code>data/jumpstart-decks.json</code> to fix a typo.`);
     if (sift > 0) notes.push(`Cards under $${sift.toFixed(2)} treated as $0 (sift threshold).`);
     if (feeName !== 'none') { const f = getFeeConfig(); notes.push(`Fees applied: ${f.pct}%${f.flat ? ` + $${f.flat.toFixed(2)}` : ''} per card.`); }
     document.getElementById('jumpstart-notes').innerHTML = notes.map(n => `<div>${n}</div>`).join('');

@@ -1,1273 +1,4592 @@
 {
-  "_comment": "Half-deck contents for fixed-theme jumpstart products. Each pack is one random deck. Card names are matched (case-insensitive) against single_cards.name within (game, set_code). Edit freely — no TCGPlayer product IDs are used.",
+  "_comment": "Half-deck contents for fixed-theme jumpstart products. Each pack is one random deck. Card names are matched (case-insensitive) against single_cards.name within (game, set_code). Edit freely â€” no TCGPlayer product IDs are used.",
+  "card_sources": {
+    "mtg/tla/jumpstart-booster-box": [
+      "tla",
+      "tle"
+    ]
+  },
   "decks": [
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Aang", "color": "W",
-      "cards": [
-        { "name": "Momo, Rambunctious Rascal", "qty": 1 },
-        { "name": "Kindly Customer", "qty": 1 },
-        { "name": "Invasion Reinforcements", "qty": 1 },
-        { "name": "Water Tribe Captain", "qty": 1 },
-        { "name": "Koala-Sheep", "qty": 1 },
-        { "name": "Kyoshi Warriors", "qty": 1 },
-        { "name": "Aang, Airbending Master", "qty": 1 },
-        { "name": "Appa, Loyal Sky Bison", "qty": 1 },
-        { "name": "Cloudshift", "qty": 1 },
-        { "name": "Enter the Avatar State", "qty": 1 },
-        { "name": "Path to Redemption", "qty": 1 },
-        { "name": "Airbending Lesson", "qty": 1 },
-        { "name": "Thriving Heath", "qty": 1 },
-        { "name": "Plains", "qty": 6 },
-        { "name": "Plains Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Swordmaster", "color": "W",
-      "cards": [
-        { "name": "Earth Kingdom Protectors", "qty": 1 },
-        { "name": "Kyoshi Battle Fan", "qty": 1 },
-        { "name": "Inspired Insurgent", "qty": 1 },
-        { "name": "Sokka, Swordmaster", "qty": 1 },
-        { "name": "Glider Kids", "qty": 1 },
-        { "name": "Aardvark Sloth", "qty": 1 },
-        { "name": "Master Piandao", "qty": 1 },
-        { "name": "Trusty Boomerang", "qty": 1 },
-        { "name": "Sokka's Sword Training", "qty": 1 },
-        { "name": "Razor Rings", "qty": 1 },
-        { "name": "Duelist's Heritage", "qty": 1 },
-        { "name": "Meteor Sword", "qty": 1 },
-        { "name": "Thriving Heath", "qty": 1 },
-        { "name": "Plains", "qty": 6 },
-        { "name": "Plains Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Airbending", "color": "W",
-      "cards": [
-        { "name": "Jeong Jeong's Deserters", "qty": 1 },
-        { "name": "Invasion Reinforcements", "qty": 1 },
-        { "name": "Glider Kids", "qty": 1 },
-        { "name": "Koala-Sheep", "qty": 1 },
-        { "name": "Monk Gyatso", "qty": 1 },
-        { "name": "Aang, the Last Airbender", "qty": 1 },
-        { "name": "Rabaroo Troop", "qty": 1 },
-        { "name": "Appa, Loyal Sky Bison", "qty": 1 },
-        { "name": "Airbender Ascension", "qty": 1 },
-        { "name": "Path to Redemption", "qty": 1 },
-        { "name": "Airbending Lesson", "qty": 1 },
-        { "name": "Airbender's Reversal", "qty": 1 },
-        { "name": "Thriving Heath", "qty": 1 },
-        { "name": "Plains", "qty": 6 },
-        { "name": "Plains Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Freedom Fighters", "color": "W",
-      "cards": [
-        { "name": "The Duke, Rebel Sentry", "qty": 1 },
-        { "name": "Jeong Jeong's Deserters", "qty": 1 },
-        { "name": "Inspired Insurgent", "qty": 1 },
-        { "name": "Toucan-Puffin", "qty": 1 },
-        { "name": "Pipsqueak, Rebel Strongarm", "qty": 1 },
-        { "name": "Jet, Rebel Leader", "qty": 1 },
-        { "name": "Wandering Musicians", "qty": 1 },
-        { "name": "Rabaroo Troop", "qty": 1 },
-        { "name": "Acrobatic Leap", "qty": 1 },
-        { "name": "Path to Redemption", "qty": 1 },
-        { "name": "Valorous Stance", "qty": 1 },
-        { "name": "Hook Swords", "qty": 1 },
-        { "name": "Thriving Heath", "qty": 1 },
-        { "name": "Plains", "qty": 6 },
-        { "name": "Plains Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Warriors", "color": "W",
-      "cards": [
-        { "name": "Kyoshi Warrior Guard", "qty": 1 },
-        { "name": "Invasion Reinforcements", "qty": 1 },
-        { "name": "Kyoshi Battle Fan", "qty": 1 },
-        { "name": "Toucan-Puffin", "qty": 1 },
-        { "name": "Sokka, Lateral Strategist", "qty": 1 },
-        { "name": "Suki, Kyoshi Captain", "qty": 1 },
-        { "name": "Kyoshi Warriors", "qty": 1 },
-        { "name": "Rabaroo Troop", "qty": 1 },
-        { "name": "Path to Redemption", "qty": 1 },
-        { "name": "Sokka's Sword Training", "qty": 1 },
-        { "name": "Valorous Stance", "qty": 1 },
-        { "name": "Team Avatar", "qty": 1 },
-        { "name": "Thriving Heath", "qty": 1 },
-        { "name": "Plains", "qty": 6 },
-        { "name": "Plains Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Hei Bai (Version 1)", "color": "W",
-      "cards": [
-        { "name": "Invasion Reinforcements", "qty": 1 },
-        { "name": "Pretending Poxbearers", "qty": 1 },
-        { "name": "Aang, A Lot to Learn", "qty": 1 },
-        { "name": "Koala-Sheep", "qty": 1 },
-        { "name": "Suki, Courageous Rescuer", "qty": 1 },
-        { "name": "Vengeful Villagers", "qty": 1 },
-        { "name": "Hei Bai, Spirit of Balance", "qty": 1 },
-        { "name": "Rabaroo Troop", "qty": 1 },
-        { "name": "Acrobatic Leap", "qty": 1 },
-        { "name": "Path to Redemption", "qty": 1 },
-        { "name": "That's Rough Buddy", "qty": 1 },
-        { "name": "Sandbenders' Storm", "qty": 1 },
-        { "name": "Thriving Heath", "qty": 1 },
-        { "name": "Plains", "qty": 6 },
-        { "name": "Plains Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Hei Bai (Version 2)", "color": "W",
-      "cards": [
-        { "name": "Curious Farm Animals", "qty": 1 },
-        { "name": "Jeong Jeong's Deserters", "qty": 1 },
-        { "name": "Pretending Poxbearers", "qty": 1 },
-        { "name": "Aang, A Lot to Learn", "qty": 1 },
-        { "name": "Suki, Courageous Rescuer", "qty": 1 },
-        { "name": "Aardvark Sloth", "qty": 1 },
-        { "name": "Hei Bai, Spirit of Balance", "qty": 1 },
-        { "name": "Rabaroo Troop", "qty": 1 },
-        { "name": "Sokka's Sword Training", "qty": 1 },
-        { "name": "Path to Redemption", "qty": 1 },
-        { "name": "That's Rough Buddy", "qty": 1 },
-        { "name": "Destined Confrontation", "qty": 1 },
-        { "name": "Thriving Heath", "qty": 1 },
-        { "name": "Plains", "qty": 6 },
-        { "name": "Plains Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Gliding (Version 1)", "color": "W",
-      "cards": [
-        { "name": "Momo, Friendly Flier", "qty": 1 },
-        { "name": "Kindly Customer", "qty": 1 },
-        { "name": "Toucan-Puffin", "qty": 1 },
-        { "name": "Koala-Sheep", "qty": 1 },
-        { "name": "Air Nomad Student", "qty": 1 },
-        { "name": "Aang, the Last Airbender", "qty": 1 },
-        { "name": "Rabaroo Troop", "qty": 1 },
-        { "name": "Appa, Loyal Sky Bison", "qty": 1 },
-        { "name": "Yip Yip!", "qty": 1 },
-        { "name": "Path to Redemption", "qty": 1 },
-        { "name": "Airbending Lesson", "qty": 1 },
-        { "name": "Glider Staff", "qty": 1 },
-        { "name": "Thriving Heath", "qty": 1 },
-        { "name": "Plains", "qty": 6 },
-        { "name": "Plains Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Gliding (Version 2)", "color": "W",
-      "cards": [
-        { "name": "Momo, Friendly Flier", "qty": 1 },
-        { "name": "Jeong Jeong's Deserters", "qty": 1 },
-        { "name": "Inspired Insurgent", "qty": 1 },
-        { "name": "Glider Kids", "qty": 1 },
-        { "name": "Water Tribe Captain", "qty": 1 },
-        { "name": "Air Nomad Student", "qty": 1 },
-        { "name": "Aang, the Last Airbender", "qty": 1 },
-        { "name": "Appa, Loyal Sky Bison", "qty": 1 },
-        { "name": "Yip Yip!", "qty": 1 },
-        { "name": "Path to Redemption", "qty": 1 },
-        { "name": "Tale of Momo", "qty": 1 },
-        { "name": "Glider Staff", "qty": 1 },
-        { "name": "Thriving Heath", "qty": 1 },
-        { "name": "Plains", "qty": 6 },
-        { "name": "Plains Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Insurgent (Version 1)", "color": "W",
-      "cards": [
-        { "name": "Momo, Rambunctious Rascal", "qty": 1 },
-        { "name": "Inspired Insurgent", "qty": 1 },
-        { "name": "Jeong Jeong's Deserters", "qty": 1 },
-        { "name": "Invasion Reinforcements", "qty": 1 },
-        { "name": "Glider Kids", "qty": 1 },
-        { "name": "Kyoshi Warriors", "qty": 1 },
-        { "name": "Aang, the Last Airbender", "qty": 1 },
-        { "name": "Appa, Loyal Sky Bison", "qty": 1 },
-        { "name": "Razor Rings", "qty": 1 },
-        { "name": "Stand United", "qty": 1 },
-        { "name": "Airbender's Reversal", "qty": 1 },
-        { "name": "Tale of Momo", "qty": 1 },
-        { "name": "Thriving Heath", "qty": 1 },
-        { "name": "Plains", "qty": 6 },
-        { "name": "Plains Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Insurgent (Version 2)", "color": "W",
-      "cards": [
-        { "name": "Momo, Rambunctious Rascal", "qty": 1 },
-        { "name": "Inspired Insurgent", "qty": 1 },
-        { "name": "Kyoshi Warrior Guard", "qty": 1 },
-        { "name": "Sokka, Lateral Strategist", "qty": 1 },
-        { "name": "Glider Kids", "qty": 1 },
-        { "name": "Kyoshi Warriors", "qty": 1 },
-        { "name": "Hakoda, Selfless Commander", "qty": 1 },
-        { "name": "Appa, Loyal Sky Bison", "qty": 1 },
-        { "name": "Path to Redemption", "qty": 1 },
-        { "name": "Stand United", "qty": 1 },
-        { "name": "That's Rough Buddy", "qty": 1 },
-        { "name": "Duelist's Heritage", "qty": 1 },
-        { "name": "Thriving Heath", "qty": 1 },
-        { "name": "Plains", "qty": 6 },
-        { "name": "Plains Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Alliance (Version 1)", "color": "W",
-      "cards": [
-        { "name": "The Duke, Rebel Sentry", "qty": 1 },
-        { "name": "South Pole Voyager", "qty": 1 },
-        { "name": "Kyoshi Warrior Guard", "qty": 1 },
-        { "name": "Glider Kids", "qty": 1 },
-        { "name": "Sokka, Lateral Strategist", "qty": 1 },
-        { "name": "Kyoshi Warriors", "qty": 1 },
-        { "name": "Suki, Kyoshi Warrior", "qty": 1 },
-        { "name": "Jet, Freedom Fighter", "qty": 1 },
-        { "name": "Mechanical Glider", "qty": 1 },
-        { "name": "Sokka's Sword Training", "qty": 1 },
-        { "name": "Path to Redemption", "qty": 1 },
-        { "name": "Fancy Footwork", "qty": 1 },
-        { "name": "Thriving Heath", "qty": 1 },
-        { "name": "Plains", "qty": 6 },
-        { "name": "Plains Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Alliance (Version 2)", "color": "W",
-      "cards": [
-        { "name": "The Duke, Rebel Sentry", "qty": 1 },
-        { "name": "South Pole Voyager", "qty": 1 },
-        { "name": "Inspired Insurgent", "qty": 1 },
-        { "name": "Glider Kids", "qty": 1 },
-        { "name": "Sokka, Lateral Strategist", "qty": 1 },
-        { "name": "Kyoshi Warriors", "qty": 1 },
-        { "name": "Suki, Kyoshi Warrior", "qty": 1 },
-        { "name": "Jet, Rebel Leader", "qty": 1 },
-        { "name": "Mechanical Glider", "qty": 1 },
-        { "name": "Acrobatic Leap", "qty": 1 },
-        { "name": "Razor Rings", "qty": 1 },
-        { "name": "Fancy Footwork", "qty": 1 },
-        { "name": "Thriving Heath", "qty": 1 },
-        { "name": "Plains", "qty": 6 },
-        { "name": "Plains Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Katara", "color": "U",
-      "cards": [
-        { "name": "Gran-Gran", "qty": 1 },
-        { "name": "Master Pakku", "qty": 1 },
-        { "name": "Katara, Waterbending Master", "qty": 1 },
-        { "name": "Rowdy Snowballers", "qty": 1 },
-        { "name": "Sokka, Lateral Strategist", "qty": 1 },
-        { "name": "Turtle-Seals", "qty": 1 },
-        { "name": "Geyser Leaper", "qty": 1 },
-        { "name": "Consider", "qty": 1 },
-        { "name": "Watery Grasp", "qty": 1 },
-        { "name": "Octopus Form", "qty": 1 },
-        { "name": "It'll Quench Ya!", "qty": 1 },
-        { "name": "Sokka's Haiku", "qty": 1 },
-        { "name": "Thriving Isle", "qty": 1 },
-        { "name": "Island", "qty": 6 },
-        { "name": "Island Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Librarian", "color": "U",
-      "cards": [
-        { "name": "Professor Zei, Anthropologist", "qty": 1 },
-        { "name": "Suspicious Bookcase", "qty": 1 },
-        { "name": "Knowledge Seeker", "qty": 1 },
-        { "name": "Dutiful Knowledge Seeker", "qty": 1 },
-        { "name": "Wan Shi Tong, All-Knowing", "qty": 1 },
-        { "name": "Giant Koi", "qty": 1 },
-        { "name": "Brainstorm", "qty": 1 },
-        { "name": "Octopus Form", "qty": 1 },
-        { "name": "Accumulate Wisdom", "qty": 1 },
-        { "name": "Lost in the Spirit World", "qty": 1 },
-        { "name": "Waterbending Lesson", "qty": 1 },
-        { "name": "Zuko's Exile", "qty": 1 },
-        { "name": "Thriving Isle", "qty": 1 },
-        { "name": "Island", "qty": 6 },
-        { "name": "Island Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Spirit", "color": "U",
-      "cards": [
-        { "name": "Flying Dolphin-Fish", "qty": 1 },
-        { "name": "Benevolent River Spirit", "qty": 1 },
-        { "name": "Knowledge Seeker", "qty": 1 },
-        { "name": "Dutiful Knowledge Seeker", "qty": 1 },
-        { "name": "Baboon Spirit", "qty": 1 },
-        { "name": "Flexible Waterbender", "qty": 1 },
-        { "name": "Giant Koi", "qty": 1 },
-        { "name": "Octopus Form", "qty": 1 },
-        { "name": "Dramatic Reversal", "qty": 1 },
-        { "name": "It'll Quench Ya!", "qty": 1 },
-        { "name": "Lost in the Spirit World", "qty": 1 },
-        { "name": "The Spirit Oasis", "qty": 1 },
-        { "name": "Thriving Isle", "qty": 1 },
-        { "name": "Island", "qty": 6 },
-        { "name": "Island Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Underwater", "color": "U",
-      "cards": [
-        { "name": "Flying Dolphin-Fish", "qty": 1 },
-        { "name": "Invasion Submersible", "qty": 1 },
-        { "name": "Rowdy Snowballers", "qty": 1 },
-        { "name": "Turtle-Seals", "qty": 1 },
-        { "name": "Tui and La, Moon and Ocean", "qty": 1 },
-        { "name": "Giant Koi", "qty": 1 },
-        { "name": "Serpent of the Pass", "qty": 1 },
-        { "name": "Unagi's Spray", "qty": 1 },
-        { "name": "Octopus Form", "qty": 1 },
-        { "name": "Honest Work", "qty": 1 },
-        { "name": "Coastal Piracy", "qty": 1 },
-        { "name": "White Lotus Hideout", "qty": 1 },
-        { "name": "Thriving Isle", "qty": 1 },
-        { "name": "Island", "qty": 6 },
-        { "name": "Island Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Adaptive", "color": "U",
-      "cards": [
-        { "name": "Glider Kids", "qty": 1 },
-        { "name": "Kyoshi Battle Fan", "qty": 1 },
-        { "name": "Rowdy Snowballers", "qty": 1 },
-        { "name": "Katara, Bending Prodigy", "qty": 1 },
-        { "name": "Princess Yue", "qty": 1 },
-        { "name": "The Blue Spirit", "qty": 1 },
-        { "name": "Teo, Spirited Glider", "qty": 1 },
-        { "name": "Giant Koi", "qty": 1 },
-        { "name": "Boomerang Basics", "qty": 1 },
-        { "name": "Frantic Search", "qty": 1 },
-        { "name": "Lost in the Spirit World", "qty": 1 },
-        { "name": "Waterbending Lesson", "qty": 1 },
-        { "name": "Thriving Isle", "qty": 1 },
-        { "name": "Island", "qty": 6 },
-        { "name": "Island Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Wise (Version 1)", "color": "U",
-      "cards": [
-        { "name": "Gran-Gran", "qty": 1 },
-        { "name": "Forecasting Fortune Teller", "qty": 1 },
-        { "name": "Otter-Penguin", "qty": 1 },
-        { "name": "Katara, Bending Prodigy", "qty": 1 },
-        { "name": "Rowdy Snowballers", "qty": 1 },
-        { "name": "Messenger Hawk", "qty": 1 },
-        { "name": "Turtle-Seals", "qty": 1 },
-        { "name": "Consider", "qty": 1 },
-        { "name": "Waterbender's Restoration", "qty": 1 },
-        { "name": "Waterbending Lesson", "qty": 1 },
-        { "name": "Coastal Piracy", "qty": 1 },
-        { "name": "Whirlwind Technique", "qty": 1 },
-        { "name": "Thriving Isle", "qty": 1 },
-        { "name": "Island", "qty": 6 },
-        { "name": "Island Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Wise (Version 2)", "color": "U",
-      "cards": [
-        { "name": "Tiger-Seal", "qty": 1 },
-        { "name": "Otter-Penguin", "qty": 1 },
-        { "name": "Knowledge Seeker", "qty": 1 },
-        { "name": "Sokka, Lateral Strategist", "qty": 1 },
-        { "name": "Rowdy Snowballers", "qty": 1 },
-        { "name": "Messenger Hawk", "qty": 1 },
-        { "name": "Turtle-Seals", "qty": 1 },
-        { "name": "The Blue Spirit", "qty": 1 },
-        { "name": "Consider", "qty": 1 },
-        { "name": "It'll Quench Ya!", "qty": 1 },
-        { "name": "Sokka's Haiku", "qty": 1 },
-        { "name": "Whirlwind Technique", "qty": 1 },
-        { "name": "Thriving Isle", "qty": 1 },
-        { "name": "Island", "qty": 6 },
-        { "name": "Island Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Soaring (Version 1)", "color": "U",
-      "cards": [
-        { "name": "Flying Dolphin-Fish", "qty": 1 },
-        { "name": "Forecasting Fortune Teller", "qty": 1 },
-        { "name": "Messenger Hawk", "qty": 1 },
-        { "name": "Sokka, Lateral Strategist", "qty": 1 },
-        { "name": "The Mechanist, Aerial Artisan", "qty": 1 },
-        { "name": "Teo, Spirited Glider", "qty": 1 },
-        { "name": "Cat-Owl", "qty": 1 },
-        { "name": "Giant Koi", "qty": 1 },
-        { "name": "Watery Grasp", "qty": 1 },
-        { "name": "Mechanical Glider", "qty": 1 },
-        { "name": "Boomerang Basics", "qty": 1 },
-        { "name": "Sokka's Haiku", "qty": 1 },
-        { "name": "Thriving Isle", "qty": 1 },
-        { "name": "Island", "qty": 6 },
-        { "name": "Island Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Soaring (Version 2)", "color": "U",
-      "cards": [
-        { "name": "Flying Dolphin-Fish", "qty": 1 },
-        { "name": "Benevolent River Spirit", "qty": 1 },
-        { "name": "Messenger Hawk", "qty": 1 },
-        { "name": "Sokka, Lateral Strategist", "qty": 1 },
-        { "name": "Teo, Spirited Glider", "qty": 1 },
-        { "name": "Cat-Owl", "qty": 1 },
-        { "name": "Yue, the Moon Spirit", "qty": 1 },
-        { "name": "Giant Koi", "qty": 1 },
-        { "name": "Watery Grasp", "qty": 1 },
-        { "name": "Octopus Form", "qty": 1 },
-        { "name": "Boomerang Basics", "qty": 1 },
-        { "name": "Frantic Search", "qty": 1 },
-        { "name": "Thriving Isle", "qty": 1 },
-        { "name": "Island", "qty": 6 },
-        { "name": "Island Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Adept (Version 1)", "color": "U",
-      "cards": [
-        { "name": "Professor Zei, Anthropologist", "qty": 1 },
-        { "name": "Forecasting Fortune Teller", "qty": 1 },
-        { "name": "Katara, Bending Prodigy", "qty": 1 },
-        { "name": "Iguana Parrot", "qty": 1 },
-        { "name": "Turtle-Seals", "qty": 1 },
-        { "name": "Giant Koi", "qty": 1 },
-        { "name": "Serpent of the Pass", "qty": 1 },
-        { "name": "Unagi's Spray", "qty": 1 },
-        { "name": "Dramatic Reversal", "qty": 1 },
-        { "name": "Crashing Wave", "qty": 1 },
-        { "name": "Nightmares and Daydreams", "qty": 1 },
-        { "name": "Waterbending Lesson", "qty": 1 },
-        { "name": "Thriving Isle", "qty": 1 },
-        { "name": "Island", "qty": 6 },
-        { "name": "Island Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Adept (Version 2)", "color": "U",
-      "cards": [
-        { "name": "Professor Zei, Anthropologist", "qty": 1 },
-        { "name": "Master Pakku", "qty": 1 },
-        { "name": "Katara, Bending Prodigy", "qty": 1 },
-        { "name": "Iguana Parrot", "qty": 1 },
-        { "name": "Teo, Spirited Glider", "qty": 1 },
-        { "name": "Geyser Leaper", "qty": 1 },
-        { "name": "Serpent of the Pass", "qty": 1 },
-        { "name": "Octopus Form", "qty": 1 },
-        { "name": "Consider", "qty": 1 },
-        { "name": "Nightmares and Daydreams", "qty": 1 },
-        { "name": "Waterbending Lesson", "qty": 1 },
-        { "name": "Lost Days", "qty": 1 },
-        { "name": "Thriving Isle", "qty": 1 },
-        { "name": "Island", "qty": 6 },
-        { "name": "Island Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Lessons (Version 1)", "color": "U",
-      "cards": [
-        { "name": "Gran-Gran", "qty": 1 },
-        { "name": "Glider Kids", "qty": 1 },
-        { "name": "Platypus-Bear", "qty": 1 },
-        { "name": "Iguana Parrot", "qty": 1 },
-        { "name": "Katara, Seeking Revenge", "qty": 1 },
-        { "name": "Giant Koi", "qty": 1 },
-        { "name": "Octopus Form", "qty": 1 },
-        { "name": "Boomerang Basics", "qty": 1 },
-        { "name": "Accumulate Wisdom", "qty": 1 },
-        { "name": "It'll Quench Ya!", "qty": 1 },
-        { "name": "Chakra Meditation", "qty": 1 },
-        { "name": "Whirlwind Technique", "qty": 1 },
-        { "name": "Thriving Isle", "qty": 1 },
-        { "name": "Island", "qty": 6 },
-        { "name": "Island Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Lessons (Version 2)", "color": "U",
-      "cards": [
-        { "name": "Gran-Gran", "qty": 1 },
-        { "name": "Master Pakku", "qty": 1 },
-        { "name": "Platypus-Bear", "qty": 1 },
-        { "name": "Iguana Parrot", "qty": 1 },
-        { "name": "Katara, Seeking Revenge", "qty": 1 },
-        { "name": "Geyser Leaper", "qty": 1 },
-        { "name": "Octopus Form", "qty": 1 },
-        { "name": "Accumulate Wisdom", "qty": 1 },
-        { "name": "Chakra Meditation", "qty": 1 },
-        { "name": "Waterbending Lesson", "qty": 1 },
-        { "name": "Lost Days", "qty": 1 },
-        { "name": "Whirlwind Technique", "qty": 1 },
-        { "name": "Thriving Isle", "qty": 1 },
-        { "name": "Island", "qty": 6 },
-        { "name": "Island Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Azula", "color": "B",
-      "cards": [
-        { "name": "Dai Li Censor", "qty": 1 },
-        { "name": "Corrupt Court Official", "qty": 1 },
-        { "name": "Fire Nation Ambushers", "qty": 1 },
-        { "name": "Fire Navy Trebuchet", "qty": 1 },
-        { "name": "Azula, Ruthless Firebender", "qty": 1 },
-        { "name": "Lo and Li, Twin Tutors", "qty": 1 },
-        { "name": "Canyon Crawler", "qty": 1 },
-        { "name": "Sold Out", "qty": 1 },
-        { "name": "Azula Always Lies", "qty": 1 },
-        { "name": "Dai Li Indoctrination", "qty": 1 },
-        { "name": "Epic Downfall", "qty": 1 },
-        { "name": "Dark Deal", "qty": 1 },
-        { "name": "Thriving Moor", "qty": 1 },
-        { "name": "Swamp", "qty": 6 },
-        { "name": "Swamp Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Ozai", "color": "B",
-      "cards": [
-        { "name": "Callous Inspector", "qty": 1 },
-        { "name": "Corrupt Court Official", "qty": 1 },
-        { "name": "Fire Nation Ambushers", "qty": 1 },
-        { "name": "Fire Navy Trebuchet", "qty": 1 },
-        { "name": "Fire Lord Ozai", "qty": 1 },
-        { "name": "Zhao, Ruthless Admiral", "qty": 1 },
-        { "name": "Beetle-Headed Merchants", "qty": 1 },
-        { "name": "Canyon Crawler", "qty": 1 },
-        { "name": "Heartless Act", "qty": 1 },
-        { "name": "Ozai's Cruelty", "qty": 1 },
-        { "name": "Scarring Memories", "qty": 1 },
-        { "name": "Deadly Precision", "qty": 1 },
-        { "name": "Thriving Moor", "qty": 1 },
-        { "name": "Swamp", "qty": 6 },
-        { "name": "Swamp Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Nightmares", "color": "B",
-      "cards": [
-        { "name": "Purple Pentapus", "qty": 1 },
-        { "name": "Pretending Poxbearers", "qty": 1 },
-        { "name": "Joo Dee, One of Many", "qty": 1 },
-        { "name": "Pirate Peddlers", "qty": 1 },
-        { "name": "Azula, On the Hunt", "qty": 1 },
-        { "name": "Hei Bai, Spirit of Balance", "qty": 1 },
-        { "name": "Canyon Crawler", "qty": 1 },
-        { "name": "Koh, the Face Stealer", "qty": 1 },
-        { "name": "Zuko's Conviction", "qty": 1 },
-        { "name": "Desperate Plea", "qty": 1 },
-        { "name": "Ruinous Waterbending", "qty": 1 },
-        { "name": "Deadly Precision", "qty": 1 },
-        { "name": "Thriving Moor", "qty": 1 },
-        { "name": "Swamp", "qty": 6 },
-        { "name": "Swamp Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Bad Advice", "color": "B",
-      "cards": [
-        { "name": "Gilacorn", "qty": 1 },
-        { "name": "Dai Li Censor", "qty": 1 },
-        { "name": "Corrupt Court Official", "qty": 1 },
-        { "name": "Joo Dee, One of Many", "qty": 1 },
-        { "name": "Long Feng, Grand Secretariat", "qty": 1 },
-        { "name": "Fire Nation Ambushers", "qty": 1 },
-        { "name": "Lo and Li, Royal Advisors", "qty": 1 },
-        { "name": "Hama, the Bloodbender", "qty": 1 },
-        { "name": "Sold Out", "qty": 1 },
-        { "name": "Dai Li Indoctrination", "qty": 1 },
-        { "name": "Ozai's Cruelty", "qty": 1 },
-        { "name": "Deadly Precision", "qty": 1 },
-        { "name": "Thriving Moor", "qty": 1 },
-        { "name": "Swamp", "qty": 6 },
-        { "name": "Swamp Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Siege Engines", "color": "B",
-      "cards": [
-        { "name": "Callous Inspector", "qty": 1 },
-        { "name": "Merchant of Many Hats", "qty": 1 },
-        { "name": "Pretending Poxbearers", "qty": 1 },
-        { "name": "Fire Nation Engineer", "qty": 1 },
-        { "name": "Fire Navy Trebuchet", "qty": 1 },
-        { "name": "Fire Nation Warship", "qty": 1 },
-        { "name": "Tundra Tank", "qty": 1 },
-        { "name": "The Fire Nation Drill", "qty": 1 },
-        { "name": "Beetle-Headed Merchants", "qty": 1 },
-        { "name": "Canyon Crawler", "qty": 1 },
-        { "name": "Heartless Act", "qty": 1 },
-        { "name": "Deadly Precision", "qty": 1 },
-        { "name": "Thriving Moor", "qty": 1 },
-        { "name": "Swamp", "qty": 6 },
-        { "name": "Swamp Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Bounty Hunter (Version 1)", "color": "B",
-      "cards": [
-        { "name": "Purple Pentapus", "qty": 1 },
-        { "name": "Pretending Poxbearers", "qty": 1 },
-        { "name": "June, Bounty Hunter", "qty": 1 },
-        { "name": "Pirate Peddlers", "qty": 1 },
-        { "name": "Giant Fly", "qty": 1 },
-        { "name": "Azula, On the Hunt", "qty": 1 },
-        { "name": "Beetle-Headed Merchants", "qty": 1 },
-        { "name": "Nyla, Shirshu Sleuth", "qty": 1 },
-        { "name": "Sold Out", "qty": 1 },
-        { "name": "Zuko's Conviction", "qty": 1 },
-        { "name": "Bastion of Remembrance", "qty": 1 },
-        { "name": "Deadly Precision", "qty": 1 },
-        { "name": "Thriving Moor", "qty": 1 },
-        { "name": "Swamp", "qty": 6 },
-        { "name": "Swamp Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Bounty Hunter (Version 2)", "color": "B",
-      "cards": [
-        { "name": "Callous Inspector", "qty": 1 },
-        { "name": "Pretending Poxbearers", "qty": 1 },
-        { "name": "June, Bounty Hunter", "qty": 1 },
-        { "name": "Pirate Peddlers", "qty": 1 },
-        { "name": "Fire Navy Trebuchet", "qty": 1 },
-        { "name": "Azula, On the Hunt", "qty": 1 },
-        { "name": "Zhao, Ruthless Admiral", "qty": 1 },
-        { "name": "Nyla, Shirshu Sleuth", "qty": 1 },
-        { "name": "Sold Out", "qty": 1 },
-        { "name": "Obsessive Pursuit", "qty": 1 },
-        { "name": "Bastion of Remembrance", "qty": 1 },
-        { "name": "Deadly Precision", "qty": 1 },
-        { "name": "Thriving Moor", "qty": 1 },
-        { "name": "Swamp", "qty": 6 },
-        { "name": "Swamp Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Relentless (Version 1)", "color": "B",
-      "cards": [
-        { "name": "Purple Pentapus", "qty": 1 },
-        { "name": "Merchant of Many Hats", "qty": 1 },
-        { "name": "Ruthless Waterbender", "qty": 1 },
-        { "name": "Pirate Peddlers", "qty": 1 },
-        { "name": "Fire Nation Ambushers", "qty": 1 },
-        { "name": "Azula, On the Hunt", "qty": 1 },
-        { "name": "Buzzard-Wasp Colony", "qty": 1 },
-        { "name": "Canyon Crawler", "qty": 1 },
-        { "name": "Sold Out", "qty": 1 },
-        { "name": "Azula Always Lies", "qty": 1 },
-        { "name": "Heartless Act", "qty": 1 },
-        { "name": "Fire Nation Occupation", "qty": 1 },
-        { "name": "Thriving Moor", "qty": 1 },
-        { "name": "Swamp", "qty": 6 },
-        { "name": "Swamp Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Relentless (Version 2)", "color": "B",
-      "cards": [
-        { "name": "Callous Inspector", "qty": 1 },
-        { "name": "Merchant of Many Hats", "qty": 1 },
-        { "name": "Joo Dee, One of Many", "qty": 1 },
-        { "name": "Fire Nation Ambushers", "qty": 1 },
-        { "name": "Azula, On the Hunt", "qty": 1 },
-        { "name": "Zhao, Ruthless Admiral", "qty": 1 },
-        { "name": "Beetle-Headed Merchants", "qty": 1 },
-        { "name": "Canyon Crawler", "qty": 1 },
-        { "name": "Azula Always Lies", "qty": 1 },
-        { "name": "Heartless Act", "qty": 1 },
-        { "name": "Fire Nation Occupation", "qty": 1 },
-        { "name": "Deadly Precision", "qty": 1 },
-        { "name": "Thriving Moor", "qty": 1 },
-        { "name": "Swamp", "qty": 6 },
-        { "name": "Swamp Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Reinforced (Version 1)", "color": "B",
-      "cards": [
-        { "name": "Callous Inspector", "qty": 1 },
-        { "name": "Elephant-Rat", "qty": 1 },
-        { "name": "Long Feng, Grand Secretariat", "qty": 1 },
-        { "name": "Hog-Monkey", "qty": 1 },
-        { "name": "Zuko, Seeking Honor", "qty": 1 },
-        { "name": "Buzzard-Wasp Colony", "qty": 1 },
-        { "name": "Fire Nation Salvagers", "qty": 1 },
-        { "name": "Beetle-Headed Merchants", "qty": 1 },
-        { "name": "Azula Always Lies", "qty": 1 },
-        { "name": "Dai Li Indoctrination", "qty": 1 },
-        { "name": "Epic Downfall", "qty": 1 },
-        { "name": "Feed the Swarm", "qty": 1 },
-        { "name": "Thriving Moor", "qty": 1 },
-        { "name": "Swamp", "qty": 6 },
-        { "name": "Swamp Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Reinforced (Version 2)", "color": "B",
-      "cards": [
-        { "name": "Gilacorn", "qty": 1 },
-        { "name": "Elephant-Rat", "qty": 1 },
-        { "name": "Hog-Monkey", "qty": 1 },
-        { "name": "Long Feng, Grand Secretariat", "qty": 1 },
-        { "name": "Earth Village Ruffians", "qty": 1 },
-        { "name": "Zuko, Seeking Honor", "qty": 1 },
-        { "name": "Buzzard-Wasp Colony", "qty": 1 },
-        { "name": "Fire Nation Salvagers", "qty": 1 },
-        { "name": "Fatal Fissure", "qty": 1 },
-        { "name": "Dai Li Indoctrination", "qty": 1 },
-        { "name": "Heartless Act", "qty": 1 },
-        { "name": "Deadly Precision", "qty": 1 },
-        { "name": "Thriving Moor", "qty": 1 },
-        { "name": "Swamp", "qty": 6 },
-        { "name": "Swamp Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Hunting (Version 1)", "color": "B",
-      "cards": [
-        { "name": "Purple Pentapus", "qty": 1 },
-        { "name": "Elephant-Rat", "qty": 1 },
-        { "name": "June, Bounty Hunter", "qty": 1 },
-        { "name": "Raven Eagle", "qty": 1 },
-        { "name": "Messenger Hawk", "qty": 1 },
-        { "name": "Katara, Seeking Revenge", "qty": 1 },
-        { "name": "Foggy Swamp Hunters", "qty": 1 },
-        { "name": "Beetle-Headed Merchants", "qty": 1 },
-        { "name": "Desperate Plea", "qty": 1 },
-        { "name": "Epic Downfall", "qty": 1 },
-        { "name": "Diresight", "qty": 1 },
-        { "name": "Deadly Precision", "qty": 1 },
-        { "name": "Thriving Moor", "qty": 1 },
-        { "name": "Swamp", "qty": 6 },
-        { "name": "Swamp Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Hunting (Version 2)", "color": "B",
-      "cards": [
-        { "name": "Gilacorn", "qty": 1 },
-        { "name": "Ruthless Waterbender", "qty": 1 },
-        { "name": "June, Bounty Hunter", "qty": 1 },
-        { "name": "Raven Eagle", "qty": 1 },
-        { "name": "Messenger Hawk", "qty": 1 },
-        { "name": "Katara, Seeking Revenge", "qty": 1 },
-        { "name": "Foggy Swamp Hunters", "qty": 1 },
-        { "name": "Beetle-Headed Merchants", "qty": 1 },
-        { "name": "Azula Always Lies", "qty": 1 },
-        { "name": "Swampsnare Trap", "qty": 1 },
-        { "name": "Diresight", "qty": 1 },
-        { "name": "Deadly Precision", "qty": 1 },
-        { "name": "Thriving Moor", "qty": 1 },
-        { "name": "Swamp", "qty": 6 },
-        { "name": "Swamp Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Zuko", "color": "R",
-      "cards": [
-        { "name": "Yuyan Archers", "qty": 1 },
-        { "name": "Zuko, Firebending Master", "qty": 1 },
-        { "name": "Mai, Jaded Edge", "qty": 1 },
-        { "name": "War Balloon", "qty": 1 },
-        { "name": "Dragon Moose", "qty": 1 },
-        { "name": "Fire Nation Attacks", "qty": 1 },
-        { "name": "Mongoose Lizard", "qty": 1 },
-        { "name": "Frantic Confrontation", "qty": 1 },
-        { "name": "Firebending Lesson", "qty": 1 },
-        { "name": "Fists of Flame", "qty": 1 },
-        { "name": "Lightning Strike", "qty": 1 },
-        { "name": "Lost in Memories", "qty": 1 },
-        { "name": "Thriving Bluff", "qty": 1 },
-        { "name": "Mountain", "qty": 6 },
-        { "name": "Mountain Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Roku", "color": "R",
-      "cards": [
-        { "name": "Yuyan Archers", "qty": 1 },
-        { "name": "Fire Sages", "qty": 1 },
-        { "name": "Boar-q-pine", "qty": 1 },
-        { "name": "Loyal Fire Sage", "qty": 1 },
-        { "name": "Jeong Jeong, the Deserter", "qty": 1 },
-        { "name": "Fang, Roku's Companion", "qty": 1 },
-        { "name": "Avatar Roku, Firebender", "qty": 1 },
-        { "name": "Firebending Lesson", "qty": 1 },
-        { "name": "Frantic Confrontation", "qty": 1 },
-        { "name": "Roku's Mastery", "qty": 1 },
-        { "name": "Crescent Island Temple", "qty": 1 },
-        { "name": "White Lotus Hideout", "qty": 1 },
-        { "name": "Thriving Bluff", "qty": 1 },
-        { "name": "Mountain", "qty": 6 },
-        { "name": "Mountain Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Iroh", "color": "R",
-      "cards": [
-        { "name": "Deserter's Disciple", "qty": 1 },
-        { "name": "Tiger-Dillo", "qty": 1 },
-        { "name": "Boar-q-pine", "qty": 1 },
-        { "name": "Zuko, Seeking Honor", "qty": 1 },
-        { "name": "Jeong Jeong, the Deserter", "qty": 1 },
-        { "name": "Iroh, Dragon of the West", "qty": 1 },
-        { "name": "Mongoose Lizard", "qty": 1 },
-        { "name": "Firebending Lesson", "qty": 1 },
-        { "name": "Iroh's Demonstration", "qty": 1 },
-        { "name": "Cathartic Reunion", "qty": 1 },
-        { "name": "Bolt Bend", "qty": 1 },
-        { "name": "Fiery Confluence", "qty": 1 },
-        { "name": "Thriving Bluff", "qty": 1 },
-        { "name": "Mountain", "qty": 6 },
-        { "name": "Mountain Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Fire Nation", "color": "R",
-      "cards": [
-        { "name": "Firebending Student", "qty": 1 },
-        { "name": "Mai, Jaded Edge", "qty": 1 },
-        { "name": "Ty Lee, Artful Acrobat", "qty": 1 },
-        { "name": "Zuko, Seeking Honor", "qty": 1 },
-        { "name": "Longshot, Rebel Bowman", "qty": 1 },
-        { "name": "Fire Nation Attacks", "qty": 1 },
-        { "name": "Firebending Lesson", "qty": 1 },
-        { "name": "Cunning Maneuver", "qty": 1 },
-        { "name": "Fists of Flame", "qty": 1 },
-        { "name": "Lightning Strike", "qty": 1 },
-        { "name": "How to Start a Riot", "qty": 1 },
-        { "name": "Storm of Memories", "qty": 1 },
-        { "name": "Thriving Bluff", "qty": 1 },
-        { "name": "Mountain", "qty": 6 },
-        { "name": "Mountain Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Musicians", "color": "R",
-      "cards": [
-        { "name": "Freedom Fighter Recruit", "qty": 1 },
-        { "name": "Moku, Meandering Drummer", "qty": 1 },
-        { "name": "Ty Lee, Artful Acrobat", "qty": 1 },
-        { "name": "Founding of Omashu", "qty": 1 },
-        { "name": "Wandering Musicians", "qty": 1 },
-        { "name": "Chong and Lily, Nomads", "qty": 1 },
-        { "name": "Rough Rhino Cavalry", "qty": 1 },
-        { "name": "Mongoose Lizard", "qty": 1 },
-        { "name": "Explosive Shot", "qty": 1 },
-        { "name": "Cunning Maneuver", "qty": 1 },
-        { "name": "Bumi Bash", "qty": 1 },
-        { "name": "The Cave of Two Lovers", "qty": 1 },
-        { "name": "Thriving Bluff", "qty": 1 },
-        { "name": "Secret Tunnel", "qty": 1 },
-        { "name": "Mountain", "qty": 5 },
-        { "name": "Mountain Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Rebelling (Version 1)", "color": "R",
-      "cards": [
-        { "name": "Freedom Fighter Recruit", "qty": 1 },
-        { "name": "Yuyan Archers", "qty": 1 },
-        { "name": "Treetop Freedom Fighters", "qty": 1 },
-        { "name": "Zuko, Seeking Honor", "qty": 1 },
-        { "name": "Longshot, Rebel Bowman", "qty": 1 },
-        { "name": "Smellerbee, Rebel Fighter", "qty": 1 },
-        { "name": "Jet, Freedom Fighter", "qty": 1 },
-        { "name": "Fire Nation Attacks", "qty": 1 },
-        { "name": "Explosive Shot", "qty": 1 },
-        { "name": "Cunning Maneuver", "qty": 1 },
-        { "name": "How to Start a Riot", "qty": 1 },
-        { "name": "Bumi Bash", "qty": 1 },
-        { "name": "Thriving Bluff", "qty": 1 },
-        { "name": "Mountain", "qty": 6 },
-        { "name": "Mountain Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Rebelling (Version 2)", "color": "R",
-      "cards": [
-        { "name": "Freedom Fighter Recruit", "qty": 1 },
-        { "name": "Deserter's Disciple", "qty": 1 },
-        { "name": "Treetop Freedom Fighters", "qty": 1 },
-        { "name": "Zuko, Seeking Honor", "qty": 1 },
-        { "name": "Hook Swords", "qty": 1 },
-        { "name": "Longshot, Rebel Bowman", "qty": 1 },
-        { "name": "Smellerbee, Rebel Fighter", "qty": 1 },
-        { "name": "Jet, Freedom Fighter", "qty": 1 },
-        { "name": "Explosive Shot", "qty": 1 },
-        { "name": "Run Amok", "qty": 1 },
-        { "name": "How to Start a Riot", "qty": 1 },
-        { "name": "Overwhelming Victory", "qty": 1 },
-        { "name": "Thriving Bluff", "qty": 1 },
-        { "name": "Mountain", "qty": 6 },
-        { "name": "Mountain Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Firebending (Version 1)", "color": "R",
-      "cards": [
-        { "name": "Fire Nation Cadets", "qty": 1 },
-        { "name": "Fire Sages", "qty": 1 },
-        { "name": "Firebender Ascension", "qty": 1 },
-        { "name": "Loyal Fire Sage", "qty": 1 },
-        { "name": "Jeong Jeong, the Deserter", "qty": 1 },
-        { "name": "Zuko, Exiled Prince", "qty": 1 },
-        { "name": "Dragon Moose", "qty": 1 },
-        { "name": "Firebending Lesson", "qty": 1 },
-        { "name": "Roku's Mastery", "qty": 1 },
-        { "name": "Cunning Maneuver", "qty": 1 },
-        { "name": "Lightning Strike", "qty": 1 },
-        { "name": "Reckless Blaze", "qty": 1 },
-        { "name": "Thriving Bluff", "qty": 1 },
-        { "name": "Mountain", "qty": 6 },
-        { "name": "Mountain Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Firebending (Version 2)", "color": "R",
-      "cards": [
-        { "name": "Fire Nation Cadets", "qty": 1 },
-        { "name": "Moku, Meandering Drummer", "qty": 1 },
-        { "name": "Yuyan Archers", "qty": 1 },
-        { "name": "Loyal Fire Sage", "qty": 1 },
-        { "name": "Jeong Jeong, the Deserter", "qty": 1 },
-        { "name": "Zuko, Exiled Prince", "qty": 1 },
-        { "name": "Rough Rhino Cavalry", "qty": 1 },
-        { "name": "Fire Nation Attacks", "qty": 1 },
-        { "name": "Firebending Lesson", "qty": 1 },
-        { "name": "Cunning Maneuver", "qty": 1 },
-        { "name": "Combustion Technique", "qty": 1 },
-        { "name": "Reckless Blaze", "qty": 1 },
-        { "name": "Thriving Bluff", "qty": 1 },
-        { "name": "Mountain", "qty": 6 },
-        { "name": "Mountain Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Sparky Sparky (Version 1)", "color": "R",
-      "cards": [
-        { "name": "Fire Nation Cadets", "qty": 1 },
-        { "name": "Fire Sages", "qty": 1 },
-        { "name": "Deer-Dog", "qty": 1 },
-        { "name": "War Balloon", "qty": 1 },
-        { "name": "Zuko, Exiled Prince", "qty": 1 },
-        { "name": "Earth Rumble Wrestlers", "qty": 1 },
-        { "name": "Combustion Man", "qty": 1 },
-        { "name": "Ran and Shaw", "qty": 1 },
-        { "name": "Iroh's Demonstration", "qty": 1 },
-        { "name": "Combustion Technique", "qty": 1 },
-        { "name": "How to Start a Riot", "qty": 1 },
-        { "name": "Bumi Bash", "qty": 1 },
-        { "name": "Thriving Bluff", "qty": 1 },
-        { "name": "Mountain", "qty": 6 },
-        { "name": "Mountain Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Sparky Sparky (Version 2)", "color": "R",
-      "cards": [
-        { "name": "Fire Nation Cadets", "qty": 1 },
-        { "name": "Yuyan Archers", "qty": 1 },
-        { "name": "Deer-Dog", "qty": 1 },
-        { "name": "War Balloon", "qty": 1 },
-        { "name": "Zuko, Exiled Prince", "qty": 1 },
-        { "name": "Dragon Moose", "qty": 1 },
-        { "name": "Combustion Man", "qty": 1 },
-        { "name": "Ran and Shaw", "qty": 1 },
-        { "name": "Firebending Lesson", "qty": 1 },
-        { "name": "Combustion Technique", "qty": 1 },
-        { "name": "Price of Freedom", "qty": 1 },
-        { "name": "Overwhelming Victory", "qty": 1 },
-        { "name": "Thriving Bluff", "qty": 1 },
-        { "name": "Mountain", "qty": 6 },
-        { "name": "Mountain Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Powerful (Version 1)", "color": "R",
-      "cards": [
-        { "name": "Deserter's Disciple", "qty": 1 },
-        { "name": "Tiger-Dillo", "qty": 1 },
-        { "name": "Uncle Iroh", "qty": 1 },
-        { "name": "Earth Rumble Wrestlers", "qty": 1 },
-        { "name": "Fire Nation Raider", "qty": 1 },
-        { "name": "Fang, Roku's Companion", "qty": 1 },
-        { "name": "Rough Rhino Cavalry", "qty": 1 },
-        { "name": "Mongoose Lizard", "qty": 1 },
-        { "name": "Firebending Lesson", "qty": 1 },
-        { "name": "Iroh's Demonstration", "qty": 1 },
-        { "name": "Cathartic Reunion", "qty": 1 },
-        { "name": "Twin Blades", "qty": 1 },
-        { "name": "Thriving Bluff", "qty": 1 },
-        { "name": "Mountain", "qty": 6 },
-        { "name": "Mountain Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Powerful (Version 2)", "color": "R",
-      "cards": [
-        { "name": "Freedom Fighter Recruit", "qty": 1 },
-        { "name": "Tiger-Dillo", "qty": 1 },
-        { "name": "Uncle Iroh", "qty": 1 },
-        { "name": "Komodo Rhino", "qty": 1 },
-        { "name": "Fire Nation Raider", "qty": 1 },
-        { "name": "Fang, Roku's Companion", "qty": 1 },
-        { "name": "Combustion Man", "qty": 1 },
-        { "name": "Mongoose Lizard", "qty": 1 },
-        { "name": "Firebending Lesson", "qty": 1 },
-        { "name": "Hog-Monkey Rampage", "qty": 1 },
-        { "name": "Cathartic Reunion", "qty": 1 },
-        { "name": "How to Start a Riot", "qty": 1 },
-        { "name": "Thriving Bluff", "qty": 1 },
-        { "name": "Mountain", "qty": 6 },
-        { "name": "Mountain Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Toph", "color": "G",
-      "cards": [
-        { "name": "Rebellious Captives", "qty": 1 },
-        { "name": "Frog-Squirrels", "qty": 1 },
-        { "name": "Toph, Earthbending Master", "qty": 1 },
-        { "name": "Earth Kingdom Soldier", "qty": 1 },
-        { "name": "Kyoshi Warrior", "qty": 1 },
-        { "name": "Exemplars", "qty": 1 },
-        { "name": "Earth Kingdom General", "qty": 1 },
-        { "name": "Badgermole", "qty": 1 },
-        { "name": "Saber-Tooth Moose-Lion", "qty": 1 },
-        { "name": "Rocky Rebuke", "qty": 1 },
-        { "name": "Origin of Metalbending", "qty": 1 },
-        { "name": "Tale of Katara and Toph", "qty": 1 },
-        { "name": "Solid Ground", "qty": 1 },
-        { "name": "Thriving Grove", "qty": 1 },
-        { "name": "Forest", "qty": 6 },
-        { "name": "Forest Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Kyoshi", "color": "G",
-      "cards": [
-        { "name": "Kyoshi Battle Fan", "qty": 1 },
-        { "name": "Raucous Audience", "qty": 1 },
-        { "name": "Elephant-Mandrill", "qty": 1 },
-        { "name": "Kyoshi Warrior", "qty": 1 },
-        { "name": "Exemplars", "qty": 1 },
-        { "name": "Suki, Kyoshi Warrior", "qty": 1 },
-        { "name": "Earth Kingdom Soldier", "qty": 1 },
-        { "name": "Avatar Kyoshi, Earthbender", "qty": 1 },
-        { "name": "Rocky Rebuke", "qty": 1 },
-        { "name": "Cycle of Renewal", "qty": 1 },
-        { "name": "Allies at Last", "qty": 1 },
-        { "name": "Cracked Earth Technique", "qty": 1 },
-        { "name": "Tectonic Split", "qty": 1 },
-        { "name": "Thriving Grove", "qty": 1 },
-        { "name": "Forest", "qty": 6 },
-        { "name": "Forest Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "At the Zoo", "color": "G",
-      "cards": [
-        { "name": "Turtle-Duck", "qty": 1 },
-        { "name": "Animal Attendant", "qty": 1 },
-        { "name": "Frog-Squirrels", "qty": 1 },
-        { "name": "Ostrich-Horse", "qty": 1 },
-        { "name": "Elephant-Mandrill", "qty": 1 },
-        { "name": "Eel-Hounds", "qty": 1 },
-        { "name": "Diligent Zookeeper", "qty": 1 },
-        { "name": "Saber-Tooth Moose-Lion", "qty": 1 },
-        { "name": "Pillar Launch", "qty": 1 },
-        { "name": "Origin of Metalbending", "qty": 1 },
-        { "name": "Bison Whistle", "qty": 1 },
-        { "name": "Hog-Monkey Rampage", "qty": 1 },
-        { "name": "Thriving Grove", "qty": 1 },
-        { "name": "Forest", "qty": 6 },
-        { "name": "Forest Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Cabbages", "color": "G",
-      "cards": [
-        { "name": "Unlucky Cabbage Merchant", "qty": 1 },
-        { "name": "Bumi's Feast", "qty": 1 },
-        { "name": "Lecture", "qty": 1 },
-        { "name": "Elephant-Mandrill", "qty": 1 },
-        { "name": "The Cabbage Merchant", "qty": 1 },
-        { "name": "Foggy Swamp", "qty": 1 },
-        { "name": "Vinebender", "qty": 1 },
-        { "name": "Bosco, Just a Bear", "qty": 1 },
-        { "name": "Hippo-Cows", "qty": 1 },
-        { "name": "Saber-Tooth Moose-Lion", "qty": 1 },
-        { "name": "Many Partings", "qty": 1 },
-        { "name": "Leaves from the Vine", "qty": 1 },
-        { "name": "The Art of Tea", "qty": 1 },
-        { "name": "Rocky Rebuke", "qty": 1 },
-        { "name": "Thriving Grove", "qty": 1 },
-        { "name": "Forest", "qty": 6 },
-        { "name": "Forest Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Bumi", "color": "G",
-      "cards": [
-        { "name": "Raucous Audience", "qty": 1 },
-        { "name": "Bumi's Feast", "qty": 1 },
-        { "name": "Lecture", "qty": 1 },
-        { "name": "Aang, A Lot to Learn", "qty": 1 },
-        { "name": "Walltop Sentries", "qty": 1 },
-        { "name": "Earthbending Lesson", "qty": 1 },
-        { "name": "Badgermole", "qty": 1 },
-        { "name": "Bumi, King of Three Trials", "qty": 1 },
-        { "name": "Flopsie, Bumi's Buddy", "qty": 1 },
-        { "name": "Origin of Metalbending", "qty": 1 },
-        { "name": "Rocky Rebuke", "qty": 1 },
-        { "name": "Creeping Crystal", "qty": 1 },
-        { "name": "Coating", "qty": 1 },
-        { "name": "Crystalline Armor", "qty": 1 },
-        { "name": "Thriving Grove", "qty": 1 },
-        { "name": "Forest", "qty": 6 },
-        { "name": "Forest Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Earth Rumble (Version 1)", "color": "G",
-      "cards": [
-        { "name": "Rebellious Captives", "qty": 1 },
-        { "name": "Raucous Audience", "qty": 1 },
-        { "name": "Kyoshi Battle Fan", "qty": 1 },
-        { "name": "Uncle Iroh", "qty": 1 },
-        { "name": "Toph, the Blind Bandit", "qty": 1 },
-        { "name": "The Boulder, Ready to Rumble", "qty": 1 },
-        { "name": "Earth Rumble", "qty": 1 },
-        { "name": "Wrestlers", "qty": 1 },
-        { "name": "Hippo-Cows", "qty": 1 },
-        { "name": "Pillar Launch", "qty": 1 },
-        { "name": "Hog-Monkey Rampage", "qty": 1 },
-        { "name": "Master's Guidance", "qty": 1 },
-        { "name": "Thriving Grove", "qty": 1 },
-        { "name": "Forest", "qty": 6 },
-        { "name": "Forest Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Earth Rumble (Version 2)", "color": "G",
-      "cards": [
-        { "name": "Frog-Squirrels", "qty": 1 },
-        { "name": "Raucous Audience", "qty": 1 },
-        { "name": "Kyoshi Battle Fan", "qty": 1 },
-        { "name": "Uncle Iroh", "qty": 1 },
-        { "name": "The Earth King", "qty": 1 },
-        { "name": "The Boulder, Ready to Rumble", "qty": 1 },
-        { "name": "Earth Rumble", "qty": 1 },
-        { "name": "Wrestlers", "qty": 1 },
-        { "name": "Bosco, Just a Bear", "qty": 1 },
-        { "name": "Origin of Metalbending", "qty": 1 },
-        { "name": "Hog-Monkey Rampage", "qty": 1 },
-        { "name": "Allies at Last", "qty": 1 },
-        { "name": "Master's Guidance", "qty": 1 },
-        { "name": "Thriving Grove", "qty": 1 },
-        { "name": "Forest", "qty": 6 },
-        { "name": "Forest Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Earth Kingdom (Version 1)", "color": "G",
-      "cards": [
-        { "name": "Haru, Hidden Talent", "qty": 1 },
-        { "name": "Kyoshi Battle Fan", "qty": 1 },
-        { "name": "Toph, the Blind Bandit", "qty": 1 },
-        { "name": "Match the Odds", "qty": 1 },
-        { "name": "Suki, Kyoshi Warrior", "qty": 1 },
-        { "name": "Foggy Swamp", "qty": 1 },
-        { "name": "Vinebender", "qty": 1 },
-        { "name": "Earth Kingdom Soldier", "qty": 1 },
-        { "name": "Hippo-Cows", "qty": 1 },
-        { "name": "Mechanical Glider", "qty": 1 },
-        { "name": "Stand United", "qty": 1 },
-        { "name": "Descendants' Path", "qty": 1 },
-        { "name": "Allies at Last", "qty": 1 },
-        { "name": "Thriving Grove", "qty": 1 },
-        { "name": "Forest", "qty": 6 },
-        { "name": "Forest Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Earth Kingdom (Version 2)", "color": "G",
-      "cards": [
-        { "name": "Haru, Hidden Talent", "qty": 1 },
-        { "name": "Great Divide", "qty": 1 },
-        { "name": "Guide", "qty": 1 },
-        { "name": "Toph, the Blind Bandit", "qty": 1 },
-        { "name": "Walltop Sentries", "qty": 1 },
-        { "name": "Suki, Kyoshi Warrior", "qty": 1 },
-        { "name": "Earth Kingdom General", "qty": 1 },
-        { "name": "Earth Kingdom Soldier", "qty": 1 },
-        { "name": "Hippo-Cows", "qty": 1 },
-        { "name": "Mechanical Glider", "qty": 1 },
-        { "name": "Origin of Metalbending", "qty": 1 },
-        { "name": "Descendants' Path", "qty": 1 },
-        { "name": "Allies at Last", "qty": 1 },
-        { "name": "Thriving Grove", "qty": 1 },
-        { "name": "Forest", "qty": 6 },
-        { "name": "Forest Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Learning (Version 1)", "color": "G",
-      "cards": [
-        { "name": "Rebellious Captives", "qty": 1 },
-        { "name": "Sparring Dummy", "qty": 1 },
-        { "name": "Walltop Sentries", "qty": 1 },
-        { "name": "Aang, A Lot to Learn", "qty": 1 },
-        { "name": "Guru Pathik", "qty": 1 },
-        { "name": "Saber-Tooth Moose-Lion", "qty": 1 },
-        { "name": "Origin of Metalbending", "qty": 1 },
-        { "name": "Shared Roots", "qty": 1 },
-        { "name": "Rocky Rebuke", "qty": 1 },
-        { "name": "Crystalline Armor", "qty": 1 },
-        { "name": "Cracked Earth Technique", "qty": 1 },
-        { "name": "Zuko's Exile", "qty": 1 },
-        { "name": "Thriving Grove", "qty": 1 },
-        { "name": "Forest", "qty": 6 },
-        { "name": "Forest Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Learning (Version 2)", "color": "G",
-      "cards": [
-        { "name": "Platypus-Bear", "qty": 1 },
-        { "name": "Sparring Dummy", "qty": 1 },
-        { "name": "Walltop Sentries", "qty": 1 },
-        { "name": "Aang, A Lot to Learn", "qty": 1 },
-        { "name": "Uncle Iroh", "qty": 1 },
-        { "name": "Saber-Tooth Moose-Lion", "qty": 1 },
-        { "name": "The Art of Tea", "qty": 1 },
-        { "name": "True Ancestry", "qty": 1 },
-        { "name": "Rocky Rebuke", "qty": 1 },
-        { "name": "Master's Guidance", "qty": 1 },
-        { "name": "Cracked Earth Technique", "qty": 1 },
-        { "name": "Zuko's Exile", "qty": 1 },
-        { "name": "Thriving Grove", "qty": 1 },
-        { "name": "Forest", "qty": 6 },
-        { "name": "Forest Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Earthbending (Version 1)", "color": "G",
-      "cards": [
-        { "name": "Turtle-Duck", "qty": 1 },
-        { "name": "Rebellious Captives", "qty": 1 },
-        { "name": "Earth Kingdom Soldier", "qty": 1 },
-        { "name": "Toph, the Blind Bandit", "qty": 1 },
-        { "name": "Earthbending Lesson", "qty": 1 },
-        { "name": "Earth Kingdom General", "qty": 1 },
-        { "name": "Hippo-Cows", "qty": 1 },
-        { "name": "Explore", "qty": 1 },
-        { "name": "Rocky Rebuke", "qty": 1 },
-        { "name": "Earthbender Ascension", "qty": 1 },
-        { "name": "Inspiring Call", "qty": 1 },
-        { "name": "Rumble Arena", "qty": 1 },
-        { "name": "Thriving Grove", "qty": 1 },
-        { "name": "Forest", "qty": 6 },
-        { "name": "Forest Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Earthbending (Version 2)", "color": "G",
-      "cards": [
-        { "name": "Rebellious Captives", "qty": 1 },
-        { "name": "Frog-Squirrels", "qty": 1 },
-        { "name": "Earth Kingdom Soldier", "qty": 1 },
-        { "name": "Toph, the Blind Bandit", "qty": 1 },
-        { "name": "Earthbending Lesson", "qty": 1 },
-        { "name": "Earth Kingdom General", "qty": 1 },
-        { "name": "Badgermole", "qty": 1 },
-        { "name": "Explore", "qty": 1 },
-        { "name": "Rocky Rebuke", "qty": 1 },
-        { "name": "Tale of Katara and Toph", "qty": 1 },
-        { "name": "Solid Ground", "qty": 1 },
-        { "name": "Rumble Arena", "qty": 1 },
-        { "name": "Thriving Grove", "qty": 1 },
-        { "name": "Forest", "qty": 6 },
-        { "name": "Forest Appa", "qty": 1 }
-      ]
-    },
-    { "game": "mtg", "set_code": "tla", "product_type": "jumpstart-booster-box", "deck_name": "Shrines", "color": "M",
-      "cards": [
-        { "name": "Raucous Audience", "qty": 1 },
-        { "name": "Walltop Sentries", "qty": 1 },
-        { "name": "Hei Bai, Forest Guardian", "qty": 1 },
-        { "name": "Guru Pathik", "qty": 1 },
-        { "name": "Saber-Tooth Moose-Lion", "qty": 1 },
-        { "name": "Barrels of Blasting Jelly", "qty": 1 },
-        { "name": "Northern Air Temple", "qty": 1 },
-        { "name": "Aang's Journey", "qty": 1 },
-        { "name": "The Spirit Oasis", "qty": 1 },
-        { "name": "Kyoshi Island Plaza", "qty": 1 },
-        { "name": "Southern Air Temple", "qty": 1 },
-        { "name": "Crescent Island Temple", "qty": 1 },
-        { "name": "Thriving Grove", "qty": 1 },
-        { "name": "White Lotus Hideout", "qty": 1 },
-        { "name": "Plains", "qty": 1 },
-        { "name": "Island", "qty": 1 },
-        { "name": "Swamp", "qty": 1 },
-        { "name": "Mountain", "qty": 1 },
-        { "name": "Forest", "qty": 2 },
-        { "name": "Forest Appa", "qty": 1 }
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Aang",
+      "color": "W",
+      "cards": [
+        {
+          "name": "Momo, Rambunctious Rascal",
+          "qty": 1
+        },
+        {
+          "name": "Kindly Customer",
+          "qty": 1
+        },
+        {
+          "name": "Invasion Reinforcements",
+          "qty": 1
+        },
+        {
+          "name": "Water Tribe Captain",
+          "qty": 1
+        },
+        {
+          "name": "Koala-Sheep",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Warriors",
+          "qty": 1
+        },
+        {
+          "name": "Aang, Airbending Master",
+          "qty": 1
+        },
+        {
+          "name": "Appa, Loyal Sky Bison",
+          "qty": 1
+        },
+        {
+          "name": "Cloudshift",
+          "qty": 1
+        },
+        {
+          "name": "Enter the Avatar State",
+          "qty": 1
+        },
+        {
+          "name": "Path to Redemption",
+          "qty": 1
+        },
+        {
+          "name": "Airbending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Heath",
+          "qty": 1
+        },
+        {
+          "name": "Plains",
+          "qty": 6
+        },
+        {
+          "name": "Plains Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Swordmaster",
+      "color": "W",
+      "cards": [
+        {
+          "name": "Earth Kingdom Protectors",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Battle Fan",
+          "qty": 1
+        },
+        {
+          "name": "Inspired Insurgent",
+          "qty": 1
+        },
+        {
+          "name": "Sokka, Swordmaster",
+          "qty": 1
+        },
+        {
+          "name": "Glider Kids",
+          "qty": 1
+        },
+        {
+          "name": "Aardvark Sloth",
+          "qty": 1
+        },
+        {
+          "name": "Master Piandao",
+          "qty": 1
+        },
+        {
+          "name": "Trusty Boomerang",
+          "qty": 1
+        },
+        {
+          "name": "Sokka's Sword Training",
+          "qty": 1
+        },
+        {
+          "name": "Razor Rings",
+          "qty": 1
+        },
+        {
+          "name": "Duelist's Heritage",
+          "qty": 1
+        },
+        {
+          "name": "Meteor Sword",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Heath",
+          "qty": 1
+        },
+        {
+          "name": "Plains",
+          "qty": 6
+        },
+        {
+          "name": "Plains Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Airbending",
+      "color": "W",
+      "cards": [
+        {
+          "name": "Jeong Jeong's Deserters",
+          "qty": 1
+        },
+        {
+          "name": "Invasion Reinforcements",
+          "qty": 1
+        },
+        {
+          "name": "Glider Kids",
+          "qty": 1
+        },
+        {
+          "name": "Koala-Sheep",
+          "qty": 1
+        },
+        {
+          "name": "Monk Gyatso",
+          "qty": 1
+        },
+        {
+          "name": "Aang, the Last Airbender",
+          "qty": 1
+        },
+        {
+          "name": "Rabaroo Troop",
+          "qty": 1
+        },
+        {
+          "name": "Appa, Loyal Sky Bison",
+          "qty": 1
+        },
+        {
+          "name": "Airbender Ascension",
+          "qty": 1
+        },
+        {
+          "name": "Path to Redemption",
+          "qty": 1
+        },
+        {
+          "name": "Airbending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Airbender's Reversal",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Heath",
+          "qty": 1
+        },
+        {
+          "name": "Plains",
+          "qty": 6
+        },
+        {
+          "name": "Plains Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Freedom Fighters",
+      "color": "W",
+      "cards": [
+        {
+          "name": "The Duke, Rebel Sentry",
+          "qty": 1
+        },
+        {
+          "name": "Jeong Jeong's Deserters",
+          "qty": 1
+        },
+        {
+          "name": "Inspired Insurgent",
+          "qty": 1
+        },
+        {
+          "name": "Toucan-Puffin",
+          "qty": 1
+        },
+        {
+          "name": "Pipsqueak, Rebel Strongarm",
+          "qty": 1
+        },
+        {
+          "name": "Jet, Rebel Leader",
+          "qty": 1
+        },
+        {
+          "name": "Wandering Musicians",
+          "qty": 1
+        },
+        {
+          "name": "Rabaroo Troop",
+          "qty": 1
+        },
+        {
+          "name": "Acrobatic Leap",
+          "qty": 1
+        },
+        {
+          "name": "Path to Redemption",
+          "qty": 1
+        },
+        {
+          "name": "Valorous Stance",
+          "qty": 1
+        },
+        {
+          "name": "Hook Swords",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Heath",
+          "qty": 1
+        },
+        {
+          "name": "Plains",
+          "qty": 6
+        },
+        {
+          "name": "Plains Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Warriors",
+      "color": "W",
+      "cards": [
+        {
+          "name": "Kyoshi Warrior Guard",
+          "qty": 1
+        },
+        {
+          "name": "Invasion Reinforcements",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Battle Fan",
+          "qty": 1
+        },
+        {
+          "name": "Toucan-Puffin",
+          "qty": 1
+        },
+        {
+          "name": "Sokka, Lateral Strategist",
+          "qty": 1
+        },
+        {
+          "name": "Suki, Kyoshi Captain",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Warriors",
+          "qty": 1
+        },
+        {
+          "name": "Rabaroo Troop",
+          "qty": 1
+        },
+        {
+          "name": "Path to Redemption",
+          "qty": 1
+        },
+        {
+          "name": "Sokka's Sword Training",
+          "qty": 1
+        },
+        {
+          "name": "Valorous Stance",
+          "qty": 1
+        },
+        {
+          "name": "Team Avatar",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Heath",
+          "qty": 1
+        },
+        {
+          "name": "Plains",
+          "qty": 6
+        },
+        {
+          "name": "Plains Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Hei Bai (Version 1)",
+      "color": "W",
+      "cards": [
+        {
+          "name": "Invasion Reinforcements",
+          "qty": 1
+        },
+        {
+          "name": "Pretending Poxbearers",
+          "qty": 1
+        },
+        {
+          "name": "Aang, A Lot to Learn",
+          "qty": 1
+        },
+        {
+          "name": "Koala-Sheep",
+          "qty": 1
+        },
+        {
+          "name": "Suki, Courageous Rescuer",
+          "qty": 1
+        },
+        {
+          "name": "Vengeful Villagers",
+          "qty": 1
+        },
+        {
+          "name": "Hei Bai, Spirit of Balance",
+          "qty": 1
+        },
+        {
+          "name": "Rabaroo Troop",
+          "qty": 1
+        },
+        {
+          "name": "Acrobatic Leap",
+          "qty": 1
+        },
+        {
+          "name": "Path to Redemption",
+          "qty": 1
+        },
+        {
+          "name": "That's Rough Buddy",
+          "qty": 1
+        },
+        {
+          "name": "Sandbenders' Storm",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Heath",
+          "qty": 1
+        },
+        {
+          "name": "Plains",
+          "qty": 6
+        },
+        {
+          "name": "Plains Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Hei Bai (Version 2)",
+      "color": "W",
+      "cards": [
+        {
+          "name": "Curious Farm Animals",
+          "qty": 1
+        },
+        {
+          "name": "Jeong Jeong's Deserters",
+          "qty": 1
+        },
+        {
+          "name": "Pretending Poxbearers",
+          "qty": 1
+        },
+        {
+          "name": "Aang, A Lot to Learn",
+          "qty": 1
+        },
+        {
+          "name": "Suki, Courageous Rescuer",
+          "qty": 1
+        },
+        {
+          "name": "Aardvark Sloth",
+          "qty": 1
+        },
+        {
+          "name": "Hei Bai, Spirit of Balance",
+          "qty": 1
+        },
+        {
+          "name": "Rabaroo Troop",
+          "qty": 1
+        },
+        {
+          "name": "Sokka's Sword Training",
+          "qty": 1
+        },
+        {
+          "name": "Path to Redemption",
+          "qty": 1
+        },
+        {
+          "name": "That's Rough Buddy",
+          "qty": 1
+        },
+        {
+          "name": "Destined Confrontation",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Heath",
+          "qty": 1
+        },
+        {
+          "name": "Plains",
+          "qty": 6
+        },
+        {
+          "name": "Plains Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Gliding (Version 1)",
+      "color": "W",
+      "cards": [
+        {
+          "name": "Momo, Friendly Flier",
+          "qty": 1
+        },
+        {
+          "name": "Kindly Customer",
+          "qty": 1
+        },
+        {
+          "name": "Toucan-Puffin",
+          "qty": 1
+        },
+        {
+          "name": "Koala-Sheep",
+          "qty": 1
+        },
+        {
+          "name": "Air Nomad Student",
+          "qty": 1
+        },
+        {
+          "name": "Aang, the Last Airbender",
+          "qty": 1
+        },
+        {
+          "name": "Rabaroo Troop",
+          "qty": 1
+        },
+        {
+          "name": "Appa, Loyal Sky Bison",
+          "qty": 1
+        },
+        {
+          "name": "Yip Yip!",
+          "qty": 1
+        },
+        {
+          "name": "Path to Redemption",
+          "qty": 1
+        },
+        {
+          "name": "Airbending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Glider Staff",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Heath",
+          "qty": 1
+        },
+        {
+          "name": "Plains",
+          "qty": 6
+        },
+        {
+          "name": "Plains Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Gliding (Version 2)",
+      "color": "W",
+      "cards": [
+        {
+          "name": "Momo, Friendly Flier",
+          "qty": 1
+        },
+        {
+          "name": "Jeong Jeong's Deserters",
+          "qty": 1
+        },
+        {
+          "name": "Inspired Insurgent",
+          "qty": 1
+        },
+        {
+          "name": "Glider Kids",
+          "qty": 1
+        },
+        {
+          "name": "Water Tribe Captain",
+          "qty": 1
+        },
+        {
+          "name": "Air Nomad Student",
+          "qty": 1
+        },
+        {
+          "name": "Aang, the Last Airbender",
+          "qty": 1
+        },
+        {
+          "name": "Appa, Loyal Sky Bison",
+          "qty": 1
+        },
+        {
+          "name": "Yip Yip!",
+          "qty": 1
+        },
+        {
+          "name": "Path to Redemption",
+          "qty": 1
+        },
+        {
+          "name": "Tale of Momo",
+          "qty": 1
+        },
+        {
+          "name": "Glider Staff",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Heath",
+          "qty": 1
+        },
+        {
+          "name": "Plains",
+          "qty": 6
+        },
+        {
+          "name": "Plains Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Insurgent (Version 1)",
+      "color": "W",
+      "cards": [
+        {
+          "name": "Momo, Rambunctious Rascal",
+          "qty": 1
+        },
+        {
+          "name": "Inspired Insurgent",
+          "qty": 1
+        },
+        {
+          "name": "Jeong Jeong's Deserters",
+          "qty": 1
+        },
+        {
+          "name": "Invasion Reinforcements",
+          "qty": 1
+        },
+        {
+          "name": "Glider Kids",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Warriors",
+          "qty": 1
+        },
+        {
+          "name": "Aang, the Last Airbender",
+          "qty": 1
+        },
+        {
+          "name": "Appa, Loyal Sky Bison",
+          "qty": 1
+        },
+        {
+          "name": "Razor Rings",
+          "qty": 1
+        },
+        {
+          "name": "Stand United",
+          "qty": 1
+        },
+        {
+          "name": "Airbender's Reversal",
+          "qty": 1
+        },
+        {
+          "name": "Tale of Momo",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Heath",
+          "qty": 1
+        },
+        {
+          "name": "Plains",
+          "qty": 6
+        },
+        {
+          "name": "Plains Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Insurgent (Version 2)",
+      "color": "W",
+      "cards": [
+        {
+          "name": "Momo, Rambunctious Rascal",
+          "qty": 1
+        },
+        {
+          "name": "Inspired Insurgent",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Warrior Guard",
+          "qty": 1
+        },
+        {
+          "name": "Sokka, Lateral Strategist",
+          "qty": 1
+        },
+        {
+          "name": "Glider Kids",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Warriors",
+          "qty": 1
+        },
+        {
+          "name": "Hakoda, Selfless Commander",
+          "qty": 1
+        },
+        {
+          "name": "Appa, Loyal Sky Bison",
+          "qty": 1
+        },
+        {
+          "name": "Path to Redemption",
+          "qty": 1
+        },
+        {
+          "name": "Stand United",
+          "qty": 1
+        },
+        {
+          "name": "That's Rough Buddy",
+          "qty": 1
+        },
+        {
+          "name": "Duelist's Heritage",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Heath",
+          "qty": 1
+        },
+        {
+          "name": "Plains",
+          "qty": 6
+        },
+        {
+          "name": "Plains Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Alliance (Version 1)",
+      "color": "W",
+      "cards": [
+        {
+          "name": "The Duke, Rebel Sentry",
+          "qty": 1
+        },
+        {
+          "name": "South Pole Voyager",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Warrior Guard",
+          "qty": 1
+        },
+        {
+          "name": "Glider Kids",
+          "qty": 1
+        },
+        {
+          "name": "Sokka, Lateral Strategist",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Warriors",
+          "qty": 1
+        },
+        {
+          "name": "Suki, Kyoshi Warrior",
+          "qty": 1
+        },
+        {
+          "name": "Jet, Freedom Fighter",
+          "qty": 1
+        },
+        {
+          "name": "Mechanical Glider",
+          "qty": 1
+        },
+        {
+          "name": "Sokka's Sword Training",
+          "qty": 1
+        },
+        {
+          "name": "Path to Redemption",
+          "qty": 1
+        },
+        {
+          "name": "Fancy Footwork",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Heath",
+          "qty": 1
+        },
+        {
+          "name": "Plains",
+          "qty": 6
+        },
+        {
+          "name": "Plains Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Alliance (Version 2)",
+      "color": "W",
+      "cards": [
+        {
+          "name": "The Duke, Rebel Sentry",
+          "qty": 1
+        },
+        {
+          "name": "South Pole Voyager",
+          "qty": 1
+        },
+        {
+          "name": "Inspired Insurgent",
+          "qty": 1
+        },
+        {
+          "name": "Glider Kids",
+          "qty": 1
+        },
+        {
+          "name": "Sokka, Lateral Strategist",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Warriors",
+          "qty": 1
+        },
+        {
+          "name": "Suki, Kyoshi Warrior",
+          "qty": 1
+        },
+        {
+          "name": "Jet, Rebel Leader",
+          "qty": 1
+        },
+        {
+          "name": "Mechanical Glider",
+          "qty": 1
+        },
+        {
+          "name": "Acrobatic Leap",
+          "qty": 1
+        },
+        {
+          "name": "Razor Rings",
+          "qty": 1
+        },
+        {
+          "name": "Fancy Footwork",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Heath",
+          "qty": 1
+        },
+        {
+          "name": "Plains",
+          "qty": 6
+        },
+        {
+          "name": "Plains Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Katara",
+      "color": "U",
+      "cards": [
+        {
+          "name": "Gran-Gran",
+          "qty": 1
+        },
+        {
+          "name": "Master Pakku",
+          "qty": 1
+        },
+        {
+          "name": "Katara, Waterbending Master",
+          "qty": 1
+        },
+        {
+          "name": "Rowdy Snowballers",
+          "qty": 1
+        },
+        {
+          "name": "Sokka, Lateral Strategist",
+          "qty": 1
+        },
+        {
+          "name": "Turtle-Seals",
+          "qty": 1
+        },
+        {
+          "name": "Geyser Leaper",
+          "qty": 1
+        },
+        {
+          "name": "Consider",
+          "qty": 1
+        },
+        {
+          "name": "Watery Grasp",
+          "qty": 1
+        },
+        {
+          "name": "Octopus Form",
+          "qty": 1
+        },
+        {
+          "name": "It'll Quench Ya!",
+          "qty": 1
+        },
+        {
+          "name": "Sokka's Haiku",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Isle",
+          "qty": 1
+        },
+        {
+          "name": "Island",
+          "qty": 6
+        },
+        {
+          "name": "Island Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Librarian",
+      "color": "U",
+      "cards": [
+        {
+          "name": "Professor Zei, Anthropologist",
+          "qty": 1
+        },
+        {
+          "name": "Suspicious Bookcase",
+          "qty": 1
+        },
+        {
+          "name": "Knowledge Seeker",
+          "qty": 1
+        },
+        {
+          "name": "Dutiful Knowledge Seeker",
+          "qty": 1
+        },
+        {
+          "name": "Wan Shi Tong, All-Knowing",
+          "qty": 1
+        },
+        {
+          "name": "Giant Koi",
+          "qty": 1
+        },
+        {
+          "name": "Brainstorm",
+          "qty": 1
+        },
+        {
+          "name": "Octopus Form",
+          "qty": 1
+        },
+        {
+          "name": "Accumulate Wisdom",
+          "qty": 1
+        },
+        {
+          "name": "Lost in the Spirit World",
+          "qty": 1
+        },
+        {
+          "name": "Waterbending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Zuko's Exile",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Isle",
+          "qty": 1
+        },
+        {
+          "name": "Island",
+          "qty": 6
+        },
+        {
+          "name": "Island Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Spirit",
+      "color": "U",
+      "cards": [
+        {
+          "name": "Flying Dolphin-Fish",
+          "qty": 1
+        },
+        {
+          "name": "Benevolent River Spirit",
+          "qty": 1
+        },
+        {
+          "name": "Knowledge Seeker",
+          "qty": 1
+        },
+        {
+          "name": "Dutiful Knowledge Seeker",
+          "qty": 1
+        },
+        {
+          "name": "Baboon Spirit",
+          "qty": 1
+        },
+        {
+          "name": "Flexible Waterbender",
+          "qty": 1
+        },
+        {
+          "name": "Giant Koi",
+          "qty": 1
+        },
+        {
+          "name": "Octopus Form",
+          "qty": 1
+        },
+        {
+          "name": "Dramatic Reversal",
+          "qty": 1
+        },
+        {
+          "name": "It'll Quench Ya!",
+          "qty": 1
+        },
+        {
+          "name": "Lost in the Spirit World",
+          "qty": 1
+        },
+        {
+          "name": "The Spirit Oasis",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Isle",
+          "qty": 1
+        },
+        {
+          "name": "Island",
+          "qty": 6
+        },
+        {
+          "name": "Island Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Underwater",
+      "color": "U",
+      "cards": [
+        {
+          "name": "Flying Dolphin-Fish",
+          "qty": 1
+        },
+        {
+          "name": "Invasion Submersible",
+          "qty": 1
+        },
+        {
+          "name": "Rowdy Snowballers",
+          "qty": 1
+        },
+        {
+          "name": "Turtle-Seals",
+          "qty": 1
+        },
+        {
+          "name": "Tui and La, Moon and Ocean",
+          "qty": 1
+        },
+        {
+          "name": "Giant Koi",
+          "qty": 1
+        },
+        {
+          "name": "Serpent of the Pass",
+          "qty": 1
+        },
+        {
+          "name": "Unagi's Spray",
+          "qty": 1
+        },
+        {
+          "name": "Octopus Form",
+          "qty": 1
+        },
+        {
+          "name": "Honest Work",
+          "qty": 1
+        },
+        {
+          "name": "Coastal Piracy",
+          "qty": 1
+        },
+        {
+          "name": "White Lotus Hideout",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Isle",
+          "qty": 1
+        },
+        {
+          "name": "Island",
+          "qty": 6
+        },
+        {
+          "name": "Island Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Adaptive",
+      "color": "U",
+      "cards": [
+        {
+          "name": "Glider Kids",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Battle Fan",
+          "qty": 1
+        },
+        {
+          "name": "Rowdy Snowballers",
+          "qty": 1
+        },
+        {
+          "name": "Katara, Bending Prodigy",
+          "qty": 1
+        },
+        {
+          "name": "Princess Yue",
+          "qty": 1
+        },
+        {
+          "name": "The Blue Spirit",
+          "qty": 1
+        },
+        {
+          "name": "Teo, Spirited Glider",
+          "qty": 1
+        },
+        {
+          "name": "Giant Koi",
+          "qty": 1
+        },
+        {
+          "name": "Boomerang Basics",
+          "qty": 1
+        },
+        {
+          "name": "Frantic Search",
+          "qty": 1
+        },
+        {
+          "name": "Lost in the Spirit World",
+          "qty": 1
+        },
+        {
+          "name": "Waterbending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Isle",
+          "qty": 1
+        },
+        {
+          "name": "Island",
+          "qty": 6
+        },
+        {
+          "name": "Island Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Wise (Version 1)",
+      "color": "U",
+      "cards": [
+        {
+          "name": "Gran-Gran",
+          "qty": 1
+        },
+        {
+          "name": "Forecasting Fortune Teller",
+          "qty": 1
+        },
+        {
+          "name": "Otter-Penguin",
+          "qty": 1
+        },
+        {
+          "name": "Katara, Bending Prodigy",
+          "qty": 1
+        },
+        {
+          "name": "Rowdy Snowballers",
+          "qty": 1
+        },
+        {
+          "name": "Messenger Hawk",
+          "qty": 1
+        },
+        {
+          "name": "Turtle-Seals",
+          "qty": 1
+        },
+        {
+          "name": "Consider",
+          "qty": 1
+        },
+        {
+          "name": "Waterbender's Restoration",
+          "qty": 1
+        },
+        {
+          "name": "Waterbending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Coastal Piracy",
+          "qty": 1
+        },
+        {
+          "name": "Whirlwind Technique",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Isle",
+          "qty": 1
+        },
+        {
+          "name": "Island",
+          "qty": 6
+        },
+        {
+          "name": "Island Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Wise (Version 2)",
+      "color": "U",
+      "cards": [
+        {
+          "name": "Tiger-Seal",
+          "qty": 1
+        },
+        {
+          "name": "Otter-Penguin",
+          "qty": 1
+        },
+        {
+          "name": "Knowledge Seeker",
+          "qty": 1
+        },
+        {
+          "name": "Sokka, Lateral Strategist",
+          "qty": 1
+        },
+        {
+          "name": "Rowdy Snowballers",
+          "qty": 1
+        },
+        {
+          "name": "Messenger Hawk",
+          "qty": 1
+        },
+        {
+          "name": "Turtle-Seals",
+          "qty": 1
+        },
+        {
+          "name": "The Blue Spirit",
+          "qty": 1
+        },
+        {
+          "name": "Consider",
+          "qty": 1
+        },
+        {
+          "name": "It'll Quench Ya!",
+          "qty": 1
+        },
+        {
+          "name": "Sokka's Haiku",
+          "qty": 1
+        },
+        {
+          "name": "Whirlwind Technique",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Isle",
+          "qty": 1
+        },
+        {
+          "name": "Island",
+          "qty": 6
+        },
+        {
+          "name": "Island Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Soaring (Version 1)",
+      "color": "U",
+      "cards": [
+        {
+          "name": "Flying Dolphin-Fish",
+          "qty": 1
+        },
+        {
+          "name": "Forecasting Fortune Teller",
+          "qty": 1
+        },
+        {
+          "name": "Messenger Hawk",
+          "qty": 1
+        },
+        {
+          "name": "Sokka, Lateral Strategist",
+          "qty": 1
+        },
+        {
+          "name": "The Mechanist, Aerial Artisan",
+          "qty": 1
+        },
+        {
+          "name": "Teo, Spirited Glider",
+          "qty": 1
+        },
+        {
+          "name": "Cat-Owl",
+          "qty": 1
+        },
+        {
+          "name": "Giant Koi",
+          "qty": 1
+        },
+        {
+          "name": "Watery Grasp",
+          "qty": 1
+        },
+        {
+          "name": "Mechanical Glider",
+          "qty": 1
+        },
+        {
+          "name": "Boomerang Basics",
+          "qty": 1
+        },
+        {
+          "name": "Sokka's Haiku",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Isle",
+          "qty": 1
+        },
+        {
+          "name": "Island",
+          "qty": 6
+        },
+        {
+          "name": "Island Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Soaring (Version 2)",
+      "color": "U",
+      "cards": [
+        {
+          "name": "Flying Dolphin-Fish",
+          "qty": 1
+        },
+        {
+          "name": "Benevolent River Spirit",
+          "qty": 1
+        },
+        {
+          "name": "Messenger Hawk",
+          "qty": 1
+        },
+        {
+          "name": "Sokka, Lateral Strategist",
+          "qty": 1
+        },
+        {
+          "name": "Teo, Spirited Glider",
+          "qty": 1
+        },
+        {
+          "name": "Cat-Owl",
+          "qty": 1
+        },
+        {
+          "name": "Yue, the Moon Spirit",
+          "qty": 1
+        },
+        {
+          "name": "Giant Koi",
+          "qty": 1
+        },
+        {
+          "name": "Watery Grasp",
+          "qty": 1
+        },
+        {
+          "name": "Octopus Form",
+          "qty": 1
+        },
+        {
+          "name": "Boomerang Basics",
+          "qty": 1
+        },
+        {
+          "name": "Frantic Search",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Isle",
+          "qty": 1
+        },
+        {
+          "name": "Island",
+          "qty": 6
+        },
+        {
+          "name": "Island Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Adept (Version 1)",
+      "color": "U",
+      "cards": [
+        {
+          "name": "Professor Zei, Anthropologist",
+          "qty": 1
+        },
+        {
+          "name": "Forecasting Fortune Teller",
+          "qty": 1
+        },
+        {
+          "name": "Katara, Bending Prodigy",
+          "qty": 1
+        },
+        {
+          "name": "Iguana Parrot",
+          "qty": 1
+        },
+        {
+          "name": "Turtle-Seals",
+          "qty": 1
+        },
+        {
+          "name": "Giant Koi",
+          "qty": 1
+        },
+        {
+          "name": "Serpent of the Pass",
+          "qty": 1
+        },
+        {
+          "name": "Unagi's Spray",
+          "qty": 1
+        },
+        {
+          "name": "Dramatic Reversal",
+          "qty": 1
+        },
+        {
+          "name": "Crashing Wave",
+          "qty": 1
+        },
+        {
+          "name": "Nightmares and Daydreams",
+          "qty": 1
+        },
+        {
+          "name": "Waterbending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Isle",
+          "qty": 1
+        },
+        {
+          "name": "Island",
+          "qty": 6
+        },
+        {
+          "name": "Island Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Adept (Version 2)",
+      "color": "U",
+      "cards": [
+        {
+          "name": "Professor Zei, Anthropologist",
+          "qty": 1
+        },
+        {
+          "name": "Master Pakku",
+          "qty": 1
+        },
+        {
+          "name": "Katara, Bending Prodigy",
+          "qty": 1
+        },
+        {
+          "name": "Iguana Parrot",
+          "qty": 1
+        },
+        {
+          "name": "Teo, Spirited Glider",
+          "qty": 1
+        },
+        {
+          "name": "Geyser Leaper",
+          "qty": 1
+        },
+        {
+          "name": "Serpent of the Pass",
+          "qty": 1
+        },
+        {
+          "name": "Octopus Form",
+          "qty": 1
+        },
+        {
+          "name": "Consider",
+          "qty": 1
+        },
+        {
+          "name": "Nightmares and Daydreams",
+          "qty": 1
+        },
+        {
+          "name": "Waterbending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Lost Days",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Isle",
+          "qty": 1
+        },
+        {
+          "name": "Island",
+          "qty": 6
+        },
+        {
+          "name": "Island Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Lessons (Version 1)",
+      "color": "U",
+      "cards": [
+        {
+          "name": "Gran-Gran",
+          "qty": 1
+        },
+        {
+          "name": "Glider Kids",
+          "qty": 1
+        },
+        {
+          "name": "Platypus-Bear",
+          "qty": 1
+        },
+        {
+          "name": "Iguana Parrot",
+          "qty": 1
+        },
+        {
+          "name": "Katara, Seeking Revenge",
+          "qty": 1
+        },
+        {
+          "name": "Giant Koi",
+          "qty": 1
+        },
+        {
+          "name": "Octopus Form",
+          "qty": 1
+        },
+        {
+          "name": "Boomerang Basics",
+          "qty": 1
+        },
+        {
+          "name": "Accumulate Wisdom",
+          "qty": 1
+        },
+        {
+          "name": "It'll Quench Ya!",
+          "qty": 1
+        },
+        {
+          "name": "Chakra Meditation",
+          "qty": 1
+        },
+        {
+          "name": "Whirlwind Technique",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Isle",
+          "qty": 1
+        },
+        {
+          "name": "Island",
+          "qty": 6
+        },
+        {
+          "name": "Island Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Lessons (Version 2)",
+      "color": "U",
+      "cards": [
+        {
+          "name": "Gran-Gran",
+          "qty": 1
+        },
+        {
+          "name": "Master Pakku",
+          "qty": 1
+        },
+        {
+          "name": "Platypus-Bear",
+          "qty": 1
+        },
+        {
+          "name": "Iguana Parrot",
+          "qty": 1
+        },
+        {
+          "name": "Katara, Seeking Revenge",
+          "qty": 1
+        },
+        {
+          "name": "Geyser Leaper",
+          "qty": 1
+        },
+        {
+          "name": "Octopus Form",
+          "qty": 1
+        },
+        {
+          "name": "Accumulate Wisdom",
+          "qty": 1
+        },
+        {
+          "name": "Chakra Meditation",
+          "qty": 1
+        },
+        {
+          "name": "Waterbending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Lost Days",
+          "qty": 1
+        },
+        {
+          "name": "Whirlwind Technique",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Isle",
+          "qty": 1
+        },
+        {
+          "name": "Island",
+          "qty": 6
+        },
+        {
+          "name": "Island Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Azula",
+      "color": "B",
+      "cards": [
+        {
+          "name": "Dai Li Censor",
+          "qty": 1
+        },
+        {
+          "name": "Corrupt Court Official",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Ambushers",
+          "qty": 1
+        },
+        {
+          "name": "Fire Navy Trebuchet",
+          "qty": 1
+        },
+        {
+          "name": "Azula, Ruthless Firebender",
+          "qty": 1
+        },
+        {
+          "name": "Lo and Li, Twin Tutors",
+          "qty": 1
+        },
+        {
+          "name": "Canyon Crawler",
+          "qty": 1
+        },
+        {
+          "name": "Sold Out",
+          "qty": 1
+        },
+        {
+          "name": "Azula Always Lies",
+          "qty": 1
+        },
+        {
+          "name": "Dai Li Indoctrination",
+          "qty": 1
+        },
+        {
+          "name": "Epic Downfall",
+          "qty": 1
+        },
+        {
+          "name": "Dark Deal",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Moor",
+          "qty": 1
+        },
+        {
+          "name": "Swamp",
+          "qty": 6
+        },
+        {
+          "name": "Swamp Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Ozai",
+      "color": "B",
+      "cards": [
+        {
+          "name": "Callous Inspector",
+          "qty": 1
+        },
+        {
+          "name": "Corrupt Court Official",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Ambushers",
+          "qty": 1
+        },
+        {
+          "name": "Fire Navy Trebuchet",
+          "qty": 1
+        },
+        {
+          "name": "Fire Lord Ozai",
+          "qty": 1
+        },
+        {
+          "name": "Zhao, Ruthless Admiral",
+          "qty": 1
+        },
+        {
+          "name": "Beetle-Headed Merchants",
+          "qty": 1
+        },
+        {
+          "name": "Canyon Crawler",
+          "qty": 1
+        },
+        {
+          "name": "Heartless Act",
+          "qty": 1
+        },
+        {
+          "name": "Ozai's Cruelty",
+          "qty": 1
+        },
+        {
+          "name": "Scarring Memories",
+          "qty": 1
+        },
+        {
+          "name": "Deadly Precision",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Moor",
+          "qty": 1
+        },
+        {
+          "name": "Swamp",
+          "qty": 6
+        },
+        {
+          "name": "Swamp Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Nightmares",
+      "color": "B",
+      "cards": [
+        {
+          "name": "Purple Pentapus",
+          "qty": 1
+        },
+        {
+          "name": "Pretending Poxbearers",
+          "qty": 1
+        },
+        {
+          "name": "Joo Dee, One of Many",
+          "qty": 1
+        },
+        {
+          "name": "Pirate Peddlers",
+          "qty": 1
+        },
+        {
+          "name": "Azula, On the Hunt",
+          "qty": 1
+        },
+        {
+          "name": "Hei Bai, Spirit of Balance",
+          "qty": 1
+        },
+        {
+          "name": "Canyon Crawler",
+          "qty": 1
+        },
+        {
+          "name": "Koh, the Face Stealer",
+          "qty": 1
+        },
+        {
+          "name": "Zuko's Conviction",
+          "qty": 1
+        },
+        {
+          "name": "Desperate Plea",
+          "qty": 1
+        },
+        {
+          "name": "Ruinous Waterbending",
+          "qty": 1
+        },
+        {
+          "name": "Deadly Precision",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Moor",
+          "qty": 1
+        },
+        {
+          "name": "Swamp",
+          "qty": 6
+        },
+        {
+          "name": "Swamp Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Bad Advice",
+      "color": "B",
+      "cards": [
+        {
+          "name": "Gilacorn",
+          "qty": 1
+        },
+        {
+          "name": "Dai Li Censor",
+          "qty": 1
+        },
+        {
+          "name": "Corrupt Court Official",
+          "qty": 1
+        },
+        {
+          "name": "Joo Dee, One of Many",
+          "qty": 1
+        },
+        {
+          "name": "Long Feng, Grand Secretariat",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Ambushers",
+          "qty": 1
+        },
+        {
+          "name": "Lo and Li, Royal Advisors",
+          "qty": 1
+        },
+        {
+          "name": "Hama, the Bloodbender",
+          "qty": 1
+        },
+        {
+          "name": "Sold Out",
+          "qty": 1
+        },
+        {
+          "name": "Dai Li Indoctrination",
+          "qty": 1
+        },
+        {
+          "name": "Ozai's Cruelty",
+          "qty": 1
+        },
+        {
+          "name": "Deadly Precision",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Moor",
+          "qty": 1
+        },
+        {
+          "name": "Swamp",
+          "qty": 6
+        },
+        {
+          "name": "Swamp Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Siege Engines",
+      "color": "B",
+      "cards": [
+        {
+          "name": "Callous Inspector",
+          "qty": 1
+        },
+        {
+          "name": "Merchant of Many Hats",
+          "qty": 1
+        },
+        {
+          "name": "Pretending Poxbearers",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Engineer",
+          "qty": 1
+        },
+        {
+          "name": "Fire Navy Trebuchet",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Warship",
+          "qty": 1
+        },
+        {
+          "name": "Tundra Tank",
+          "qty": 1
+        },
+        {
+          "name": "The Fire Nation Drill",
+          "qty": 1
+        },
+        {
+          "name": "Beetle-Headed Merchants",
+          "qty": 1
+        },
+        {
+          "name": "Canyon Crawler",
+          "qty": 1
+        },
+        {
+          "name": "Heartless Act",
+          "qty": 1
+        },
+        {
+          "name": "Deadly Precision",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Moor",
+          "qty": 1
+        },
+        {
+          "name": "Swamp",
+          "qty": 6
+        },
+        {
+          "name": "Swamp Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Bounty Hunter (Version 1)",
+      "color": "B",
+      "cards": [
+        {
+          "name": "Purple Pentapus",
+          "qty": 1
+        },
+        {
+          "name": "Pretending Poxbearers",
+          "qty": 1
+        },
+        {
+          "name": "June, Bounty Hunter",
+          "qty": 1
+        },
+        {
+          "name": "Pirate Peddlers",
+          "qty": 1
+        },
+        {
+          "name": "Giant Fly",
+          "qty": 1
+        },
+        {
+          "name": "Azula, On the Hunt",
+          "qty": 1
+        },
+        {
+          "name": "Beetle-Headed Merchants",
+          "qty": 1
+        },
+        {
+          "name": "Nyla, Shirshu Sleuth",
+          "qty": 1
+        },
+        {
+          "name": "Sold Out",
+          "qty": 1
+        },
+        {
+          "name": "Zuko's Conviction",
+          "qty": 1
+        },
+        {
+          "name": "Bastion of Remembrance",
+          "qty": 1
+        },
+        {
+          "name": "Deadly Precision",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Moor",
+          "qty": 1
+        },
+        {
+          "name": "Swamp",
+          "qty": 6
+        },
+        {
+          "name": "Swamp Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Bounty Hunter (Version 2)",
+      "color": "B",
+      "cards": [
+        {
+          "name": "Callous Inspector",
+          "qty": 1
+        },
+        {
+          "name": "Pretending Poxbearers",
+          "qty": 1
+        },
+        {
+          "name": "June, Bounty Hunter",
+          "qty": 1
+        },
+        {
+          "name": "Pirate Peddlers",
+          "qty": 1
+        },
+        {
+          "name": "Fire Navy Trebuchet",
+          "qty": 1
+        },
+        {
+          "name": "Azula, On the Hunt",
+          "qty": 1
+        },
+        {
+          "name": "Zhao, Ruthless Admiral",
+          "qty": 1
+        },
+        {
+          "name": "Nyla, Shirshu Sleuth",
+          "qty": 1
+        },
+        {
+          "name": "Sold Out",
+          "qty": 1
+        },
+        {
+          "name": "Obsessive Pursuit",
+          "qty": 1
+        },
+        {
+          "name": "Bastion of Remembrance",
+          "qty": 1
+        },
+        {
+          "name": "Deadly Precision",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Moor",
+          "qty": 1
+        },
+        {
+          "name": "Swamp",
+          "qty": 6
+        },
+        {
+          "name": "Swamp Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Relentless (Version 1)",
+      "color": "B",
+      "cards": [
+        {
+          "name": "Purple Pentapus",
+          "qty": 1
+        },
+        {
+          "name": "Merchant of Many Hats",
+          "qty": 1
+        },
+        {
+          "name": "Ruthless Waterbender",
+          "qty": 1
+        },
+        {
+          "name": "Pirate Peddlers",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Ambushers",
+          "qty": 1
+        },
+        {
+          "name": "Azula, On the Hunt",
+          "qty": 1
+        },
+        {
+          "name": "Buzzard-Wasp Colony",
+          "qty": 1
+        },
+        {
+          "name": "Canyon Crawler",
+          "qty": 1
+        },
+        {
+          "name": "Sold Out",
+          "qty": 1
+        },
+        {
+          "name": "Azula Always Lies",
+          "qty": 1
+        },
+        {
+          "name": "Heartless Act",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Occupation",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Moor",
+          "qty": 1
+        },
+        {
+          "name": "Swamp",
+          "qty": 6
+        },
+        {
+          "name": "Swamp Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Relentless (Version 2)",
+      "color": "B",
+      "cards": [
+        {
+          "name": "Callous Inspector",
+          "qty": 1
+        },
+        {
+          "name": "Merchant of Many Hats",
+          "qty": 1
+        },
+        {
+          "name": "Joo Dee, One of Many",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Ambushers",
+          "qty": 1
+        },
+        {
+          "name": "Azula, On the Hunt",
+          "qty": 1
+        },
+        {
+          "name": "Zhao, Ruthless Admiral",
+          "qty": 1
+        },
+        {
+          "name": "Beetle-Headed Merchants",
+          "qty": 1
+        },
+        {
+          "name": "Canyon Crawler",
+          "qty": 1
+        },
+        {
+          "name": "Azula Always Lies",
+          "qty": 1
+        },
+        {
+          "name": "Heartless Act",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Occupation",
+          "qty": 1
+        },
+        {
+          "name": "Deadly Precision",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Moor",
+          "qty": 1
+        },
+        {
+          "name": "Swamp",
+          "qty": 6
+        },
+        {
+          "name": "Swamp Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Reinforced (Version 1)",
+      "color": "B",
+      "cards": [
+        {
+          "name": "Callous Inspector",
+          "qty": 1
+        },
+        {
+          "name": "Elephant-Rat",
+          "qty": 1
+        },
+        {
+          "name": "Long Feng, Grand Secretariat",
+          "qty": 1
+        },
+        {
+          "name": "Hog-Monkey",
+          "qty": 1
+        },
+        {
+          "name": "Zuko, Seeking Honor",
+          "qty": 1
+        },
+        {
+          "name": "Buzzard-Wasp Colony",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Salvagers",
+          "qty": 1
+        },
+        {
+          "name": "Beetle-Headed Merchants",
+          "qty": 1
+        },
+        {
+          "name": "Azula Always Lies",
+          "qty": 1
+        },
+        {
+          "name": "Dai Li Indoctrination",
+          "qty": 1
+        },
+        {
+          "name": "Epic Downfall",
+          "qty": 1
+        },
+        {
+          "name": "Feed the Swarm",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Moor",
+          "qty": 1
+        },
+        {
+          "name": "Swamp",
+          "qty": 6
+        },
+        {
+          "name": "Swamp Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Reinforced (Version 2)",
+      "color": "B",
+      "cards": [
+        {
+          "name": "Gilacorn",
+          "qty": 1
+        },
+        {
+          "name": "Elephant-Rat",
+          "qty": 1
+        },
+        {
+          "name": "Hog-Monkey",
+          "qty": 1
+        },
+        {
+          "name": "Long Feng, Grand Secretariat",
+          "qty": 1
+        },
+        {
+          "name": "Earth Village Ruffians",
+          "qty": 1
+        },
+        {
+          "name": "Zuko, Seeking Honor",
+          "qty": 1
+        },
+        {
+          "name": "Buzzard-Wasp Colony",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Salvagers",
+          "qty": 1
+        },
+        {
+          "name": "Fatal Fissure",
+          "qty": 1
+        },
+        {
+          "name": "Dai Li Indoctrination",
+          "qty": 1
+        },
+        {
+          "name": "Heartless Act",
+          "qty": 1
+        },
+        {
+          "name": "Deadly Precision",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Moor",
+          "qty": 1
+        },
+        {
+          "name": "Swamp",
+          "qty": 6
+        },
+        {
+          "name": "Swamp Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Hunting (Version 1)",
+      "color": "B",
+      "cards": [
+        {
+          "name": "Purple Pentapus",
+          "qty": 1
+        },
+        {
+          "name": "Elephant-Rat",
+          "qty": 1
+        },
+        {
+          "name": "June, Bounty Hunter",
+          "qty": 1
+        },
+        {
+          "name": "Raven Eagle",
+          "qty": 1
+        },
+        {
+          "name": "Messenger Hawk",
+          "qty": 1
+        },
+        {
+          "name": "Katara, Seeking Revenge",
+          "qty": 1
+        },
+        {
+          "name": "Foggy Swamp Hunters",
+          "qty": 1
+        },
+        {
+          "name": "Beetle-Headed Merchants",
+          "qty": 1
+        },
+        {
+          "name": "Desperate Plea",
+          "qty": 1
+        },
+        {
+          "name": "Epic Downfall",
+          "qty": 1
+        },
+        {
+          "name": "Diresight",
+          "qty": 1
+        },
+        {
+          "name": "Deadly Precision",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Moor",
+          "qty": 1
+        },
+        {
+          "name": "Swamp",
+          "qty": 6
+        },
+        {
+          "name": "Swamp Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Hunting (Version 2)",
+      "color": "B",
+      "cards": [
+        {
+          "name": "Gilacorn",
+          "qty": 1
+        },
+        {
+          "name": "Ruthless Waterbender",
+          "qty": 1
+        },
+        {
+          "name": "June, Bounty Hunter",
+          "qty": 1
+        },
+        {
+          "name": "Raven Eagle",
+          "qty": 1
+        },
+        {
+          "name": "Messenger Hawk",
+          "qty": 1
+        },
+        {
+          "name": "Katara, Seeking Revenge",
+          "qty": 1
+        },
+        {
+          "name": "Foggy Swamp Hunters",
+          "qty": 1
+        },
+        {
+          "name": "Beetle-Headed Merchants",
+          "qty": 1
+        },
+        {
+          "name": "Azula Always Lies",
+          "qty": 1
+        },
+        {
+          "name": "Swampsnare Trap",
+          "qty": 1
+        },
+        {
+          "name": "Diresight",
+          "qty": 1
+        },
+        {
+          "name": "Deadly Precision",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Moor",
+          "qty": 1
+        },
+        {
+          "name": "Swamp",
+          "qty": 6
+        },
+        {
+          "name": "Swamp Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Zuko",
+      "color": "R",
+      "cards": [
+        {
+          "name": "Yuyan Archers",
+          "qty": 1
+        },
+        {
+          "name": "Zuko, Firebending Master",
+          "qty": 1
+        },
+        {
+          "name": "Mai, Jaded Edge",
+          "qty": 1
+        },
+        {
+          "name": "War Balloon",
+          "qty": 1
+        },
+        {
+          "name": "Dragon Moose",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Attacks",
+          "qty": 1
+        },
+        {
+          "name": "Mongoose Lizard",
+          "qty": 1
+        },
+        {
+          "name": "Frantic Confrontation",
+          "qty": 1
+        },
+        {
+          "name": "Firebending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Fists of Flame",
+          "qty": 1
+        },
+        {
+          "name": "Lightning Strike",
+          "qty": 1
+        },
+        {
+          "name": "Lost in Memories",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Bluff",
+          "qty": 1
+        },
+        {
+          "name": "Mountain",
+          "qty": 6
+        },
+        {
+          "name": "Mountain Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Roku",
+      "color": "R",
+      "cards": [
+        {
+          "name": "Yuyan Archers",
+          "qty": 1
+        },
+        {
+          "name": "Fire Sages",
+          "qty": 1
+        },
+        {
+          "name": "Boar-q-pine",
+          "qty": 1
+        },
+        {
+          "name": "Loyal Fire Sage",
+          "qty": 1
+        },
+        {
+          "name": "Jeong Jeong, the Deserter",
+          "qty": 1
+        },
+        {
+          "name": "Fang, Roku's Companion",
+          "qty": 1
+        },
+        {
+          "name": "Avatar Roku, Firebender",
+          "qty": 1
+        },
+        {
+          "name": "Firebending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Frantic Confrontation",
+          "qty": 1
+        },
+        {
+          "name": "Roku's Mastery",
+          "qty": 1
+        },
+        {
+          "name": "Crescent Island Temple",
+          "qty": 1
+        },
+        {
+          "name": "White Lotus Hideout",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Bluff",
+          "qty": 1
+        },
+        {
+          "name": "Mountain",
+          "qty": 6
+        },
+        {
+          "name": "Mountain Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Iroh",
+      "color": "R",
+      "cards": [
+        {
+          "name": "Deserter's Disciple",
+          "qty": 1
+        },
+        {
+          "name": "Tiger-Dillo",
+          "qty": 1
+        },
+        {
+          "name": "Boar-q-pine",
+          "qty": 1
+        },
+        {
+          "name": "Zuko, Seeking Honor",
+          "qty": 1
+        },
+        {
+          "name": "Jeong Jeong, the Deserter",
+          "qty": 1
+        },
+        {
+          "name": "Iroh, Dragon of the West",
+          "qty": 1
+        },
+        {
+          "name": "Mongoose Lizard",
+          "qty": 1
+        },
+        {
+          "name": "Firebending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Iroh's Demonstration",
+          "qty": 1
+        },
+        {
+          "name": "Cathartic Reunion",
+          "qty": 1
+        },
+        {
+          "name": "Bolt Bend",
+          "qty": 1
+        },
+        {
+          "name": "Fiery Confluence",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Bluff",
+          "qty": 1
+        },
+        {
+          "name": "Mountain",
+          "qty": 6
+        },
+        {
+          "name": "Mountain Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Fire Nation",
+      "color": "R",
+      "cards": [
+        {
+          "name": "Firebending Student",
+          "qty": 1
+        },
+        {
+          "name": "Mai, Jaded Edge",
+          "qty": 1
+        },
+        {
+          "name": "Ty Lee, Artful Acrobat",
+          "qty": 1
+        },
+        {
+          "name": "Zuko, Seeking Honor",
+          "qty": 1
+        },
+        {
+          "name": "Longshot, Rebel Bowman",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Attacks",
+          "qty": 1
+        },
+        {
+          "name": "Firebending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Cunning Maneuver",
+          "qty": 1
+        },
+        {
+          "name": "Fists of Flame",
+          "qty": 1
+        },
+        {
+          "name": "Lightning Strike",
+          "qty": 1
+        },
+        {
+          "name": "How to Start a Riot",
+          "qty": 1
+        },
+        {
+          "name": "Storm of Memories",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Bluff",
+          "qty": 1
+        },
+        {
+          "name": "Mountain",
+          "qty": 6
+        },
+        {
+          "name": "Mountain Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Musicians",
+      "color": "R",
+      "cards": [
+        {
+          "name": "Freedom Fighter Recruit",
+          "qty": 1
+        },
+        {
+          "name": "Moku, Meandering Drummer",
+          "qty": 1
+        },
+        {
+          "name": "Ty Lee, Artful Acrobat",
+          "qty": 1
+        },
+        {
+          "name": "Founding of Omashu",
+          "qty": 1
+        },
+        {
+          "name": "Wandering Musicians",
+          "qty": 1
+        },
+        {
+          "name": "Chong and Lily, Nomads",
+          "qty": 1
+        },
+        {
+          "name": "Rough Rhino Cavalry",
+          "qty": 1
+        },
+        {
+          "name": "Mongoose Lizard",
+          "qty": 1
+        },
+        {
+          "name": "Explosive Shot",
+          "qty": 1
+        },
+        {
+          "name": "Cunning Maneuver",
+          "qty": 1
+        },
+        {
+          "name": "Bumi Bash",
+          "qty": 1
+        },
+        {
+          "name": "The Cave of Two Lovers",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Bluff",
+          "qty": 1
+        },
+        {
+          "name": "Secret Tunnel",
+          "qty": 1
+        },
+        {
+          "name": "Mountain",
+          "qty": 5
+        },
+        {
+          "name": "Mountain Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Rebelling (Version 1)",
+      "color": "R",
+      "cards": [
+        {
+          "name": "Freedom Fighter Recruit",
+          "qty": 1
+        },
+        {
+          "name": "Yuyan Archers",
+          "qty": 1
+        },
+        {
+          "name": "Treetop Freedom Fighters",
+          "qty": 1
+        },
+        {
+          "name": "Zuko, Seeking Honor",
+          "qty": 1
+        },
+        {
+          "name": "Longshot, Rebel Bowman",
+          "qty": 1
+        },
+        {
+          "name": "Smellerbee, Rebel Fighter",
+          "qty": 1
+        },
+        {
+          "name": "Jet, Freedom Fighter",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Attacks",
+          "qty": 1
+        },
+        {
+          "name": "Explosive Shot",
+          "qty": 1
+        },
+        {
+          "name": "Cunning Maneuver",
+          "qty": 1
+        },
+        {
+          "name": "How to Start a Riot",
+          "qty": 1
+        },
+        {
+          "name": "Bumi Bash",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Bluff",
+          "qty": 1
+        },
+        {
+          "name": "Mountain",
+          "qty": 6
+        },
+        {
+          "name": "Mountain Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Rebelling (Version 2)",
+      "color": "R",
+      "cards": [
+        {
+          "name": "Freedom Fighter Recruit",
+          "qty": 1
+        },
+        {
+          "name": "Deserter's Disciple",
+          "qty": 1
+        },
+        {
+          "name": "Treetop Freedom Fighters",
+          "qty": 1
+        },
+        {
+          "name": "Zuko, Seeking Honor",
+          "qty": 1
+        },
+        {
+          "name": "Hook Swords",
+          "qty": 1
+        },
+        {
+          "name": "Longshot, Rebel Bowman",
+          "qty": 1
+        },
+        {
+          "name": "Smellerbee, Rebel Fighter",
+          "qty": 1
+        },
+        {
+          "name": "Jet, Freedom Fighter",
+          "qty": 1
+        },
+        {
+          "name": "Explosive Shot",
+          "qty": 1
+        },
+        {
+          "name": "Run Amok",
+          "qty": 1
+        },
+        {
+          "name": "How to Start a Riot",
+          "qty": 1
+        },
+        {
+          "name": "Overwhelming Victory",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Bluff",
+          "qty": 1
+        },
+        {
+          "name": "Mountain",
+          "qty": 6
+        },
+        {
+          "name": "Mountain Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Firebending (Version 1)",
+      "color": "R",
+      "cards": [
+        {
+          "name": "Fire Nation Cadets",
+          "qty": 1
+        },
+        {
+          "name": "Fire Sages",
+          "qty": 1
+        },
+        {
+          "name": "Firebender Ascension",
+          "qty": 1
+        },
+        {
+          "name": "Loyal Fire Sage",
+          "qty": 1
+        },
+        {
+          "name": "Jeong Jeong, the Deserter",
+          "qty": 1
+        },
+        {
+          "name": "Zuko, Exiled Prince",
+          "qty": 1
+        },
+        {
+          "name": "Dragon Moose",
+          "qty": 1
+        },
+        {
+          "name": "Firebending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Roku's Mastery",
+          "qty": 1
+        },
+        {
+          "name": "Cunning Maneuver",
+          "qty": 1
+        },
+        {
+          "name": "Lightning Strike",
+          "qty": 1
+        },
+        {
+          "name": "Reckless Blaze",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Bluff",
+          "qty": 1
+        },
+        {
+          "name": "Mountain",
+          "qty": 6
+        },
+        {
+          "name": "Mountain Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Firebending (Version 2)",
+      "color": "R",
+      "cards": [
+        {
+          "name": "Fire Nation Cadets",
+          "qty": 1
+        },
+        {
+          "name": "Moku, Meandering Drummer",
+          "qty": 1
+        },
+        {
+          "name": "Yuyan Archers",
+          "qty": 1
+        },
+        {
+          "name": "Loyal Fire Sage",
+          "qty": 1
+        },
+        {
+          "name": "Jeong Jeong, the Deserter",
+          "qty": 1
+        },
+        {
+          "name": "Zuko, Exiled Prince",
+          "qty": 1
+        },
+        {
+          "name": "Rough Rhino Cavalry",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Attacks",
+          "qty": 1
+        },
+        {
+          "name": "Firebending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Cunning Maneuver",
+          "qty": 1
+        },
+        {
+          "name": "Combustion Technique",
+          "qty": 1
+        },
+        {
+          "name": "Reckless Blaze",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Bluff",
+          "qty": 1
+        },
+        {
+          "name": "Mountain",
+          "qty": 6
+        },
+        {
+          "name": "Mountain Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Sparky Sparky (Version 1)",
+      "color": "R",
+      "cards": [
+        {
+          "name": "Fire Nation Cadets",
+          "qty": 1
+        },
+        {
+          "name": "Fire Sages",
+          "qty": 1
+        },
+        {
+          "name": "Deer-Dog",
+          "qty": 1
+        },
+        {
+          "name": "War Balloon",
+          "qty": 1
+        },
+        {
+          "name": "Zuko, Exiled Prince",
+          "qty": 1
+        },
+        {
+          "name": "Earth Rumble Wrestlers",
+          "qty": 1
+        },
+        {
+          "name": "Combustion Man",
+          "qty": 1
+        },
+        {
+          "name": "Ran and Shaw",
+          "qty": 1
+        },
+        {
+          "name": "Iroh's Demonstration",
+          "qty": 1
+        },
+        {
+          "name": "Combustion Technique",
+          "qty": 1
+        },
+        {
+          "name": "How to Start a Riot",
+          "qty": 1
+        },
+        {
+          "name": "Bumi Bash",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Bluff",
+          "qty": 1
+        },
+        {
+          "name": "Mountain",
+          "qty": 6
+        },
+        {
+          "name": "Mountain Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Sparky Sparky (Version 2)",
+      "color": "R",
+      "cards": [
+        {
+          "name": "Fire Nation Cadets",
+          "qty": 1
+        },
+        {
+          "name": "Yuyan Archers",
+          "qty": 1
+        },
+        {
+          "name": "Deer-Dog",
+          "qty": 1
+        },
+        {
+          "name": "War Balloon",
+          "qty": 1
+        },
+        {
+          "name": "Zuko, Exiled Prince",
+          "qty": 1
+        },
+        {
+          "name": "Dragon Moose",
+          "qty": 1
+        },
+        {
+          "name": "Combustion Man",
+          "qty": 1
+        },
+        {
+          "name": "Ran and Shaw",
+          "qty": 1
+        },
+        {
+          "name": "Firebending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Combustion Technique",
+          "qty": 1
+        },
+        {
+          "name": "Price of Freedom",
+          "qty": 1
+        },
+        {
+          "name": "Overwhelming Victory",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Bluff",
+          "qty": 1
+        },
+        {
+          "name": "Mountain",
+          "qty": 6
+        },
+        {
+          "name": "Mountain Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Powerful (Version 1)",
+      "color": "R",
+      "cards": [
+        {
+          "name": "Deserter's Disciple",
+          "qty": 1
+        },
+        {
+          "name": "Tiger-Dillo",
+          "qty": 1
+        },
+        {
+          "name": "Uncle Iroh",
+          "qty": 1
+        },
+        {
+          "name": "Earth Rumble Wrestlers",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Raider",
+          "qty": 1
+        },
+        {
+          "name": "Fang, Roku's Companion",
+          "qty": 1
+        },
+        {
+          "name": "Rough Rhino Cavalry",
+          "qty": 1
+        },
+        {
+          "name": "Mongoose Lizard",
+          "qty": 1
+        },
+        {
+          "name": "Firebending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Iroh's Demonstration",
+          "qty": 1
+        },
+        {
+          "name": "Cathartic Reunion",
+          "qty": 1
+        },
+        {
+          "name": "Twin Blades",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Bluff",
+          "qty": 1
+        },
+        {
+          "name": "Mountain",
+          "qty": 6
+        },
+        {
+          "name": "Mountain Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Powerful (Version 2)",
+      "color": "R",
+      "cards": [
+        {
+          "name": "Freedom Fighter Recruit",
+          "qty": 1
+        },
+        {
+          "name": "Tiger-Dillo",
+          "qty": 1
+        },
+        {
+          "name": "Uncle Iroh",
+          "qty": 1
+        },
+        {
+          "name": "Komodo Rhino",
+          "qty": 1
+        },
+        {
+          "name": "Fire Nation Raider",
+          "qty": 1
+        },
+        {
+          "name": "Fang, Roku's Companion",
+          "qty": 1
+        },
+        {
+          "name": "Combustion Man",
+          "qty": 1
+        },
+        {
+          "name": "Mongoose Lizard",
+          "qty": 1
+        },
+        {
+          "name": "Firebending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Hog-Monkey Rampage",
+          "qty": 1
+        },
+        {
+          "name": "Cathartic Reunion",
+          "qty": 1
+        },
+        {
+          "name": "How to Start a Riot",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Bluff",
+          "qty": 1
+        },
+        {
+          "name": "Mountain",
+          "qty": 6
+        },
+        {
+          "name": "Mountain Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Toph",
+      "color": "G",
+      "cards": [
+        {
+          "name": "Rebellious Captives",
+          "qty": 1
+        },
+        {
+          "name": "Frog-Squirrels",
+          "qty": 1
+        },
+        {
+          "name": "Toph, Earthbending Master",
+          "qty": 1
+        },
+        {
+          "name": "Earth Kingdom Soldier",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Warrior Exemplars",
+          "qty": 1
+        },
+        {
+          "name": "Earth Kingdom General",
+          "qty": 1
+        },
+        {
+          "name": "Badgermole",
+          "qty": 1
+        },
+        {
+          "name": "Saber-Tooth Moose-Lion",
+          "qty": 1
+        },
+        {
+          "name": "Rocky Rebuke",
+          "qty": 1
+        },
+        {
+          "name": "Origin of Metalbending",
+          "qty": 1
+        },
+        {
+          "name": "Tale of Katara and Toph",
+          "qty": 1
+        },
+        {
+          "name": "Solid Ground",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Grove",
+          "qty": 1
+        },
+        {
+          "name": "Forest",
+          "qty": 6
+        },
+        {
+          "name": "Forest Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Kyoshi",
+      "color": "G",
+      "cards": [
+        {
+          "name": "Kyoshi Battle Fan",
+          "qty": 1
+        },
+        {
+          "name": "Raucous Audience",
+          "qty": 1
+        },
+        {
+          "name": "Elephant-Mandrill",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Warrior Exemplars",
+          "qty": 1
+        },
+        {
+          "name": "Suki, Kyoshi Warrior",
+          "qty": 1
+        },
+        {
+          "name": "Earth Kingdom Soldier",
+          "qty": 1
+        },
+        {
+          "name": "Avatar Kyoshi, Earthbender",
+          "qty": 1
+        },
+        {
+          "name": "Rocky Rebuke",
+          "qty": 1
+        },
+        {
+          "name": "Cycle of Renewal",
+          "qty": 1
+        },
+        {
+          "name": "Allies at Last",
+          "qty": 1
+        },
+        {
+          "name": "Cracked Earth Technique",
+          "qty": 1
+        },
+        {
+          "name": "Tectonic Split",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Grove",
+          "qty": 1
+        },
+        {
+          "name": "Forest",
+          "qty": 6
+        },
+        {
+          "name": "Forest Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "At the Zoo",
+      "color": "G",
+      "cards": [
+        {
+          "name": "Turtle-Duck",
+          "qty": 1
+        },
+        {
+          "name": "Animal Attendant",
+          "qty": 1
+        },
+        {
+          "name": "Frog-Squirrels",
+          "qty": 1
+        },
+        {
+          "name": "Ostrich-Horse",
+          "qty": 1
+        },
+        {
+          "name": "Elephant-Mandrill",
+          "qty": 1
+        },
+        {
+          "name": "Eel-Hounds",
+          "qty": 1
+        },
+        {
+          "name": "Diligent Zookeeper",
+          "qty": 1
+        },
+        {
+          "name": "Saber-Tooth Moose-Lion",
+          "qty": 1
+        },
+        {
+          "name": "Pillar Launch",
+          "qty": 1
+        },
+        {
+          "name": "Origin of Metalbending",
+          "qty": 1
+        },
+        {
+          "name": "Bison Whistle",
+          "qty": 1
+        },
+        {
+          "name": "Hog-Monkey Rampage",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Grove",
+          "qty": 1
+        },
+        {
+          "name": "Forest",
+          "qty": 6
+        },
+        {
+          "name": "Forest Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Cabbages",
+      "color": "G",
+      "cards": [
+        {
+          "name": "Unlucky Cabbage Merchant",
+          "qty": 1
+        },
+        {
+          "name": "Bumi's Feast Lecture",
+          "qty": 1
+        },
+        {
+          "name": "Elephant-Mandrill",
+          "qty": 1
+        },
+        {
+          "name": "The Cabbage Merchant",
+          "qty": 1
+        },
+        {
+          "name": "Foggy Swamp Vinebender",
+          "qty": 1
+        },
+        {
+          "name": "Bosco, Just a Bear",
+          "qty": 1
+        },
+        {
+          "name": "Hippo-Cows",
+          "qty": 1
+        },
+        {
+          "name": "Saber-Tooth Moose-Lion",
+          "qty": 1
+        },
+        {
+          "name": "Many Partings",
+          "qty": 1
+        },
+        {
+          "name": "Leaves from the Vine",
+          "qty": 1
+        },
+        {
+          "name": "The Art of Tea",
+          "qty": 1
+        },
+        {
+          "name": "Rocky Rebuke",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Grove",
+          "qty": 1
+        },
+        {
+          "name": "Forest",
+          "qty": 6
+        },
+        {
+          "name": "Forest Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Bumi",
+      "color": "G",
+      "cards": [
+        {
+          "name": "Raucous Audience",
+          "qty": 1
+        },
+        {
+          "name": "Bumi's Feast Lecture",
+          "qty": 1
+        },
+        {
+          "name": "Aang, A Lot to Learn",
+          "qty": 1
+        },
+        {
+          "name": "Walltop Sentries",
+          "qty": 1
+        },
+        {
+          "name": "Earthbending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Badgermole",
+          "qty": 1
+        },
+        {
+          "name": "Bumi, King of Three Trials",
+          "qty": 1
+        },
+        {
+          "name": "Flopsie, Bumi's Buddy",
+          "qty": 1
+        },
+        {
+          "name": "Origin of Metalbending",
+          "qty": 1
+        },
+        {
+          "name": "Rocky Rebuke",
+          "qty": 1
+        },
+        {
+          "name": "Creeping Crystal Coating",
+          "qty": 1
+        },
+        {
+          "name": "Crystalline Armor",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Grove",
+          "qty": 1
+        },
+        {
+          "name": "Forest",
+          "qty": 6
+        },
+        {
+          "name": "Forest Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Earth Rumble (Version 1)",
+      "color": "G",
+      "cards": [
+        {
+          "name": "Rebellious Captives",
+          "qty": 1
+        },
+        {
+          "name": "Raucous Audience",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Battle Fan",
+          "qty": 1
+        },
+        {
+          "name": "Uncle Iroh",
+          "qty": 1
+        },
+        {
+          "name": "Toph, the Blind Bandit",
+          "qty": 1
+        },
+        {
+          "name": "The Boulder, Ready to Rumble",
+          "qty": 1
+        },
+        {
+          "name": "Earth Rumble",
+          "qty": 1
+        },
+        {
+          "name": "Earth Rumble Wrestlers",
+          "qty": 1
+        },
+        {
+          "name": "Hippo-Cows",
+          "qty": 1
+        },
+        {
+          "name": "Pillar Launch",
+          "qty": 1
+        },
+        {
+          "name": "Hog-Monkey Rampage",
+          "qty": 1
+        },
+        {
+          "name": "Master's Guidance",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Grove",
+          "qty": 1
+        },
+        {
+          "name": "Forest",
+          "qty": 6
+        },
+        {
+          "name": "Forest Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Earth Rumble (Version 2)",
+      "color": "G",
+      "cards": [
+        {
+          "name": "Frog-Squirrels",
+          "qty": 1
+        },
+        {
+          "name": "Raucous Audience",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Battle Fan",
+          "qty": 1
+        },
+        {
+          "name": "Uncle Iroh",
+          "qty": 1
+        },
+        {
+          "name": "The Earth King",
+          "qty": 1
+        },
+        {
+          "name": "The Boulder, Ready to Rumble",
+          "qty": 1
+        },
+        {
+          "name": "Earth Rumble",
+          "qty": 1
+        },
+        {
+          "name": "Earth Rumble Wrestlers",
+          "qty": 1
+        },
+        {
+          "name": "Bosco, Just a Bear",
+          "qty": 1
+        },
+        {
+          "name": "Origin of Metalbending",
+          "qty": 1
+        },
+        {
+          "name": "Hog-Monkey Rampage",
+          "qty": 1
+        },
+        {
+          "name": "Allies at Last",
+          "qty": 1
+        },
+        {
+          "name": "Master's Guidance",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Grove",
+          "qty": 1
+        },
+        {
+          "name": "Forest",
+          "qty": 6
+        },
+        {
+          "name": "Forest Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Earth Kingdom (Version 1)",
+      "color": "G",
+      "cards": [
+        {
+          "name": "Haru, Hidden Talent",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Battle Fan",
+          "qty": 1
+        },
+        {
+          "name": "Toph, the Blind Bandit",
+          "qty": 1
+        },
+        {
+          "name": "Match the Odds",
+          "qty": 1
+        },
+        {
+          "name": "Suki, Kyoshi Warrior",
+          "qty": 1
+        },
+        {
+          "name": "Foggy Swamp Vinebender",
+          "qty": 1
+        },
+        {
+          "name": "Earth Kingdom Soldier",
+          "qty": 1
+        },
+        {
+          "name": "Hippo-Cows",
+          "qty": 1
+        },
+        {
+          "name": "Mechanical Glider",
+          "qty": 1
+        },
+        {
+          "name": "Stand United",
+          "qty": 1
+        },
+        {
+          "name": "Descendants' Path",
+          "qty": 1
+        },
+        {
+          "name": "Allies at Last",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Grove",
+          "qty": 1
+        },
+        {
+          "name": "Forest",
+          "qty": 6
+        },
+        {
+          "name": "Forest Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Earth Kingdom (Version 2)",
+      "color": "G",
+      "cards": [
+        {
+          "name": "Haru, Hidden Talent",
+          "qty": 1
+        },
+        {
+          "name": "Great Divide Guide",
+          "qty": 1
+        },
+        {
+          "name": "Toph, the Blind Bandit",
+          "qty": 1
+        },
+        {
+          "name": "Walltop Sentries",
+          "qty": 1
+        },
+        {
+          "name": "Suki, Kyoshi Warrior",
+          "qty": 1
+        },
+        {
+          "name": "Earth Kingdom General",
+          "qty": 1
+        },
+        {
+          "name": "Earth Kingdom Soldier",
+          "qty": 1
+        },
+        {
+          "name": "Hippo-Cows",
+          "qty": 1
+        },
+        {
+          "name": "Mechanical Glider",
+          "qty": 1
+        },
+        {
+          "name": "Origin of Metalbending",
+          "qty": 1
+        },
+        {
+          "name": "Descendants' Path",
+          "qty": 1
+        },
+        {
+          "name": "Allies at Last",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Grove",
+          "qty": 1
+        },
+        {
+          "name": "Forest",
+          "qty": 6
+        },
+        {
+          "name": "Forest Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Learning (Version 1)",
+      "color": "G",
+      "cards": [
+        {
+          "name": "Rebellious Captives",
+          "qty": 1
+        },
+        {
+          "name": "Sparring Dummy",
+          "qty": 1
+        },
+        {
+          "name": "Walltop Sentries",
+          "qty": 1
+        },
+        {
+          "name": "Aang, A Lot to Learn",
+          "qty": 1
+        },
+        {
+          "name": "Guru Pathik",
+          "qty": 1
+        },
+        {
+          "name": "Saber-Tooth Moose-Lion",
+          "qty": 1
+        },
+        {
+          "name": "Origin of Metalbending",
+          "qty": 1
+        },
+        {
+          "name": "Shared Roots",
+          "qty": 1
+        },
+        {
+          "name": "Rocky Rebuke",
+          "qty": 1
+        },
+        {
+          "name": "Crystalline Armor",
+          "qty": 1
+        },
+        {
+          "name": "Cracked Earth Technique",
+          "qty": 1
+        },
+        {
+          "name": "Zuko's Exile",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Grove",
+          "qty": 1
+        },
+        {
+          "name": "Forest",
+          "qty": 6
+        },
+        {
+          "name": "Forest Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Learning (Version 2)",
+      "color": "G",
+      "cards": [
+        {
+          "name": "Platypus-Bear",
+          "qty": 1
+        },
+        {
+          "name": "Sparring Dummy",
+          "qty": 1
+        },
+        {
+          "name": "Walltop Sentries",
+          "qty": 1
+        },
+        {
+          "name": "Aang, A Lot to Learn",
+          "qty": 1
+        },
+        {
+          "name": "Uncle Iroh",
+          "qty": 1
+        },
+        {
+          "name": "Saber-Tooth Moose-Lion",
+          "qty": 1
+        },
+        {
+          "name": "The Art of Tea",
+          "qty": 1
+        },
+        {
+          "name": "True Ancestry",
+          "qty": 1
+        },
+        {
+          "name": "Rocky Rebuke",
+          "qty": 1
+        },
+        {
+          "name": "Master's Guidance",
+          "qty": 1
+        },
+        {
+          "name": "Cracked Earth Technique",
+          "qty": 1
+        },
+        {
+          "name": "Zuko's Exile",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Grove",
+          "qty": 1
+        },
+        {
+          "name": "Forest",
+          "qty": 6
+        },
+        {
+          "name": "Forest Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Earthbending (Version 1)",
+      "color": "G",
+      "cards": [
+        {
+          "name": "Turtle-Duck",
+          "qty": 1
+        },
+        {
+          "name": "Rebellious Captives",
+          "qty": 1
+        },
+        {
+          "name": "Earth Kingdom Soldier",
+          "qty": 1
+        },
+        {
+          "name": "Toph, the Blind Bandit",
+          "qty": 1
+        },
+        {
+          "name": "Earthbending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Earth Kingdom General",
+          "qty": 1
+        },
+        {
+          "name": "Hippo-Cows",
+          "qty": 1
+        },
+        {
+          "name": "Explore",
+          "qty": 1
+        },
+        {
+          "name": "Rocky Rebuke",
+          "qty": 1
+        },
+        {
+          "name": "Earthbender Ascension",
+          "qty": 1
+        },
+        {
+          "name": "Inspiring Call",
+          "qty": 1
+        },
+        {
+          "name": "Rumble Arena",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Grove",
+          "qty": 1
+        },
+        {
+          "name": "Forest",
+          "qty": 6
+        },
+        {
+          "name": "Forest Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Earthbending (Version 2)",
+      "color": "G",
+      "cards": [
+        {
+          "name": "Rebellious Captives",
+          "qty": 1
+        },
+        {
+          "name": "Frog-Squirrels",
+          "qty": 1
+        },
+        {
+          "name": "Earth Kingdom Soldier",
+          "qty": 1
+        },
+        {
+          "name": "Toph, the Blind Bandit",
+          "qty": 1
+        },
+        {
+          "name": "Earthbending Lesson",
+          "qty": 1
+        },
+        {
+          "name": "Earth Kingdom General",
+          "qty": 1
+        },
+        {
+          "name": "Badgermole",
+          "qty": 1
+        },
+        {
+          "name": "Explore",
+          "qty": 1
+        },
+        {
+          "name": "Rocky Rebuke",
+          "qty": 1
+        },
+        {
+          "name": "Tale of Katara and Toph",
+          "qty": 1
+        },
+        {
+          "name": "Solid Ground",
+          "qty": 1
+        },
+        {
+          "name": "Rumble Arena",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Grove",
+          "qty": 1
+        },
+        {
+          "name": "Forest",
+          "qty": 6
+        },
+        {
+          "name": "Forest Appa",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "game": "mtg",
+      "set_code": "tla",
+      "product_type": "jumpstart-booster-box",
+      "deck_name": "Shrines",
+      "color": "M",
+      "cards": [
+        {
+          "name": "Raucous Audience",
+          "qty": 1
+        },
+        {
+          "name": "Walltop Sentries",
+          "qty": 1
+        },
+        {
+          "name": "Hei Bai, Forest Guardian",
+          "qty": 1
+        },
+        {
+          "name": "Guru Pathik",
+          "qty": 1
+        },
+        {
+          "name": "Saber-Tooth Moose-Lion",
+          "qty": 1
+        },
+        {
+          "name": "Barrels of Blasting Jelly",
+          "qty": 1
+        },
+        {
+          "name": "Northern Air Temple",
+          "qty": 1
+        },
+        {
+          "name": "Aang's Journey",
+          "qty": 1
+        },
+        {
+          "name": "The Spirit Oasis",
+          "qty": 1
+        },
+        {
+          "name": "Kyoshi Island Plaza",
+          "qty": 1
+        },
+        {
+          "name": "Southern Air Temple",
+          "qty": 1
+        },
+        {
+          "name": "Crescent Island Temple",
+          "qty": 1
+        },
+        {
+          "name": "Thriving Grove",
+          "qty": 1
+        },
+        {
+          "name": "White Lotus Hideout",
+          "qty": 1
+        },
+        {
+          "name": "Plains",
+          "qty": 1
+        },
+        {
+          "name": "Island",
+          "qty": 1
+        },
+        {
+          "name": "Swamp",
+          "qty": 1
+        },
+        {
+          "name": "Mountain",
+          "qty": 1
+        },
+        {
+          "name": "Forest",
+          "qty": 2
+        },
+        {
+          "name": "Forest Appa",
+          "qty": 1
+        }
       ]
     }
   ]
