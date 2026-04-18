@@ -149,6 +149,45 @@
   const HORIZON_DAYS = { "6mo": 180, "1yr": 365, "2yr": 730 };
   const HORIZON_LABEL = { "6mo": "6 months", "1yr": "1 year", "2yr": "2 years" };
 
+  // Human-readable labels for feature attribution display.
+  const FEATURE_LABELS = {
+    market_price: "Current market price",
+    release_age_days: "Days since release",
+    month: "Month of year",
+    avg_daily_sold: "Avg daily sold",
+    listed_median: "Median listed price",
+    seller_count: "Seller count",
+    price_7d_ago: "Price 7 days ago",
+    price_30d_ago: "Price 30 days ago",
+    price_90d_ago: "Price 90 days ago",
+    price_180d_ago: "Price 6 months ago",
+    price_365d_ago: "Price 1 year ago",
+    pct_change_7d: "% change over 7 days",
+    pct_change_30d: "% change over 30 days",
+    pct_change_90d: "% change over 90 days",
+    set_market_value: "Set market value (sum of singles)",
+    pack_expected_value: "Pack expected value",
+    packs_to_master_r1: "Packs needed for rarest pull",
+    packs_to_master_r2: "Packs needed for 2nd rarest",
+    packs_to_master_r3: "Packs needed for 3rd rarest",
+    max_single_price: "Most expensive single",
+    top_3_singles_sum: "Top 3 singles combined",
+    chase_multiple: "Chase vs box ratio",
+    avg_psa_10_price: "Avg PSA 10 price",
+    avg_cgc_95_price: "Avg CGC 9.5 price",
+    avg_psa_9_price: "Avg PSA 9 price",
+    graded_premium_ratio: "PSA 10 premium ratio",
+    sp500_close: "S&P 500 close",
+    sp500_52w_pct: "S&P 500 52-week %",
+    btc_close: "BTC close",
+    btc_52w_pct: "BTC 52-week %",
+    trends_game_interest: "Game search interest",
+    trends_game_anchor: "Game vs anchor ratio",
+    trends_set_interest: "Set search interest",
+    trends_set_anchor: "Set vs anchor ratio",
+  };
+  const featureLabel = k => FEATURE_LABELS[k] || k;
+
   function fmtMoney(v) {
     if (v === null || v === undefined) return "—";
     return "$" + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -329,6 +368,42 @@
   }
 
   // ── Detail view ────────────────────────────────────────────────
+  // Render the "Why this prediction?" panel from SHAP-style attributions.
+  // Each attribution is a log-return delta; we show it as an approx %
+  // price-impact and a horizontal bar scaled against the largest |attribution|
+  // for this horizon.
+  function attributionsHTML(attrs) {
+    if (!attrs || attrs.length === 0) {
+      return `<div class="small text-muted mt-2">Feature attributions unavailable for this prediction.</div>`;
+    }
+    const maxAbs = Math.max(...attrs.map(a => Math.abs(a.attribution)), 1e-9);
+    const rows = attrs.map(a => {
+      const pct = (Math.exp(a.attribution) - 1) * 100;
+      const sign = pct >= 0 ? "+" : "";
+      const widthPct = Math.min(100, (Math.abs(a.attribution) / maxAbs) * 100);
+      const bar = a.attribution >= 0
+        ? `<div class="d-flex"><div style="width:50%"></div><div style="width:${widthPct / 2}%;background:#19875433;border-left:2px solid #198754;height:8px;border-radius:0 2px 2px 0"></div></div>`
+        : `<div class="d-flex justify-content-end"><div style="width:${widthPct / 2}%;background:#dc354533;border-right:2px solid #dc3545;height:8px;border-radius:2px 0 0 2px"></div><div style="width:50%"></div></div>`;
+      const color = pct >= 0 ? "text-success" : "text-danger";
+      return `
+        <div class="row g-1 align-items-center small">
+          <div class="col-6 text-truncate" title="${featureLabel(a.feature)} (${a.feature})">${featureLabel(a.feature)}</div>
+          <div class="col-4">${bar}</div>
+          <div class="col-2 text-end ${color}">${sign}${pct.toFixed(1)}%</div>
+        </div>`;
+    }).join("");
+    return `
+      <div class="border-top mt-2 pt-2">
+        <div class="d-flex align-items-center justify-content-between mb-1">
+          <span class="small fw-semibold">Why this prediction?</span>
+          <span class="text-muted" style="font-size:0.7rem" title="SHAP-style attributions from ML.EXPLAIN_PREDICT. Each value is the approx price impact from this feature relative to the model's baseline.">
+            <i class="bi bi-info-circle"></i>
+          </span>
+        </div>
+        ${rows}
+      </div>`;
+  }
+
   function horizonCardHTML(horizon, pred, gameMetrics) {
     const m = gameMetrics && gameMetrics[horizon];
     const r2 = m && m.status === "trained" ? m.r2 : null;
@@ -353,6 +428,7 @@
         <span class="fs-6 ${deltaColor}">${deltaSign}${deltaPct.toFixed(1)}%</span>
       </div>
       <div class="small text-muted">${fmtMoney(pred.price_low)} – ${fmtMoney(pred.price_high)}</div>
+      ${attributionsHTML(pred.attributions)}
     </div>`;
   }
 
