@@ -1,0 +1,267 @@
+{{ define "main" }}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h2 class="h5 mb-0 fw-semibold"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Price Predictions</h2>
+  <div class="d-flex gap-2">
+    <div id="btn-refresh-group" class="btn-group btn-group-sm d-none" role="group">
+      <button class="btn btn-outline-primary"   onclick="refreshData('github')"><i class="bi bi-github me-1"></i>GitHub</button>
+      <button class="btn btn-outline-secondary" onclick="refreshData('gcs')"><i class="bi bi-cloud me-1"></i>GCS</button>
+    </div>
+  </div>
+</div>
+
+<div id="auth-guard"  class="alert alert-warning  d-none"><i class="bi bi-lock me-1"></i>You must be <a href="{{ "" | relURL }}">signed in</a> to view price predictions.</div>
+<div id="admin-guard" class="alert alert-secondary d-none"><i class="bi bi-shield-lock me-1"></i>You need to be an admin to access this page.</div>
+<div id="loading" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+
+<!-- Filters -->
+<div class="card shadow-sm border-0 d-none mb-3" id="filters-card">
+  <div class="card-body py-2">
+    <div class="row g-2 align-items-center">
+      <div class="col-sm-3">
+        <select class="form-select form-select-sm" id="filter-game" onchange="onGameChange()">
+          <option value="">Select Game</option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <select class="form-select form-select-sm" id="filter-set" onchange="render()">
+          <option value="">All Sets</option>
+        </select>
+      </div>
+      <div class="col-sm-4">
+        <div class="btn-group btn-group-sm w-100" role="group">
+          <input type="radio" class="btn-check" name="type-toggle" id="type-sealed" checked onchange="render()">
+          <label class="btn btn-outline-primary" for="type-sealed">Sealed</label>
+          <input type="radio" class="btn-check" name="type-toggle" id="type-singles" disabled>
+          <label class="btn btn-outline-secondary" for="type-singles" title="Requires ml_price_features_singles">
+            Singles <i class="bi bi-hourglass-split ms-1 small"></i>
+          </label>
+        </div>
+      </div>
+      <div class="col-sm-2 text-end">
+        <small class="text-muted" id="generated-at"></small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Model summary -->
+<div class="card shadow-sm border-0 d-none mb-3" id="model-summary-card">
+  <div class="card-body py-2">
+    <div class="d-flex align-items-center flex-wrap gap-3">
+      <span class="small text-muted">Model confidence (<span id="summary-game-label">—</span>):</span>
+      <span id="summary-horizons" class="d-flex gap-2 flex-wrap"></span>
+      <span class="small text-muted ms-auto" id="summary-meta"></span>
+    </div>
+  </div>
+</div>
+
+<div id="select-prompt" class="text-center py-5 d-none">
+  <i class="bi bi-funnel fs-1 text-muted"></i>
+  <p class="text-muted mt-2">Select a game to view predictions.</p>
+</div>
+
+<div id="empty-state" class="text-center py-5 d-none">
+  <i class="bi bi-inbox fs-1 text-muted"></i>
+  <p class="text-muted mt-2">No predictions available for the current selection.</p>
+</div>
+
+<div class="card shadow-sm border-0 d-none" id="items-card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3">Set</th>
+            <th>Product</th>
+            <th class="text-end">Current</th>
+            <th class="text-center">6mo</th>
+            <th class="text-center">1yr</th>
+            <th class="text-center">2yr</th>
+          </tr>
+        </thead>
+        <tbody id="items-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{{ end }}
+
+{{ define "page-scripts" }}
+<script>
+  let PAYLOAD = null;
+
+  function fmtMoney(v) {
+    if (v === null || v === undefined) return "—";
+    return "$" + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function confidenceClass(r2) {
+    if (r2 === null || r2 === undefined) return { label: "no model", cls: "bg-secondary" };
+    if (r2 >= 0.15) return { label: "decent", cls: "bg-success" };
+    if (r2 > 0)    return { label: "marginal", cls: "bg-warning text-dark" };
+    return { label: "unreliable", cls: "bg-danger" };
+  }
+
+  function predCell(horizon, pred, gameMetrics) {
+    if (!pred) {
+      return `<td class="text-center text-muted small">—</td>`;
+    }
+    const m = gameMetrics && gameMetrics[horizon];
+    const r2 = m && m.status === "trained" ? m.r2 : null;
+    const conf = confidenceClass(r2);
+    const deltaPct = pred.log_return_mid !== null && pred.log_return_mid !== undefined
+      ? (Math.exp(pred.log_return_mid) - 1) * 100
+      : null;
+    const deltaStr = deltaPct === null ? "" :
+      ` <span class="${deltaPct >= 0 ? "text-success" : "text-danger"} small">${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}%</span>`;
+    const spread = `${fmtMoney(pred.price_low)} – ${fmtMoney(pred.price_high)}`;
+    return `
+      <td class="text-center">
+        <div class="fw-semibold">${fmtMoney(pred.price_mid)}${deltaStr}</div>
+        <div class="small text-muted">${spread}</div>
+        <span class="badge ${conf.cls}" style="font-size:0.65rem">${conf.label}</span>
+      </td>`;
+  }
+
+  function populateGames() {
+    const sel = document.getElementById("filter-game");
+    const games = [...new Set(PAYLOAD.products.map(p => p.game))].sort();
+    for (const g of games) {
+      const opt = document.createElement("option");
+      opt.value = g;
+      opt.textContent = g;
+      sel.appendChild(opt);
+    }
+  }
+
+  function populateSets(game) {
+    const sel = document.getElementById("filter-set");
+    sel.innerHTML = `<option value="">All Sets</option>`;
+    if (!game) return;
+    const sets = [...new Set(PAYLOAD.products.filter(p => p.game === game).map(p => p.set_code))].sort();
+    for (const s of sets) {
+      const opt = document.createElement("option");
+      opt.value = s;
+      opt.textContent = s;
+      sel.appendChild(opt);
+    }
+  }
+
+  function renderModelSummary(game) {
+    const card = document.getElementById("model-summary-card");
+    if (!game) { card.classList.add("d-none"); return; }
+    card.classList.remove("d-none");
+    document.getElementById("summary-game-label").textContent = game;
+    const metrics = PAYLOAD.model_summary[game] || {};
+    const container = document.getElementById("summary-horizons");
+    container.innerHTML = "";
+    for (const h of ["6mo", "1yr", "2yr"]) {
+      const m = metrics[h];
+      const r2 = m && m.status === "trained" ? m.r2 : null;
+      const conf = confidenceClass(r2);
+      let text = `${h}: ${conf.label}`;
+      if (m && m.status === "trained") {
+        text += ` (R²=${m.r2.toFixed(2)}, Δ ${m.delta_vs_naive_pct >= 0 ? "+" : ""}${m.delta_vs_naive_pct}%)`;
+      } else if (m && m.status === "insufficient_data") {
+        text += ` (${m.rows} rows — need 400+)`;
+      }
+      const span = document.createElement("span");
+      span.className = `badge ${conf.cls}`;
+      span.textContent = text;
+      container.appendChild(span);
+    }
+  }
+
+  function render() {
+    const game = document.getElementById("filter-game").value;
+    const set = document.getElementById("filter-set").value;
+    const prompt = document.getElementById("select-prompt");
+    const items = document.getElementById("items-card");
+    const empty = document.getElementById("empty-state");
+    renderModelSummary(game);
+
+    if (!game) {
+      prompt.classList.remove("d-none");
+      items.classList.add("d-none");
+      empty.classList.add("d-none");
+      return;
+    }
+    prompt.classList.add("d-none");
+
+    const gameMetrics = PAYLOAD.model_summary[game] || {};
+    const rows = PAYLOAD.products
+      .filter(p => p.game === game && (!set || p.set_code === set))
+      .sort((a, b) => (a.set_code || "").localeCompare(b.set_code || "")
+                      || (a.product_type || "").localeCompare(b.product_type || ""));
+
+    if (rows.length === 0) {
+      items.classList.add("d-none");
+      empty.classList.remove("d-none");
+      return;
+    }
+    empty.classList.add("d-none");
+    items.classList.remove("d-none");
+
+    const tbody = document.getElementById("items-tbody");
+    tbody.innerHTML = rows.map(p => `
+      <tr>
+        <td class="ps-3 fw-semibold">${p.set_code}</td>
+        <td class="small">${p.product_type}</td>
+        <td class="text-end">${fmtMoney(p.market_price)}</td>
+        ${predCell("6mo", p.predictions["6mo"], gameMetrics)}
+        ${predCell("1yr", p.predictions["1yr"], gameMetrics)}
+        ${predCell("2yr", p.predictions["2yr"], gameMetrics)}
+      </tr>
+    `).join("");
+  }
+
+  function onGameChange() {
+    populateSets(document.getElementById("filter-game").value);
+    render();
+  }
+
+  async function refreshData(source) {
+    const loader = source === "github" ? loadFromGitHub : loadFromGCS;
+    document.getElementById("loading").classList.remove("d-none");
+    try {
+      PAYLOAD = await loader("price-predictions.json");
+      document.getElementById("generated-at").textContent = "Generated " + new Date(PAYLOAD.generated_at).toLocaleString();
+      render();
+    } catch (e) {
+      alert("Failed to load predictions: " + e.message);
+    } finally {
+      document.getElementById("loading").classList.add("d-none");
+    }
+  }
+
+  async function loadData() {
+    document.getElementById("loading").classList.remove("d-none");
+    try {
+      PAYLOAD = await loadJsonData("price-predictions.json");
+      document.getElementById("generated-at").textContent = "Generated " + new Date(PAYLOAD.generated_at).toLocaleString();
+      document.getElementById("filters-card").classList.remove("d-none");
+      document.getElementById("btn-refresh-group").classList.remove("d-none");
+      document.getElementById("select-prompt").classList.remove("d-none");
+      populateGames();
+    } catch (e) {
+      alert("Failed to load predictions: " + e.message);
+    } finally {
+      document.getElementById("loading").classList.add("d-none");
+    }
+  }
+
+  firebase.auth().onAuthStateChanged(async user => {
+    document.getElementById("loading").classList.add("d-none");
+    if (!user) {
+      document.getElementById("auth-guard").classList.remove("d-none");
+      return;
+    }
+    if (!isEmailAllowed(user.email)) {
+      document.getElementById("admin-guard").classList.remove("d-none");
+      return;
+    }
+    await loadData();
+  });
+</script>
+{{ end }}
