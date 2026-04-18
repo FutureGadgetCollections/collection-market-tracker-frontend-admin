@@ -13,7 +13,7 @@
 <div id="admin-guard" class="alert alert-secondary d-none"><i class="bi bi-shield-lock me-1"></i>You need to be an admin to access this page.</div>
 <div id="loading" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
 
-<!-- Filters -->
+<!-- Lookup form -->
 <div class="card shadow-sm border-0 d-none mb-3" id="filters-card">
   <div class="card-body py-2">
     <div class="row g-2 align-items-center">
@@ -23,22 +23,34 @@
         </select>
       </div>
       <div class="col-sm-3">
-        <select class="form-select form-select-sm" id="filter-set" onchange="render()">
-          <option value="">All Sets</option>
+        <select class="form-select form-select-sm" id="filter-set" onchange="onSetChange()">
+          <option value="">Select Set</option>
         </select>
       </div>
-      <div class="col-sm-4">
-        <div class="btn-group btn-group-sm w-100" role="group">
+      <div class="col-sm-3">
+        <select class="form-select form-select-sm" id="filter-product" onchange="onProductChange()">
+          <option value="">Select Product</option>
+        </select>
+      </div>
+      <div class="col-sm-2">
+        <button class="btn btn-primary btn-sm w-100" id="btn-lookup" onclick="showDetail()" disabled>
+          <i class="bi bi-search me-1"></i>Look up
+        </button>
+      </div>
+      <div class="col-sm-1 text-end">
+        <small class="text-muted" id="generated-at"></small>
+      </div>
+    </div>
+    <div class="row g-2 mt-1">
+      <div class="col-sm-6">
+        <div class="btn-group btn-group-sm" role="group">
           <input type="radio" class="btn-check" name="type-toggle" id="type-sealed" checked onchange="render()">
-          <label class="btn btn-outline-primary" for="type-sealed">Sealed</label>
+          <label class="btn btn-outline-primary btn-sm" for="type-sealed">Sealed</label>
           <input type="radio" class="btn-check" name="type-toggle" id="type-singles" disabled>
-          <label class="btn btn-outline-secondary" for="type-singles" title="Requires ml_price_features_singles">
+          <label class="btn btn-outline-secondary btn-sm" for="type-singles" title="Requires ml_price_features_singles">
             Singles <i class="bi bi-hourglass-split ms-1 small"></i>
           </label>
         </div>
-      </div>
-      <div class="col-sm-2 text-end">
-        <small class="text-muted" id="generated-at"></small>
       </div>
     </div>
   </div>
@@ -50,7 +62,6 @@
     <div class="d-flex align-items-center flex-wrap gap-3">
       <span class="small text-muted">Model confidence (<span id="summary-game-label">—</span>):</span>
       <span id="summary-horizons" class="d-flex gap-2 flex-wrap"></span>
-      <span class="small text-muted ms-auto" id="summary-meta"></span>
     </div>
   </div>
 </div>
@@ -65,6 +76,7 @@
   <p class="text-muted mt-2">No predictions available for the current selection.</p>
 </div>
 
+<!-- Browse table (shown when game selected but product not yet) -->
 <div class="card shadow-sm border-0 d-none" id="items-card">
   <div class="card-body p-0">
     <div class="table-responsive">
@@ -85,11 +97,57 @@
   </div>
 </div>
 
+<!-- Detail view (shown after Look up) -->
+<div id="detail-view" class="d-none">
+  <div class="d-flex align-items-center mb-3">
+    <button class="btn btn-sm btn-outline-secondary me-2" onclick="hideDetail()">
+      <i class="bi bi-arrow-left me-1"></i>Back to list
+    </button>
+    <h5 class="mb-0 fw-semibold" id="detail-title">—</h5>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <div class="small text-muted">Current market price</div>
+          <div class="fs-3 fw-semibold" id="detail-current">—</div>
+          <div class="small text-muted" id="detail-snapshot">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <div class="row g-3 h-100">
+        <div class="col-sm-4"><div class="card shadow-sm border-0 h-100" id="horizon-6mo"></div></div>
+        <div class="col-sm-4"><div class="card shadow-sm border-0 h-100" id="horizon-1yr"></div></div>
+        <div class="col-sm-4"><div class="card shadow-sm border-0 h-100" id="horizon-2yr"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <h6 class="mb-0 fw-semibold">Price history + forecast</h6>
+        <small class="text-muted">Shaded band = ~p10 to p90 from model residuals.</small>
+      </div>
+      <div style="position:relative;height:360px"><canvas id="price-chart"></canvas></div>
+    </div>
+  </div>
+</div>
+
 {{ end }}
 
 {{ define "page-scripts" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <script>
   let PAYLOAD = null;
+  let HISTORY = null;
+  let CHART = null;
+
+  const HORIZON_DAYS = { "6mo": 180, "1yr": 365, "2yr": 730 };
+  const HORIZON_LABEL = { "6mo": "6 months", "1yr": "1 year", "2yr": "2 years" };
 
   function fmtMoney(v) {
     if (v === null || v === undefined) return "—";
@@ -103,16 +161,18 @@
     return { label: "unreliable", cls: "bg-danger" };
   }
 
+  function productKey(game, set_code, product_type) {
+    return `${game}:${set_code}:${product_type}`;
+  }
+
+  // ── Browse-mode table ──────────────────────────────────────────
   function predCell(horizon, pred, gameMetrics) {
-    if (!pred) {
-      return `<td class="text-center text-muted small">—</td>`;
-    }
+    if (!pred) return `<td class="text-center text-muted small">—</td>`;
     const m = gameMetrics && gameMetrics[horizon];
     const r2 = m && m.status === "trained" ? m.r2 : null;
     const conf = confidenceClass(r2);
     const deltaPct = pred.log_return_mid !== null && pred.log_return_mid !== undefined
-      ? (Math.exp(pred.log_return_mid) - 1) * 100
-      : null;
+      ? (Math.exp(pred.log_return_mid) - 1) * 100 : null;
     const deltaStr = deltaPct === null ? "" :
       ` <span class="${deltaPct >= 0 ? "text-success" : "text-danger"} small">${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}%</span>`;
     const spread = `${fmtMoney(pred.price_low)} – ${fmtMoney(pred.price_high)}`;
@@ -124,26 +184,39 @@
       </td>`;
   }
 
+  // ── Filter population ──────────────────────────────────────────
   function populateGames() {
     const sel = document.getElementById("filter-game");
     const games = [...new Set(PAYLOAD.products.map(p => p.game))].sort();
     for (const g of games) {
       const opt = document.createElement("option");
-      opt.value = g;
-      opt.textContent = g;
+      opt.value = g; opt.textContent = g;
       sel.appendChild(opt);
     }
   }
 
   function populateSets(game) {
     const sel = document.getElementById("filter-set");
-    sel.innerHTML = `<option value="">All Sets</option>`;
+    sel.innerHTML = `<option value="">Select Set</option>`;
     if (!game) return;
     const sets = [...new Set(PAYLOAD.products.filter(p => p.game === game).map(p => p.set_code))].sort();
     for (const s of sets) {
       const opt = document.createElement("option");
-      opt.value = s;
-      opt.textContent = s;
+      opt.value = s; opt.textContent = s;
+      sel.appendChild(opt);
+    }
+  }
+
+  function populateProducts(game, set_code) {
+    const sel = document.getElementById("filter-product");
+    sel.innerHTML = `<option value="">Select Product</option>`;
+    if (!game || !set_code) return;
+    const products = PAYLOAD.products
+      .filter(p => p.game === game && p.set_code === set_code)
+      .map(p => p.product_type).sort();
+    for (const p of products) {
+      const opt = document.createElement("option");
+      opt.value = p; opt.textContent = p;
       sel.appendChild(opt);
     }
   }
@@ -173,6 +246,14 @@
     }
   }
 
+  function updateLookupButton() {
+    const game = document.getElementById("filter-game").value;
+    const set_code = document.getElementById("filter-set").value;
+    const product_type = document.getElementById("filter-product").value;
+    document.getElementById("btn-lookup").disabled = !(game && set_code && product_type);
+  }
+
+  // ── Render list (table) ────────────────────────────────────────
   function render() {
     const game = document.getElementById("filter-game").value;
     const set = document.getElementById("filter-set").value;
@@ -205,7 +286,7 @@
 
     const tbody = document.getElementById("items-tbody");
     tbody.innerHTML = rows.map(p => `
-      <tr>
+      <tr style="cursor:pointer" onclick="selectRow('${p.game}','${p.set_code}','${p.product_type}')">
         <td class="ps-3 fw-semibold">${p.set_code}</td>
         <td class="small">${p.product_type}</td>
         <td class="text-end">${fmtMoney(p.market_price)}</td>
@@ -216,16 +297,192 @@
     `).join("");
   }
 
+  function selectRow(game, set_code, product_type) {
+    document.getElementById("filter-set").value = set_code;
+    populateProducts(game, set_code);
+    document.getElementById("filter-product").value = product_type;
+    updateLookupButton();
+    showDetail();
+  }
+
+  // ── Filter change handlers ─────────────────────────────────────
   function onGameChange() {
-    populateSets(document.getElementById("filter-game").value);
+    const game = document.getElementById("filter-game").value;
+    populateSets(game);
+    document.getElementById("filter-product").innerHTML = `<option value="">Select Product</option>`;
+    updateLookupButton();
+    hideDetail();
     render();
   }
 
+  function onSetChange() {
+    const game = document.getElementById("filter-game").value;
+    const set_code = document.getElementById("filter-set").value;
+    populateProducts(game, set_code);
+    updateLookupButton();
+    hideDetail();
+    render();
+  }
+
+  function onProductChange() {
+    updateLookupButton();
+  }
+
+  // ── Detail view ────────────────────────────────────────────────
+  function horizonCardHTML(horizon, pred, gameMetrics) {
+    const m = gameMetrics && gameMetrics[horizon];
+    const r2 = m && m.status === "trained" ? m.r2 : null;
+    const conf = confidenceClass(r2);
+    const label = HORIZON_LABEL[horizon];
+    if (!pred) {
+      return `<div class="card-body">
+        <div class="small text-muted">${label}</div>
+        <div class="fs-5 fw-semibold text-muted">—</div>
+        <span class="badge bg-secondary" style="font-size:0.65rem">no model</span>
+      </div>`;
+    }
+    const deltaPct = (Math.exp(pred.log_return_mid) - 1) * 100;
+    const deltaColor = deltaPct >= 0 ? "text-success" : "text-danger";
+    const deltaSign = deltaPct >= 0 ? "+" : "";
+    return `<div class="card-body">
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="small text-muted">${label}</span>
+        <span class="badge ${conf.cls}" style="font-size:0.65rem">${conf.label}</span>
+      </div>
+      <div class="fs-5 fw-semibold">${fmtMoney(pred.price_mid)}
+        <span class="fs-6 ${deltaColor}">${deltaSign}${deltaPct.toFixed(1)}%</span>
+      </div>
+      <div class="small text-muted">${fmtMoney(pred.price_low)} – ${fmtMoney(pred.price_high)}</div>
+    </div>`;
+  }
+
+  function renderChart(product, history) {
+    const ctx = document.getElementById("price-chart").getContext("2d");
+    if (CHART) { CHART.destroy(); CHART = null; }
+
+    const snapshotDate = product.snapshot_date ? new Date(product.snapshot_date) : null;
+    const hist = (history || []).map(pt => ({ x: new Date(pt.d), y: pt.p }));
+
+    // Predictions as forward points from snapshot_date
+    const predPts = { mid: [], low: [], high: [] };
+    if (snapshotDate) {
+      predPts.mid.push({ x: snapshotDate, y: product.market_price });
+      predPts.low.push({ x: snapshotDate, y: product.market_price });
+      predPts.high.push({ x: snapshotDate, y: product.market_price });
+      for (const h of ["6mo", "1yr", "2yr"]) {
+        const p = product.predictions[h];
+        if (!p) continue;
+        const when = new Date(snapshotDate);
+        when.setDate(when.getDate() + HORIZON_DAYS[h]);
+        predPts.mid.push({ x: when, y: p.price_mid });
+        predPts.low.push({ x: when, y: p.price_low });
+        predPts.high.push({ x: when, y: p.price_high });
+      }
+    }
+
+    const datasets = [
+      {
+        label: "Price history",
+        data: hist,
+        borderColor: "#0d6efd",
+        backgroundColor: "#0d6efd22",
+        tension: 0.1,
+        pointRadius: 1.5,
+        borderWidth: 2,
+      },
+      {
+        label: "Prediction (mid)",
+        data: predPts.mid,
+        borderColor: "#fd7e14",
+        backgroundColor: "transparent",
+        borderDash: [6, 4],
+        pointRadius: 4,
+        borderWidth: 2,
+      },
+      {
+        label: "p90",
+        data: predPts.high,
+        borderColor: "transparent",
+        backgroundColor: "#fd7e1422",
+        pointRadius: 0,
+        fill: "+1",
+      },
+      {
+        label: "p10",
+        data: predPts.low,
+        borderColor: "transparent",
+        backgroundColor: "transparent",
+        pointRadius: 0,
+        fill: false,
+      },
+    ];
+
+    CHART = new Chart(ctx, {
+      type: "line",
+      data: { datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "nearest", intersect: false },
+        scales: {
+          x: { type: "time", time: { unit: "month" }, title: { display: true, text: "Date" } },
+          y: { title: { display: true, text: "Market price (USD)" }, ticks: { callback: v => "$" + v } },
+        },
+        plugins: {
+          legend: { position: "bottom", labels: { filter: item => item.text !== "p10" } },
+          tooltip: {
+            callbacks: { label: ctx => `${ctx.dataset.label}: ${fmtMoney(ctx.parsed.y)}` },
+          },
+        },
+      },
+    });
+  }
+
+  function showDetail() {
+    const game = document.getElementById("filter-game").value;
+    const set_code = document.getElementById("filter-set").value;
+    const product_type = document.getElementById("filter-product").value;
+    if (!game || !set_code || !product_type) return;
+
+    const product = PAYLOAD.products.find(p =>
+      p.game === game && p.set_code === set_code && p.product_type === product_type);
+    if (!product) return;
+
+    document.getElementById("items-card").classList.add("d-none");
+    document.getElementById("empty-state").classList.add("d-none");
+    document.getElementById("select-prompt").classList.add("d-none");
+    document.getElementById("detail-view").classList.remove("d-none");
+
+    document.getElementById("detail-title").textContent =
+      `${game} / ${set_code} / ${product_type}`;
+    document.getElementById("detail-current").textContent = fmtMoney(product.market_price);
+    document.getElementById("detail-snapshot").textContent =
+      "As of " + (product.snapshot_date || "unknown");
+
+    const gameMetrics = PAYLOAD.model_summary[game] || {};
+    for (const h of ["6mo", "1yr", "2yr"]) {
+      document.getElementById(`horizon-${h}`).innerHTML =
+        horizonCardHTML(h, product.predictions[h], gameMetrics);
+    }
+
+    const key = productKey(game, set_code, product_type);
+    const history = (HISTORY && HISTORY.series) ? HISTORY.series[key] : [];
+    renderChart(product, history);
+  }
+
+  function hideDetail() {
+    document.getElementById("detail-view").classList.add("d-none");
+    if (CHART) { CHART.destroy(); CHART = null; }
+    render();
+  }
+
+  // ── Load ───────────────────────────────────────────────────────
   async function refreshData(source) {
     const loader = source === "github" ? loadFromGitHub : loadFromGCS;
     document.getElementById("loading").classList.remove("d-none");
     try {
       PAYLOAD = await loader("price-predictions.json");
+      try { HISTORY = await loader("price-history.json"); } catch (e) { console.warn("History load failed:", e.message); HISTORY = null; }
       document.getElementById("generated-at").textContent = "Generated " + new Date(PAYLOAD.generated_at).toLocaleString();
       render();
     } catch (e) {
@@ -239,6 +496,8 @@
     document.getElementById("loading").classList.remove("d-none");
     try {
       PAYLOAD = await loadJsonData("price-predictions.json");
+      try { HISTORY = await loadJsonData("price-history.json"); }
+      catch (e) { console.warn("History load failed:", e.message); HISTORY = null; }
       document.getElementById("generated-at").textContent = "Generated " + new Date(PAYLOAD.generated_at).toLocaleString();
       document.getElementById("filters-card").classList.remove("d-none");
       document.getElementById("btn-refresh-group").classList.remove("d-none");
@@ -253,14 +512,8 @@
 
   firebase.auth().onAuthStateChanged(async user => {
     document.getElementById("loading").classList.add("d-none");
-    if (!user) {
-      document.getElementById("auth-guard").classList.remove("d-none");
-      return;
-    }
-    if (!isEmailAllowed(user.email)) {
-      document.getElementById("admin-guard").classList.remove("d-none");
-      return;
-    }
+    if (!user) { document.getElementById("auth-guard").classList.remove("d-none"); return; }
+    if (!isEmailAllowed(user.email)) { document.getElementById("admin-guard").classList.remove("d-none"); return; }
     await loadData();
   });
 </script>
