@@ -481,8 +481,8 @@
     const loader = source === "github" ? loadFromGitHub : loadFromGCS;
     document.getElementById("loading").classList.remove("d-none");
     try {
-      PAYLOAD = await loader("price-predictions.json");
-      try { HISTORY = await loader("price-history.json"); } catch (e) { console.warn("History load failed:", e.message); HISTORY = null; }
+      PAYLOAD = await loader("data/price-predictions.json");
+      try { HISTORY = await loader("data/price-history.json"); } catch (e) { console.warn("History load failed:", e.message); HISTORY = null; }
       document.getElementById("generated-at").textContent = "Generated " + new Date(PAYLOAD.generated_at).toLocaleString();
       render();
     } catch (e) {
@@ -495,8 +495,8 @@
   async function loadData() {
     document.getElementById("loading").classList.remove("d-none");
     try {
-      PAYLOAD = await loadJsonData("price-predictions.json");
-      try { HISTORY = await loadJsonData("price-history.json"); }
+      PAYLOAD = await loadJsonData("data/price-predictions.json");
+      try { HISTORY = await loadJsonData("data/price-history.json"); }
       catch (e) { console.warn("History load failed:", e.message); HISTORY = null; }
       document.getElementById("generated-at").textContent = "Generated " + new Date(PAYLOAD.generated_at).toLocaleString();
       document.getElementById("filters-card").classList.remove("d-none");
