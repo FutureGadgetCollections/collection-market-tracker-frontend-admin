@@ -1,0 +1,327 @@
+{{ define "main" }}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h2 class="h5 mb-0 fw-semibold"><i class="bi bi-currency-exchange me-2 text-primary"></i>Expected Value History</h2>
+  <div id="btn-refresh-group" class="btn-group btn-group-sm d-none" role="group">
+    <button class="btn btn-outline-primary"   onclick="refreshData('github')"><i class="bi bi-github me-1"></i>GitHub</button>
+    <button class="btn btn-outline-secondary" onclick="refreshData('gcs')"><i class="bi bi-cloud me-1"></i>GCS</button>
+  </div>
+</div>
+
+<div id="auth-guard"  class="alert alert-warning  d-none"><i class="bi bi-lock me-1"></i>You must be <a href="{{ "" | relURL }}">signed in</a> to view EV history.</div>
+<div id="admin-guard" class="alert alert-secondary d-none"><i class="bi bi-shield-lock me-1"></i>You need to be an admin to access this page.</div>
+<div id="loading" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+
+<div class="card shadow-sm border-0 d-none mb-3" id="filters-card">
+  <div class="card-body py-2">
+    <div class="row g-2 align-items-center">
+      <div class="col-sm-3">
+        <select class="form-select form-select-sm" id="filter-game" onchange="onGameChange()">
+          <option value="">Select Game</option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <select class="form-select form-select-sm" id="filter-set" onchange="onSetChange()">
+          <option value="">Select Set</option>
+        </select>
+      </div>
+      <div class="col-sm-4">
+        <select class="form-select form-select-sm" id="filter-product" onchange="onProductChange()">
+          <option value="">Select Product</option>
+        </select>
+      </div>
+      <div class="col-sm-2 text-end">
+        <small class="text-muted" id="generated-at"></small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="select-prompt" class="text-center py-5 d-none">
+  <i class="bi bi-funnel fs-1 text-muted"></i>
+  <p class="text-muted mt-2">Select a product to view its EV history.</p>
+</div>
+
+<div id="empty-state" class="text-center py-5 d-none">
+  <i class="bi bi-inbox fs-1 text-muted"></i>
+  <p class="text-muted mt-2">No history available for the current selection.</p>
+</div>
+
+<div id="detail-view" class="d-none">
+  <!-- header -->
+  <div class="d-flex align-items-baseline justify-content-between mb-3">
+    <div>
+      <h3 class="h5 mb-0" id="detail-title">—</h3>
+      <small class="text-muted" id="detail-subtitle">—</small>
+    </div>
+    <div class="text-end small text-muted" id="detail-snapshot">—</div>
+  </div>
+
+  <!-- KPI cards -->
+  <div class="row g-3 mb-3">
+    <div class="col-sm-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted text-uppercase small">Latest singles EV</div>
+          <div class="fs-4 fw-semibold" id="kpi-ev-now">—</div>
+          <div class="small" id="kpi-ev-deltas">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted text-uppercase small">Latest sealed price</div>
+          <div class="fs-4 fw-semibold" id="kpi-sealed-now">—</div>
+          <div class="small" id="kpi-sealed-deltas">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted text-uppercase small">EV − Sealed (latest)</div>
+          <div class="fs-4 fw-semibold" id="kpi-spread-now">—</div>
+          <div class="small text-muted" id="kpi-spread-help">EV growth − sealed growth shown per horizon below.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+      <div style="height: 420px"><canvas id="ev-chart"></canvas></div>
+      <div class="small text-muted mt-2" id="coverage-note"></div>
+    </div>
+  </div>
+
+  <!-- Growth table -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white"><strong>Growth comparison</strong></div>
+    <div class="table-responsive">
+      <table class="table table-sm mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Horizon</th>
+            <th class="text-end">Singles EV</th>
+            <th class="text-end">Sealed price</th>
+            <th class="text-end">EV − Sealed (Δ)</th>
+          </tr>
+        </thead>
+        <tbody id="growth-rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="small text-muted">
+    Investment lens: when "EV − Sealed" is consistently positive over a horizon,
+    the cards inside are appreciating faster than the sealed product —
+    cracking the box and storing the singles tends to outperform.
+  </p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+<script>
+  let PAYLOAD = null;
+  let CHART = null;
+
+  const fmtMoney = v => v == null ? "—" : "$" + v.toFixed(2);
+  const fmtPct   = v => v == null ? "—" : ((v >= 0 ? "+" : "") + v.toFixed(1) + "%");
+
+  function deltaColor(v) {
+    if (v == null) return "text-muted";
+    return v >= 0 ? "text-success" : "text-danger";
+  }
+
+  function pctChangeOver(series, days) {
+    if (!series || series.length < 2) return null;
+    const last = series[series.length - 1];
+    const cutoff = new Date(last.date);
+    cutoff.setDate(cutoff.getDate() - days);
+    let baseline = null;
+    for (const pt of series) {
+      const d = new Date(pt.date);
+      if (d <= cutoff) baseline = pt;
+      else break;
+    }
+    if (!baseline || baseline.value == null || last.value == null || baseline.value === 0) return null;
+    return (last.value - baseline.value) / baseline.value * 100;
+  }
+
+  function evSeries(product) {
+    return (product.ev_history || []).map(p => ({ date: p.date, value: p.ev }));
+  }
+  function sealedSeries(product) {
+    return (product.sealed_history || []).map(p => ({ date: p.date, value: p.sealed_price }));
+  }
+  function lastValue(series) {
+    return series && series.length ? series[series.length - 1].value : null;
+  }
+  function lastDate(series) {
+    return series && series.length ? series[series.length - 1].date : null;
+  }
+
+  function renderKpis(product) {
+    const ev = evSeries(product);
+    const sealed = sealedSeries(product);
+    const evNow = lastValue(ev);
+    const sealedNow = lastValue(sealed);
+
+    document.getElementById("kpi-ev-now").textContent     = fmtMoney(evNow);
+    document.getElementById("kpi-sealed-now").textContent = fmtMoney(sealedNow);
+    const spread = (evNow != null && sealedNow != null) ? evNow - sealedNow : null;
+    const spreadEl = document.getElementById("kpi-spread-now");
+    spreadEl.textContent = fmtMoney(spread);
+    spreadEl.className = "fs-4 fw-semibold " + (spread == null ? "" : (spread >= 0 ? "text-success" : "text-danger"));
+
+    const evDeltas = [30, 180, 365].map(d => pctChangeOver(ev, d));
+    const sealedDeltas = [30, 180, 365].map(d => pctChangeOver(sealed, d));
+    document.getElementById("kpi-ev-deltas").innerHTML =
+      `<span class="${deltaColor(evDeltas[0])}">${fmtPct(evDeltas[0])} 30d</span> ` +
+      `<span class="${deltaColor(evDeltas[1])}">${fmtPct(evDeltas[1])} 6mo</span> ` +
+      `<span class="${deltaColor(evDeltas[2])}">${fmtPct(evDeltas[2])} 1y</span>`;
+    document.getElementById("kpi-sealed-deltas").innerHTML =
+      `<span class="${deltaColor(sealedDeltas[0])}">${fmtPct(sealedDeltas[0])} 30d</span> ` +
+      `<span class="${deltaColor(sealedDeltas[1])}">${fmtPct(sealedDeltas[1])} 6mo</span> ` +
+      `<span class="${deltaColor(sealedDeltas[2])}">${fmtPct(sealedDeltas[2])} 1y</span>`;
+
+    const tbody = document.getElementById("growth-rows");
+    tbody.innerHTML = "";
+    [["30 days", 30], ["6 months", 180], ["1 year", 365]].forEach(([label, d], i) => {
+      const evC = evDeltas[i], sealedC = sealedDeltas[i];
+      const delta = (evC != null && sealedC != null) ? evC - sealedC : null;
+      tbody.insertAdjacentHTML("beforeend",
+        `<tr><td>${label}</td>
+             <td class="text-end ${deltaColor(evC)}">${fmtPct(evC)}</td>
+             <td class="text-end ${deltaColor(sealedC)}">${fmtPct(sealedC)}</td>
+             <td class="text-end ${deltaColor(delta)}">${fmtPct(delta)}</td></tr>`);
+    });
+
+    const evD = lastDate(ev), sealedD = lastDate(sealed);
+    document.getElementById("detail-snapshot").textContent =
+      `Latest EV ${evD || "—"} · sealed ${sealedD || "—"}`;
+
+    // Coverage warning if any EV snapshot has < 95% of cards priced
+    const lowCov = (product.ev_history || []).filter(p => p.card_coverage != null && p.card_coverage < 0.95);
+    document.getElementById("coverage-note").textContent =
+      lowCov.length
+        ? `Note: ${lowCov.length} of ${product.ev_history.length} EV snapshots have <95% card coverage — older snapshots reflect only the cards that were trackable at the time.`
+        : "";
+  }
+
+  function renderChart(product) {
+    const ctx = document.getElementById("ev-chart").getContext("2d");
+    if (CHART) { CHART.destroy(); CHART = null; }
+    const evData = (product.ev_history || []).map(p => ({ x: new Date(p.date), y: p.ev }));
+    const sealedData = (product.sealed_history || []).map(p => ({ x: new Date(p.date), y: p.sealed_price }));
+    CHART = new Chart(ctx, {
+      type: "line",
+      data: {
+        datasets: [
+          { label: "Singles EV (sum of contents)", data: evData,
+            borderColor: "#0d6efd", backgroundColor: "#0d6efd22",
+            tension: 0.2, pointRadius: 2, borderWidth: 2 },
+          { label: "Sealed price", data: sealedData,
+            borderColor: "#198754", backgroundColor: "#19875422",
+            tension: 0.2, pointRadius: 2, borderWidth: 2 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: "nearest", intersect: false },
+        scales: {
+          x: { type: "time", time: { unit: "month" }, title: { display: true, text: "Date" } },
+          y: { title: { display: true, text: "USD" }, ticks: { callback: v => "$" + v } },
+        },
+        plugins: {
+          legend: { position: "bottom" },
+          tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmtMoney(ctx.parsed.y)}` } },
+        },
+      },
+    });
+  }
+
+  function populateGames() {
+    const games = [...new Set(PAYLOAD.map(p => p.game))].sort();
+    const sel = document.getElementById("filter-game");
+    sel.innerHTML = '<option value="">Select Game</option>' +
+      games.map(g => `<option value="${g}">${g.toUpperCase()}</option>`).join("");
+  }
+  function onGameChange() {
+    const g = document.getElementById("filter-game").value;
+    const setSel = document.getElementById("filter-set");
+    const prodSel = document.getElementById("filter-product");
+    const sets = [...new Set(PAYLOAD.filter(p => p.game === g).map(p => p.set_code))].sort();
+    setSel.innerHTML = '<option value="">Select Set</option>' +
+      sets.map(s => {
+        const setName = (PAYLOAD.find(p => p.game === g && p.set_code === s) || {}).set_name || s;
+        return `<option value="${s}">${setName} (${s})</option>`;
+      }).join("");
+    prodSel.innerHTML = '<option value="">Select Product</option>';
+    document.getElementById("detail-view").classList.add("d-none");
+    document.getElementById("select-prompt").classList.remove("d-none");
+  }
+  function onSetChange() {
+    const g = document.getElementById("filter-game").value;
+    const s = document.getElementById("filter-set").value;
+    const prods = PAYLOAD.filter(p => p.game === g && p.set_code === s);
+    const sel = document.getElementById("filter-product");
+    sel.innerHTML = '<option value="">Select Product</option>' +
+      prods.map(p => `<option value="${p.product_type}">${p.name}</option>`).join("");
+    document.getElementById("detail-view").classList.add("d-none");
+    document.getElementById("select-prompt").classList.remove("d-none");
+  }
+  function onProductChange() {
+    const g = document.getElementById("filter-game").value;
+    const s = document.getElementById("filter-set").value;
+    const t = document.getElementById("filter-product").value;
+    if (!g || !s || !t) { document.getElementById("detail-view").classList.add("d-none"); return; }
+    const product = PAYLOAD.find(p => p.game === g && p.set_code === s && p.product_type === t);
+    if (!product) {
+      document.getElementById("detail-view").classList.add("d-none");
+      document.getElementById("empty-state").classList.remove("d-none");
+      return;
+    }
+    document.getElementById("select-prompt").classList.add("d-none");
+    document.getElementById("empty-state").classList.add("d-none");
+    document.getElementById("detail-view").classList.remove("d-none");
+    document.getElementById("detail-title").textContent = product.name;
+    document.getElementById("detail-subtitle").textContent = `${(product.set_name || product.set_code)} · ${product.product_type}`;
+    renderKpis(product);
+    renderChart(product);
+  }
+
+  async function refreshData(source) {
+    const loader = source === "github" ? loadFromGitHub : loadFromGCS;
+    document.getElementById("loading").classList.remove("d-none");
+    try {
+      PAYLOAD = await loader("data/product-ev-history.json");
+      document.getElementById("generated-at").textContent = "Loaded " + new Date().toLocaleString();
+      populateGames();
+    } catch (e) { alert("Failed to load EV history: " + e.message); }
+    finally { document.getElementById("loading").classList.add("d-none"); }
+  }
+
+  async function loadData() {
+    document.getElementById("loading").classList.remove("d-none");
+    try {
+      PAYLOAD = await loadJsonData("data/product-ev-history.json");
+      document.getElementById("generated-at").textContent = "Loaded " + new Date().toLocaleString();
+      document.getElementById("filters-card").classList.remove("d-none");
+      document.getElementById("btn-refresh-group").classList.remove("d-none");
+      document.getElementById("select-prompt").classList.remove("d-none");
+      populateGames();
+    } catch (e) { alert("Failed to load EV history: " + e.message); }
+    finally { document.getElementById("loading").classList.add("d-none"); }
+  }
+
+  firebase.auth().onAuthStateChanged(async user => {
+    document.getElementById("loading").classList.add("d-none");
+    if (!user) { document.getElementById("auth-guard").classList.remove("d-none"); return; }
+    if (!isEmailAllowed(user.email)) { document.getElementById("admin-guard").classList.remove("d-none"); return; }
+    await loadData();
+  });
+</script>
+{{ end }}
