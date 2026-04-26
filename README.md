@@ -1,6 +1,6 @@
-# collection-market-tracker-frontend-admin
+# collection-admin
 
-**Live site:** [https://futuregadgetcollections.github.io/collection-market-tracker-frontend-admin/](https://futuregadgetcollections.github.io/collection-market-tracker-frontend-admin/)
+**Live site:** [https://futuregadgetcollections.github.io/collection-admin/](https://futuregadgetcollections.github.io/collection-admin/)
 
 Admin interface for the Collection Market Tracker — a Hugo-based static site that lets admins manage tracked products and view market pricing data.
 

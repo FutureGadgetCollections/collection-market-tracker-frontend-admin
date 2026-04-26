@@ -9,12 +9,12 @@ You are an expert on the full **Collection Market Tracker** system — a multi-r
 
 | Repo | GitHub | Local Path | Purpose |
 |------|--------|-----------|---------|
-| Frontend admin | `FutureGadgetCollections/collection-market-tracker-frontend-admin` | `../collection-market-tracker-frontend-admin` | Hugo admin UI — CRUD via API |
+| Frontend admin | `FutureGadgetCollections/collection-admin` | `../collection-admin` | Hugo admin UI — CRUD via API |
 | Backend | `FutureGadgetCollections/collection-market-tracker-backend` | `../collection-market-tracker-backend` | Go API microservice + scheduled Cloud Run jobs |
 | Data files | `FutureGadgetCollections/collection-market-tracker-data` | `../collection-market-tracker-data` | Static JSON published by backend; consumed by frontends |
 | Showcase frontend | `FutureGadgetCollections/collection-showcase-frontend` | `../collection-showcase-frontend` | Public Hugo site — read-only, no auth |
 
-All repos are expected to be sibling directories under the same parent. Run `setup.sh` from `collection-market-tracker-frontend-admin` if any are missing.
+All repos are expected to be sibling directories under the same parent. Run `setup.sh` from `collection-admin` if any are missing.
 
 ## GCP Infrastructure
 

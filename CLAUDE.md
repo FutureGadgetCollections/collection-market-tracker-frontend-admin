@@ -1,4 +1,4 @@
-# collection-market-tracker-frontend-admin
+# collection-admin
 
 Hugo-based admin frontend for the **Collection Market Tracker** — TCG market prices and listings. Deployed to GitHub Pages; reads static JSON from the data repo and writes via the backend API.
 
@@ -8,7 +8,7 @@ Run `./setup.sh` after cloning to clone all sibling repos to the correct local p
 
 | Repo | Purpose |
 |------|---------|
-| `collection-market-tracker-frontend-admin` (this) | Hugo admin UI — CRUD via backend API |
+| `collection-admin` (this) | Hugo admin UI — CRUD via backend API |
 | `collection-market-tracker-frontend` | Hugo public site — read-only; sealed products, single cards, pull rates |
 | `collection-market-tracker-backend` | Go API microservice + scheduled Cloud Run jobs |
 | `collection-market-tracker-data` | Static JSON published by backend; read by frontends |

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # setup.sh — Clone all Collection Market Tracker sibling repos
-# Run this after cloning collection-market-tracker-frontend-admin.
+# Run this after cloning collection-admin.
 
 set -euo pipefail
 

@@ -15,7 +15,7 @@ REASON="${1:-}"
 DATE=$(date -u +%Y-%m-%d)
 
 REPOS=(
-  "collection-market-tracker-frontend-admin"
+  "collection-admin"
   "collection-market-tracker-backend"
   "collection-market-tracker-data"
 )
